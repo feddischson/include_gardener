@@ -40,12 +40,12 @@ public:
 
    /// @author feddischson
    /// @brief  Copy ctor: not implemented!
-   CPP_Parser(const CPP_Parser & a_template_) = delete;
+   CPP_Parser(const CPP_Parser & parser ) = delete;
 
 
    /// @author feddischson
    /// @brief  Assignment operator: not implemented!
-   CPP_Parser& operator= (const CPP_Parser & a_template_) = delete;
+   CPP_Parser& operator= (const CPP_Parser & parser ) = delete;
 
 
    /// @author feddischson

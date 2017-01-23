@@ -2,7 +2,7 @@ CC=gcc
 CXX=g++
 RM=rm -f
 CPPFLAGS=-g -fPIC -Iinc -std=c++11
-LDFLAGS=-g 
+LDFLAGS=-g -lboost_filesystem -lboost_system
 LDLIBS= 
 
 SRCS=src/_template_.cpp \

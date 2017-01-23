@@ -18,12 +18,19 @@
 // Public License along with this program; if not, see
 // <http://www.gnu.org/licenses/>.
 //
-#include "_template_.h"
+#include "parser.h"
 
 using namespace INCLUDE_GARDENER;
 
 int main( int argc, char* argv[] )
 {
+   Parser p;
+
+   //  ./include_gardener ./ ".*\.[h|cpp]"
+   if( argc == 3 )
+   {
+      p.walk_tree( argv[1], argv[2] );
+   }
    return 0;
 }
 

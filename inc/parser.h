@@ -35,17 +35,17 @@ public:
 
    /// @author feddischson
    /// @brief Ctor: not implemented!
-   Parser( ) = delete;
+   Parser( ) = default;
 
 
    /// @author feddischson
    /// @brief  Copy ctor: not implemented!
-   Parser(const Parser & a_template_) = delete;
+   Parser(const Parser & parser ) = delete;
 
 
    /// @author feddischson
    /// @brief  Assignment operator: not implemented!
-   Parser& operator= (const Parser & a_template_) = delete;
+   Parser& operator= (const Parser & parser ) = delete;
 
 
    /// @author feddischson
@@ -66,6 +66,11 @@ public:
    /// @author feddischson
    /// @brief Output stream operator overloading.
    friend std::ostream& operator<<( std::ostream& os, const Parser& parser);
+
+   /// @author feddischson
+   /// @brief  Runs through a given file path and proceedes all include files.
+   bool walk_tree( const std::string & path,
+                   const std::string & pattern );
 
 private:
 

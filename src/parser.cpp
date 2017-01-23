@@ -20,8 +20,53 @@
 //
 #include "parser.h"
 
+#include <regex>
+#include "boost/filesystem.hpp"
+
+
 namespace INCLUDE_GARDENER
 {
+
+bool Parser::walk_tree( const std::string & p,
+                        const std::string & pattern )
+{
+
+   std::regex file_regex( pattern,
+            std::regex_constants::ECMAScript | std::regex_constants::icase);
+
+   using namespace boost::filesystem;
+
+   path root_path( p );
+
+   // return false if the root-path doesn't exist
+   if( exists( root_path ) == false )
+   {
+      return false;
+   }
+
+   directory_iterator end_itr; // default construction yields past-the-end
+   for ( directory_iterator itr( root_path );
+         itr != end_itr;
+         ++itr )
+   {
+      if( is_directory( itr->status() ) )
+      {
+         walk_tree( itr->path().string(), pattern );
+      }
+      else if( is_regular_file( itr->status() ) )
+      {
+         if( std::regex_search( itr->path().string(), file_regex ) )
+         {
+            std::cout << "found file " << itr->path() << std::endl;
+         }
+      }
+      else
+      {
+         // ignore all other files
+      }
+   }
+
+}
 
 
 std::ostream& operator<<( std::ostream& os, const Parser& parser )

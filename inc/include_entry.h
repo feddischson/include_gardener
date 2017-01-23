@@ -41,12 +41,12 @@ public:
 
    /// @author feddischson
    /// @brief  Copy ctor: not implemented!
-   Include_Entry(const Include_Entry & a_template_) = delete;
+   Include_Entry(const Include_Entry & entry ) = delete;
 
 
    /// @author feddischson
    /// @brief  Assignment operator: not implemented!
-   Include_Entry& operator= (const Include_Entry & a_template_) = delete;
+   Include_Entry& operator= (const Include_Entry & entry ) = delete;
 
 
    /// @author feddischson
