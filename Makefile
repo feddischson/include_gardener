@@ -6,7 +6,10 @@ LDFLAGS=-g
 LDLIBS= 
 
 SRCS=src/_template_.cpp \
-	 src/main.cpp
+	 src/main.cpp \
+	 src/parser.cpp \
+	 src/cpp_parser.cpp \
+	 src/include_entry.cpp 
 
 
 OBJS=$(subst .cpp,.o,$(SRCS))

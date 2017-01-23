@@ -18,15 +18,22 @@
 // Public License along with this program; if not, see
 // <http://www.gnu.org/licenses/>.
 //
-#include "_template_.h"
+#include "cpp_parser.h"
 
-using namespace INCLUDE_GARDENER;
-
-int main( int argc, char* argv[] )
+namespace INCLUDE_GARDENER
 {
-   return 0;
+
+
+std::ostream& operator<<( std::ostream& os, const CPP_Parser& parser )
+{
+   os  << "CPP_Parser ("  << reinterpret_cast< const void* >( &parser ) << "): "
+       << "TODO=" << "Add more content of this instance here @ "
+       << __FILE__ << ":" << __LINE__;
+   return os;
 }
 
+
+}; // namespace SVN_EXTERNALS_DISPOSER
 
 // vim: filetype=cpp et ts=3 sw=3 sts=3
 
