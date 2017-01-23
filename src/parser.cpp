@@ -21,6 +21,8 @@
 #include "parser.h"
 
 #include <regex>
+#include <fstream>
+
 #include "boost/filesystem.hpp"
 
 
@@ -57,12 +59,31 @@ bool Parser::walk_tree( const std::string & p,
       {
          if( std::regex_search( itr->path().string(), file_regex ) )
          {
+            walk_file( itr->path().string() );
             std::cout << "found file " << itr->path() << std::endl;
          }
       }
       else
       {
          // ignore all other files
+      }
+   }
+}
+
+bool Parser::walk_file( const std::string & path )
+{
+   std::ifstream infile( path );
+   std::string line;
+
+   std::regex line_regex( "#include\\s+[\"|<].*?[\"|>]",
+         std::regex_constants::ECMAScript | std::regex_constants::icase);
+
+   while ( std::getline( infile, line ) )
+   {
+      if( std::regex_search( line, line_regex ) )
+      {
+         std::cout << "found include:" << line << std::endl;
+
       }
    }
 

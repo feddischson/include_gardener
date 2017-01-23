@@ -72,7 +72,11 @@ public:
    bool walk_tree( const std::string & path,
                    const std::string & pattern );
 
+
 private:
+
+
+   bool walk_file( const std::string & path );
 
 
 }; // class Parser
