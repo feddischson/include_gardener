@@ -22,6 +22,12 @@
 *.a
 *.lib
 
+# Dia files
+*.dia~
+
+# Build directories
+build*
+
 # Executables
 *.exe
 *.out
