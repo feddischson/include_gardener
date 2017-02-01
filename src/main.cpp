@@ -18,7 +18,10 @@
 // Public License along with this program; if not, see
 // <http://www.gnu.org/licenses/>.
 //
+
 #include "parser.h"
+#include "include_entry.h"
+
 
 using namespace INCLUDE_GARDENER;
 
@@ -26,10 +29,12 @@ int main( int argc, char* argv[] )
 {
    Parser p;
 
+   Include_Entry::Map i_map;
+
    //  ./include_gardener ./ ".*\.[h|cpp]"
    if( argc == 3 )
    {
-      p.walk_tree( argv[1], argv[2] );
+      p.walk_tree( argv[1], "", argv[2], i_map );
    }
    return 0;
 }

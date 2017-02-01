@@ -23,6 +23,9 @@
 
 #include <iostream>
 
+#include "include_entry.h"
+
+
 namespace INCLUDE_GARDENER
 {
 
@@ -69,15 +72,16 @@ public:
 
    /// @author feddischson
    /// @brief  Runs through a given file path and proceedes all include files.
-   bool walk_tree( const std::string & path,
-                   const std::string & pattern );
+   bool walk_tree( const std::string & base_path,
+                   const std::string & sub_path,
+                   const std::string & pattern,
+                   Include_Entry::Map & i_map );
 
 
 private:
 
 
    bool walk_file( const std::string & path );
-
 
 }; // class Parser
 

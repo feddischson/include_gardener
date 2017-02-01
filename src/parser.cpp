@@ -29,8 +29,10 @@
 namespace INCLUDE_GARDENER
 {
 
-bool Parser::walk_tree( const std::string & p,
-                        const std::string & pattern )
+bool Parser::walk_tree( const std::string & base_path,
+                        const std::string & sub_path,
+                        const std::string & pattern,
+                        Include_Entry::Map & i_map )
 {
 
    std::regex file_regex( pattern,
@@ -38,29 +40,48 @@ bool Parser::walk_tree( const std::string & p,
 
    using namespace boost::filesystem;
 
-   path root_path( p );
+   path p( base_path );
+   p /= sub_path;
 
    // return false if the root-path doesn't exist
-   if( exists( root_path ) == false )
+   if( exists( p ) == false )
    {
       return false;
    }
 
    directory_iterator end_itr; // default construction yields past-the-end
-   for ( directory_iterator itr( root_path );
+   for ( directory_iterator itr( p );
          itr != end_itr;
          ++itr )
    {
+      path sub_entry( sub_path );
+      sub_entry /= itr->path().filename().string();
       if( is_directory( itr->status() ) )
       {
-         walk_tree( itr->path().string(), pattern );
+         std::cout << "recursive call " << sub_entry.string()
+                   << std::endl;
+         walk_tree( base_path, sub_entry.string(), pattern, i_map );
       }
       else if( is_regular_file( itr->status() ) )
       {
          if( std::regex_search( itr->path().string(), file_regex ) )
          {
+            auto e = i_map.find( sub_entry.string() );
+            if( e != i_map.end() )
+            {
+               // TODO add path info to e
+            }
+            else
+            {
+               Include_Entry::Ptr e(
+                     new Include_Entry( sub_entry.string(),
+                                        itr->path().relative_path().string(),
+                                        canonical( itr->path() ).string() ) );
+               i_map[ sub_entry.string() ] = e;
+               std::cout << "found file " << itr->path() << std::endl;
+            }
+
             walk_file( itr->path().string() );
-            std::cout << "found file " << itr->path() << std::endl;
          }
       }
       else

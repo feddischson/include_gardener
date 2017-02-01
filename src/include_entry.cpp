@@ -23,13 +23,21 @@
 namespace INCLUDE_GARDENER
 {
 
+Include_Entry::Include_Entry(
+      const std::string & name,
+      const std::string & rel_path,
+      const std::string & abs_path ) :
+   name( name ),
+   rel_paths( 1, rel_path ),
+   abs_paths( 1, abs_path )
+{
+}
+
 
 std::ostream& operator<<( std::ostream& os, const Include_Entry& entry )
 {
-   os  << "Include_Entry ("
-       << reinterpret_cast< const void* >( &entry ) << "): "
-       << "TODO=" << "Add more content of this instance here @ "
-       << __FILE__ << ":" << __LINE__;
+   os  << "Include_Entry :" << std::endl
+       << "     name = " << entry.name;
    return os;
 }
 

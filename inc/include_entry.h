@@ -21,8 +21,10 @@
 #ifndef INCLUDE_ENTRY
 #define INCLUDE_ENTRY
 
-#include <iostream>
+#include <memory>
 #include <map>
+#include <iostream>
+#include <vector>
 
 namespace INCLUDE_GARDENER
 {
@@ -34,9 +36,17 @@ class Include_Entry
 
 public:
 
+   /// @brief Smart pointer for Include_Entries
+   using Ptr = std::shared_ptr< Include_Entry >;
+
+   /// @brief A Map with string as key and a pointer to the entry as value.
+   using Map = std::map< std::string, Ptr >;
+
    /// @author feddischson
    /// @brief Ctor: not implemented!
-   Include_Entry( ) = delete;
+   Include_Entry( const std::string & name,
+                  const std::string & rel_path,
+                  const std::string & abs_path );
 
 
    /// @author feddischson
@@ -73,11 +83,9 @@ private:
 
    std::string name;
 
-   std::string rel_path;
+   std::vector< std::string > rel_paths;
 
-   std::string abs_path;
-
-   std::map< std::string, std::string > children;
+   std::vector< std::string > abs_paths;
 
 }; // class Include_Entry
 
