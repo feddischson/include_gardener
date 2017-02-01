@@ -1,0 +1,13 @@
+cmake_minimum_required (VERSION 2.8.11)
+project (INCLUDE_GARDENER)
+
+find_package(Boost REQUIRED COMPONENTS system filesystem)
+if(Boost_FOUND)
+  include_directories(${Boost_INCLUDE_DIRS})
+else()
+endif()
+include_directories( inc )
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_executable ( include_gardener src/main.cpp src/cpp_parser.cpp src/include_entry.cpp src/parser.cpp )
+TARGET_LINK_LIBRARIES( include_gardener ${Boost_LIBRARIES} )

@@ -3,12 +3,17 @@ Include Gardener
 
 Intorduction
 -------------
-~~TODO~~
+TODO
 
 
 Build Description
 -----------------
-TODO
+
+```
+mkdir build
+cmake ..
+make
+```
 
 
 Usage
