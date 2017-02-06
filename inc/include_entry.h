@@ -31,9 +31,9 @@ namespace INCLUDE_GARDENER
 
 /// @brief An include entry representation.
 /// @details
-///      Each entry has at least a name.
-///      Furthermore, an entry can have one or multiple
-///      absolute and relative path entries.
+/// Each entry has at least a name.
+/// Furthermore, an entry can have one or multiple
+/// absolute and relative path entries.
 /// @author feddischson
 class Include_Entry
 {

@@ -13,6 +13,8 @@ Build Description
 mkdir build
 cmake ..
 make
+make doc
+
 ```
 
 

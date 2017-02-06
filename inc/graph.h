@@ -36,7 +36,7 @@ namespace INCLUDE_GARDENER
 /// @author feddischson
 typedef struct
 {
-   int line;
+   int line; ///< The line number where the include statement is defined.
 } Edge;
 
 

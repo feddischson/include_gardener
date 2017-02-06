@@ -30,15 +30,15 @@
 namespace INCLUDE_GARDENER
 {
 
-/// @author feddischson
 /// @brief A parser class to seach for include statements.
 /// @details
-///      At the moment, only C/C++ preprocessor include statements
-///      are supported.
+/// At the moment, only C/C++ preprocessor include statements
+/// are supported.
 ///
-///      The most important method is walk_tree. By calling this method,
-///      a given path is recsively processed (all files in all sub-folders)
-///      are passed to walk_file, which then processes each line.
+/// The most important method is walk_tree. By calling this method,
+/// a given path is recsively processed (all files in all sub-folders)
+/// are passed to walk_file, which then processes each line.
+/// @author feddischson
 class Parser
 {
 
