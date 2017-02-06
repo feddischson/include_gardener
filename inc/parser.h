@@ -79,14 +79,14 @@ public:
 private:
 
    /// @brief Processes a file to detect all include entries.
-   bool walk_file( const std::string & path,
+   void walk_file( const std::string & path,
                    Include_Entry::Ptr entry,
                    Include_Entry::Map & i_map,
                    Graph & graph );
 
 }; // class Parser
 
-}; // namespace INCLUDE_GARDENER
+} // namespace INCLUDE_GARDENER
 
 #endif // PARSER_H
 

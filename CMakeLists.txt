@@ -10,5 +10,11 @@ endif()
 include_directories( inc )
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(  CMAKE_COMPILER_IS_GNUCXX )
+  set(CMAKE_CXX_FLAGS "-O0 -fno-elide-constructors -pedantic-errors -ansi -Wextra -Wall -Winit-self -Wold-style-cast -Woverloaded-virtual -Wuninitialized -Wmissing-declarations -Winit-self -Werror" )
+else()
+
+endif()
+
 add_executable ( include_gardener src/main.cpp src/include_entry.cpp src/parser.cpp )
 TARGET_LINK_LIBRARIES( include_gardener ${Boost_LIBRARIES} )

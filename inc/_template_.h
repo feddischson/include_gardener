@@ -72,7 +72,7 @@ private:
 
 }; // class _Template_
 
-}; // namespace INCLUDE_GARDENER
+} // namespace INCLUDE_GARDENER
 
 #endif // TEMPLATE_H
 

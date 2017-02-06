@@ -103,9 +103,10 @@ bool Parser::walk_tree( const std::string & base_path,
          // ignore all other files
       }
    }
+   return true;
 }
 
-bool Parser::walk_file( const std::string & path,
+void Parser::walk_file( const std::string & path,
                         Include_Entry::Ptr entry,
                         Include_Entry::Map & i_map,
                         Graph & graph )
@@ -122,7 +123,6 @@ bool Parser::walk_file( const std::string & path,
    {
       if( std::regex_search( line, match, re ) && match.size() > 1 )
       {
-         Vertex_Descriptor v2;
          auto e_itr = i_map.find( match.str( 1 ) );
 
          if( e_itr == i_map.end() )
@@ -133,7 +133,7 @@ bool Parser::walk_file( const std::string & path,
                   new Include_Entry( match.str( 1 ) ) );
             i_map[ match.str( 1 ) ] = e;
 
-            v2 = boost::add_vertex( e->get_name(), graph );
+            boost::add_vertex( e->get_name(), graph );
             graph[ e->get_name() ]     = e;
          }
          Edge_Descriptor edge;
@@ -146,7 +146,7 @@ bool Parser::walk_file( const std::string & path,
    }
 }
 
-}; // namespace SVN_EXTERNALS_DISPOSER
+} // namespace SVN_EXTERNALS_DISPOSER
 
 // vim: filetype=cpp et ts=3 sw=3 sts=3
 

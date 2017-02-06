@@ -102,7 +102,7 @@ private:
 
 }; // class Include_Entry
 
-}; // namespace INCLUDE_GARDENER
+} // namespace INCLUDE_GARDENER
 
 #endif // INCLUDE_ENTRY
 
