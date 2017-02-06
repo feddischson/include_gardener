@@ -23,8 +23,9 @@
 
 #include <iostream>
 
-#include "include_entry.h"
 
+#include "include_entry.h"
+#include "graph.h"
 
 namespace INCLUDE_GARDENER
 {
@@ -39,7 +40,6 @@ public:
    /// @author feddischson
    /// @brief Ctor: not implemented!
    Parser( ) = default;
-
 
    /// @author feddischson
    /// @brief  Copy ctor: not implemented!
@@ -67,21 +67,21 @@ public:
 
 
    /// @author feddischson
-   /// @brief Output stream operator overloading.
-   friend std::ostream& operator<<( std::ostream& os, const Parser& parser);
-
-   /// @author feddischson
    /// @brief  Runs through a given file path and proceedes all include files.
    bool walk_tree( const std::string & base_path,
                    const std::string & sub_path,
                    const std::string & pattern,
-                   Include_Entry::Map & i_map );
+                   Include_Entry::Map & i_map,
+                   Graph & graph );
 
 
 private:
 
-
-   bool walk_file( const std::string & path );
+   /// @brief Processes a file to detect all include entries.
+   bool walk_file( const std::string & path,
+                   Include_Entry::Ptr entry,
+                   Include_Entry::Map & i_map,
+                   Graph & graph );
 
 }; // class Parser
 

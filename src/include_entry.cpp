@@ -18,10 +18,22 @@
 // Public License along with this program; if not, see
 // <http://www.gnu.org/licenses/>.
 //
+#include <algorithm>
+
 #include "include_entry.h"
 
 namespace INCLUDE_GARDENER
 {
+
+
+Include_Entry::Include_Entry(
+      const std::string & name
+      ) :
+   name( name ),
+   rel_paths( 0 ),
+   abs_paths( 0 )
+{
+}
 
 Include_Entry::Include_Entry(
       const std::string & name,
@@ -33,6 +45,28 @@ Include_Entry::Include_Entry(
 {
 }
 
+void Include_Entry::add_path_info( const std::string & rel_path,
+                                   const std::string & abs_path )
+{
+   if( std::find( rel_paths.begin(),
+                  rel_paths.end(),
+                           rel_path) == rel_paths.end() )
+   {
+      rel_paths.push_back( rel_path );
+   }
+
+   if( std::find( abs_paths.begin(),
+                  abs_paths.end(),
+                           abs_path) == abs_paths.end() )
+   {
+      abs_paths.push_back( abs_path );
+   }
+}
+
+std::string Include_Entry::get_name( void ) const
+{
+   return name;
+}
 
 std::ostream& operator<<( std::ostream& os, const Include_Entry& entry )
 {

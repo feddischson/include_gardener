@@ -32,7 +32,8 @@ namespace INCLUDE_GARDENER
 bool Parser::walk_tree( const std::string & base_path,
                         const std::string & sub_path,
                         const std::string & pattern,
-                        Include_Entry::Map & i_map )
+                        Include_Entry::Map & i_map,
+                        Graph & graph )
 {
 
    std::regex file_regex( pattern,
@@ -60,28 +61,41 @@ bool Parser::walk_tree( const std::string & base_path,
       {
          std::cout << "recursive call " << sub_entry.string()
                    << std::endl;
-         walk_tree( base_path, sub_entry.string(), pattern, i_map );
+         walk_tree( base_path, sub_entry.string(), pattern, i_map, graph );
       }
       else if( is_regular_file( itr->status() ) )
       {
          if( std::regex_search( itr->path().string(), file_regex ) )
          {
-            auto e = i_map.find( sub_entry.string() );
-            if( e != i_map.end() )
+
+            Include_Entry::Ptr e;
+
+            auto e_itr = i_map.find( sub_entry.string() );
+            if( e_itr != i_map.end() )
             {
-               // TODO add path info to e
+               e = e_itr->second;
+               e->add_path_info(
+                     itr->path().relative_path().string(),
+                     canonical( itr->path() ).string()
+                     );
             }
             else
             {
-               Include_Entry::Ptr e(
+               e = Include_Entry::Ptr (
                      new Include_Entry( sub_entry.string(),
                                         itr->path().relative_path().string(),
                                         canonical( itr->path() ).string() ) );
                i_map[ sub_entry.string() ] = e;
+               boost::add_vertex( e->get_name(), graph );
+               graph[ e->get_name() ]     = e;
+
                std::cout << "found file " << itr->path() << std::endl;
             }
 
-            walk_file( itr->path().string() );
+            walk_file( itr->path().string(),
+                       e,
+                       i_map,
+                       graph );
          }
       }
       else
@@ -91,34 +105,46 @@ bool Parser::walk_tree( const std::string & base_path,
    }
 }
 
-bool Parser::walk_file( const std::string & path )
+bool Parser::walk_file( const std::string & path,
+                        Include_Entry::Ptr entry,
+                        Include_Entry::Map & i_map,
+                        Graph & graph )
 {
    std::ifstream infile( path );
+   int line_cnt = 1;
    std::string line;
 
-   std::regex line_regex( "#include\\s+[\"|<].*?[\"|>]",
+   std::smatch match;
+   std::regex  re( "#include\\s+[\"|<](.*?)[\"|>]",
          std::regex_constants::ECMAScript | std::regex_constants::icase);
 
    while ( std::getline( infile, line ) )
    {
-      if( std::regex_search( line, line_regex ) )
+      if( std::regex_search( line, match, re ) && match.size() > 1 )
       {
-         std::cout << "found include:" << line << std::endl;
+         Vertex_Descriptor v2;
+         auto e_itr = i_map.find( match.str( 1 ) );
 
+         if( e_itr == i_map.end() )
+         {
+            // there is no such entry in our data-structures:
+            //  -> create it
+            Include_Entry::Ptr e = Include_Entry::Ptr(
+                  new Include_Entry( match.str( 1 ) ) );
+            i_map[ match.str( 1 ) ] = e;
+
+            v2 = boost::add_vertex( e->get_name(), graph );
+            graph[ e->get_name() ]     = e;
+         }
+         Edge_Descriptor edge;
+         bool   b;
+         boost::tie( edge, b ) = boost::add_edge_by_label( entry->get_name(), match.str(1), graph );
+         graph[ edge ] = Edge{ line_cnt };
       }
+
+      line_cnt++;
    }
-
 }
-
-
-std::ostream& operator<<( std::ostream& os, const Parser& parser )
-{
-   os  << "Parser ("  << reinterpret_cast< const void* >( &parser ) << "): "
-       << "TODO=" << "Add more content of this instance here @ "
-       << __FILE__ << ":" << __LINE__;
-   return os;
-}
-
 
 }; // namespace SVN_EXTERNALS_DISPOSER
 

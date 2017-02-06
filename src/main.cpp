@@ -19,9 +19,11 @@
 // <http://www.gnu.org/licenses/>.
 //
 
-#include "parser.h"
-#include "include_entry.h"
+#include <boost/graph/graphviz.hpp>
+#include <boost/property_map/transform_value_property_map.hpp>
+#include <fstream>
 
+#include "parser.h"
 
 using namespace INCLUDE_GARDENER;
 
@@ -31,11 +33,25 @@ int main( int argc, char* argv[] )
 
    Include_Entry::Map i_map;
 
-   //  ./include_gardener ./ ".*\.[h|cpp]"
+   Graph g;
+
+   //
+   // ./include_gardener ../inc ".*\.[h|cpp]" && dot -Tsvg graph.dot > graph.svg
    if( argc == 3 )
    {
-      p.walk_tree( argv[1], "", argv[2], i_map );
+      p.walk_tree( argv[1], "", argv[2], i_map, g );
    }
+
+   auto name_map = boost::make_transform_value_property_map(
+         []( Include_Entry::Ptr e){ return e->get_name(); },
+         get(boost::vertex_bundle, g) );
+
+
+   std::ofstream dot( "graph.dot" );
+   write_graphviz( dot, g,
+         make_vertex_writer( name_map ),
+         make_edge_writer( boost::get(&Edge::line, g) ) );
+
    return 0;
 }
 

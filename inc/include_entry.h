@@ -43,7 +43,13 @@ public:
    using Map = std::map< std::string, Ptr >;
 
    /// @author feddischson
-   /// @brief Ctor: not implemented!
+   /// @brief Ctor: Initializes name. Rel_paths and abs_paths with
+   ///              is initialized with no entries.
+   Include_Entry( const std::string & name );
+
+   /// @author feddischson
+   /// @brief Ctor: Initializes name as well as rel_paths and abs_paths with
+   ///              real_path and abs_path.
    Include_Entry( const std::string & name,
                   const std::string & rel_path,
                   const std::string & abs_path );
@@ -73,18 +79,29 @@ public:
    /// @brief Standard dtor
    ~Include_Entry() = default;
 
+   /// @brief Adds the relative and absolute path to the internal
+   ///        vector.
+   void add_path_info( const std::string & rel_path,
+                       const std::string & abs_path );
 
    /// @author feddischson
    /// @brief Output stream operator overloading.
    friend std::ostream& operator<<( std::ostream& os,
          const Include_Entry& entry);
 
-private:
+   /// @brief Returns the name
+   std::string get_name( ) const;
 
+   /// @brief Name of the include entry
    std::string name;
 
+private:
+
+
+   /// @brief All found relative paths to this entry
    std::vector< std::string > rel_paths;
 
+   /// @brief All found absolute paths to this entry
    std::vector< std::string > abs_paths;
 
 }; // class Include_Entry
