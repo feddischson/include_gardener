@@ -31,43 +31,44 @@ namespace INCLUDE_GARDENER
 {
 
 /// @author feddischson
-/// @brief A general parser class.
+/// @brief A parser class to seach for include statements.
+/// @details
+///      At the moment, only C/C++ preprocessor include statements
+///      are supported.
+///
+///      The most important method is walk_tree. By calling this method,
+///      a given path is recsively processed (all files in all sub-folders)
+///      are passed to walk_file, which then processes each line.
 class Parser
 {
 
 public:
 
-   /// @author feddischson
    /// @brief Ctor: not implemented!
    Parser( ) = default;
 
-   /// @author feddischson
    /// @brief  Copy ctor: not implemented!
    Parser(const Parser & parser ) = delete;
 
 
-   /// @author feddischson
    /// @brief  Assignment operator: not implemented!
    Parser& operator= (const Parser & parser ) = delete;
 
 
-   /// @author feddischson
    /// @brief  Move constructor: not implemented!
    Parser( Parser && rhs ) = delete;
 
 
-   /// @author feddischson
    /// @brief  Move assignment operator: not implemented!
    Parser& operator=( Parser && rhs ) = delete;
 
 
-   /// @author feddischson
    /// @brief Standard dtor
    ~Parser() = default;
 
 
-   /// @author feddischson
    /// @brief  Runs through a given file path and proceedes all include files.
+   /// @return True on success, false if the path doesn't exist.
    bool walk_tree( const std::string & base_path,
                    const std::string & sub_path,
                    const std::string & pattern,

@@ -29,8 +29,12 @@
 namespace INCLUDE_GARDENER
 {
 
-/// @author feddischson
 /// @brief An include entry representation.
+/// @details
+///      Each entry has at least a name.
+///      Furthermore, an entry can have one or multiple
+///      absolute and relative path entries.
+/// @author feddischson
 class Include_Entry
 {
 
@@ -42,12 +46,10 @@ public:
    /// @brief A Map with string as key and a pointer to the entry as value.
    using Map = std::map< std::string, Ptr >;
 
-   /// @author feddischson
    /// @brief Ctor: Initializes name. Rel_paths and abs_paths with
    ///              is initialized with no entries.
    Include_Entry( const std::string & name );
 
-   /// @author feddischson
    /// @brief Ctor: Initializes name as well as rel_paths and abs_paths with
    ///              real_path and abs_path.
    Include_Entry( const std::string & name,
@@ -55,27 +57,22 @@ public:
                   const std::string & abs_path );
 
 
-   /// @author feddischson
    /// @brief  Copy ctor: not implemented!
    Include_Entry(const Include_Entry & entry ) = delete;
 
 
-   /// @author feddischson
    /// @brief  Assignment operator: not implemented!
    Include_Entry& operator= (const Include_Entry & entry ) = delete;
 
 
-   /// @author feddischson
    /// @brief  Move constructor: not implemented!
    Include_Entry( Include_Entry && rhs ) = delete;
 
 
-   /// @author feddischson
    /// @brief  Move assignment operator: not implemented!
    Include_Entry& operator=( Include_Entry && rhs ) = delete;
 
 
-   /// @author feddischson
    /// @brief Standard dtor
    ~Include_Entry() = default;
 
@@ -84,7 +81,6 @@ public:
    void add_path_info( const std::string & rel_path,
                        const std::string & abs_path );
 
-   /// @author feddischson
    /// @brief Output stream operator overloading.
    friend std::ostream& operator<<( std::ostream& os,
          const Include_Entry& entry);

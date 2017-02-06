@@ -32,7 +32,8 @@ namespace INCLUDE_GARDENER
 {
 
 
-/// @brief Edge Properties
+/// @brief Edge Properties.
+/// @author feddischson
 typedef struct
 {
    int line;
@@ -40,14 +41,17 @@ typedef struct
 
 
 /// @brief Graph definition.
+/// @author feddischson
 using Graph_ = boost::adjacency_list<
          boost::listS, boost::vecS, boost::directedS,
             Include_Entry::Ptr, Edge >;
 
 /// @brief Labeled-graph definition
+/// @author feddischson
 using Graph = boost::labeled_graph< Graph_, std::string >;
 
 /// @brief Aliases for handling vertices and edges of a graph
+/// @author feddischson
 //
 /// @{
 using Vertex_Descriptor = boost::graph_traits<Graph>::vertex_descriptor;
@@ -57,6 +61,7 @@ using Edge_Iterator     = boost::graph_traits<Graph>::edge_iterator;
 
 
 /// @brief Graphviz writer class for vertices.
+/// @author feddischson
 template <class T> class Vertex_Writer
 {
    public:
@@ -71,6 +76,7 @@ template <class T> class Vertex_Writer
 };
 
 /// @brief Helper function for graphviz vertices writer class
+/// @author feddischson
 template <class T> inline Vertex_Writer<T>
 make_vertex_writer(T t) {
   return Vertex_Writer<T>(t);
@@ -78,6 +84,7 @@ make_vertex_writer(T t) {
 
 
 /// @brief Graphviz writer class for edges.
+/// @author feddischson
 template <class T> class Edge_Writer {
 public:
   Edge_Writer( T t ) : t( t ) {}
@@ -92,6 +99,7 @@ private:
 
 
 /// @brief Helper function for graphviz edge writer class.
+/// @author feddischson
 template <class T> inline Edge_Writer<T>
 make_edge_writer(T t) {
   return Edge_Writer<T>(t);
