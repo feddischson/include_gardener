@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.8.11)
 project (INCLUDE_GARDENER)
 
-find_package(Boost REQUIRED COMPONENTS system filesystem)
+find_package(Boost REQUIRED COMPONENTS system filesystem program_options)
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
 else()
