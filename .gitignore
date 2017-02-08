@@ -22,9 +22,6 @@
 *.a
 *.lib
 
-# Dia files
-*.dia~
-
 # Build directories
 build*
 
