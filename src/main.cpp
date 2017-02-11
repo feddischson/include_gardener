@@ -33,6 +33,7 @@ using namespace INCLUDE_GARDENER;
 using namespace std;
 namespace po = boost::program_options;
 
+static const std::string GARDENER_VERSION = _GARDENER_VERSION;
 
 // Note: use "dot -Tsvg graph.dot > graph.svg" to create svg.
 
@@ -50,7 +51,8 @@ int main( int argc, char* argv[] )
    po::options_description desc("Options");
    desc.add_options()
     ("help,h", "displays this help message and exit")
-    ("verbose,v", "sets verbosity")
+    ("version,v", "displays version information" )
+    ("verbose,V", "sets verbosity")
     ("input-path,I", po::value< vector< string> >()->composing(), "input path")
     ("out-file,o", po::value< string >(), "output file" )
     ("format,f", po::value<string>(), "output format (suported formats: dot)")
@@ -76,6 +78,12 @@ int main( int argc, char* argv[] )
    {
       cout << desc << endl;
       return 1;
+   }
+
+   if( true == vm.count( "version" ) )
+   {
+      cout << "Include Gardener Verion " << GARDENER_VERSION << endl;
+      return -1;
    }
 
    // ensure, that at least one input path is provided
