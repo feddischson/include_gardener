@@ -18,11 +18,14 @@
 // Public License along with this program; if not, see
 // <http://www.gnu.org/licenses/>.
 //
+#include <fstream>
 
 #include <boost/graph/graphviz.hpp>
 #include <boost/property_map/transform_value_property_map.hpp>
 #include <boost/program_options.hpp>
-#include <fstream>
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
 
 #include "parser.h"
 
@@ -35,6 +38,7 @@ namespace po = boost::program_options;
 
 int main( int argc, char* argv[] )
 {
+
    // global instances
    Graph g;
    Include_Entry::Map i_map;
@@ -46,6 +50,7 @@ int main( int argc, char* argv[] )
    po::options_description desc("Options");
    desc.add_options()
     ("help,h", "displays this help message and exit")
+    ("verbose,v", "sets verbosity")
     ("input-path,I", po::value< vector< string> >()->composing(), "input path")
     ("out-file,o", po::value< string >(), "output file" )
     ("format,f", po::value<string>(), "output format (suported formats: dot)")
@@ -106,6 +111,15 @@ int main( int argc, char* argv[] )
       return -1;
    }
 
+   // Sets log level to warning if verbose is not set.
+   if( false == vm.count( "verbose" ) )
+   {
+      boost::log::core::get()->set_filter
+      (
+           boost::log::trivial::severity >= boost::log::trivial::warning
+      );
+   }
+
    Parser parser( no_threads, &i_map, &g );
 
 
@@ -113,7 +127,7 @@ int main( int argc, char* argv[] )
    auto input_paths = vm["input-path"].as< vector<string> >();
    for( auto p : input_paths )
    {
-      cout << "Processing " << p << endl;
+      BOOST_LOG_TRIVIAL(info) << "Processing sources from " << p;
       parser.walk_tree( p, "", ".*\\.[h|cpp]" );
    }
    parser.wait_for_workers();
@@ -129,7 +143,7 @@ int main( int argc, char* argv[] )
       if( vm.count( "out-file" ) == true )
       {
          auto file = vm["out-file"].as< string >();
-         cout << "writing graph to " << file << endl;
+         BOOST_LOG_TRIVIAL(info) << "Writing graph to " << file;
          ofstream file_stream( file );
          write_graphviz( file_stream, g,
                make_vertex_writer( name_map ),

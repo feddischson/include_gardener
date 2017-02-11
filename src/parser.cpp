@@ -23,6 +23,8 @@
 #include <regex>
 #include <fstream>
 
+#include <boost/log/trivial.hpp>
+
 namespace INCLUDE_GARDENER
 {
 
@@ -157,7 +159,7 @@ void Parser::wait_for_workers( void )
    {
       file_workers[i].join();
    }
-   std::cout << "all threads are done" << std::endl;
+   BOOST_LOG_TRIVIAL( debug ) << "All threads are done";
 
 }
 
@@ -165,15 +167,18 @@ void Parser::wait_for_workers( void )
 void Parser::do_work( int id )
 {
 
-   std::cout << "started worker " << id << std::endl;
+   BOOST_LOG_TRIVIAL( debug ) << "Started worker [" << id << "]";
 
    while( true )
    {
       std::unique_lock<std::mutex> lck( job_queue_mutex );
-      job_queue_condition.wait( lck, [this](){return job_queue.size()>0 || all_work_is_done;});
+      job_queue_condition.wait( lck, [this]()
+            {
+               return job_queue.size()>0 || all_work_is_done;
+            });
       if( all_work_is_done )
       {
-         std::cout << "all work is done" << std::endl;
+         BOOST_LOG_TRIVIAL( debug ) << "[" << id << "] All work is done";
          return;
       }
 
@@ -182,7 +187,11 @@ void Parser::do_work( int id )
       lck.unlock();
       job_queue_condition.notify_all();
 
-      //std::cout << "["  << id << "]" << " processing" << entry.first << std::endl;
+      BOOST_LOG_TRIVIAL( debug ) << "["
+                                 << id
+                                 << "]"
+                                 << " processing"
+                                 << entry.first;
 
       walk_file( entry.first, entry.second );
    }
@@ -204,6 +213,11 @@ void Parser::walk_file( const std::string & path,
    {
       if( std::regex_search( line, match, re ) && match.size() > 1 )
       {
+         BOOST_LOG_TRIVIAL( trace ) << "Found include entry in "
+                                    << path
+                                    << " line "
+                                    << line_cnt
+                                    << ": \"" << line << "\"";
          std::unique_lock<std::mutex> glck( graph_mutex );
 
          auto entry_name_2 = match.str(1);

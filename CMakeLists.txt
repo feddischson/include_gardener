@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.8.11)
 project (INCLUDE_GARDENER)
 
-find_package(Boost REQUIRED COMPONENTS system filesystem program_options)
+find_package(Boost REQUIRED COMPONENTS log system filesystem program_options )
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
 else()
@@ -16,6 +16,8 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "-O0 -fno-elide-constructors -pedantic-errors -Wextra -Wall -Winit-self -Wold-style-cast -Woverloaded-virtual -Wuninitialized -Wmissing-declarations -Winit-self -Werror" )
 endif()
 
+find_package (Threads REQUIRED )
+
 
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
@@ -27,5 +29,7 @@ if(DOXYGEN_FOUND)
 endif(DOXYGEN_FOUND)
 
 
+add_definitions( -DBOOST_LOG_DYN_LINK=1 )
 add_executable ( include_gardener src/main.cpp src/include_entry.cpp src/parser.cpp )
-TARGET_LINK_LIBRARIES( include_gardener ${Boost_LIBRARIES} )
+target_link_libraries( include_gardener ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries( include_gardener ${Boost_LIBRARIES} )
