@@ -42,8 +42,10 @@ dot -Tsvg graph.dot > graph.svg
 
 Contribution
 ------------
+If you find a bug, unexpected behaviour or if you have a interesting feature
+in your mind which fits to this tool, please add an issue / feature request.
 
-TODO
+Pull requests are always welcome.
 
 License
 ----------
