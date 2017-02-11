@@ -36,10 +36,9 @@ namespace po = boost::program_options;
 int main( int argc, char* argv[] )
 {
    // global instances
-   Parser parser;
    Graph g;
    Include_Entry::Map i_map;
-
+   int no_threads = 2;
 
    //
    // use boost's command line parser
@@ -49,7 +48,8 @@ int main( int argc, char* argv[] )
     ("help,h", "displays this help message and exit")
     ("input-path,I", po::value< vector< string> >()->composing(), "input path")
     ("out-file,o", po::value< string >(), "output file" )
-    ("format,f", po::value<string>(), "output format (suported formats: dot)");
+    ("format,f", po::value<string>(), "output format (suported formats: dot)")
+    ("threads,j", po::value<int>(), "defines number of worker threads (default=2)");
    po::positional_options_description pos;
    pos.add("input-path", -1);
 
@@ -88,6 +88,17 @@ int main( int argc, char* argv[] )
       format = vm["format"].as< string >();
    }
 
+   if( true == vm.count( "threads" ) )
+   {
+      no_threads = vm["threads"].as< int >();
+      if( no_threads == 0 )
+      {
+         cerr << "Number of threads is set to 0, which is not allwed." << endl
+              << "Please use at least one worker thread."              << endl;
+         return -1;
+
+      }
+   }
 
    if( !( "" == format || "dot" == format ) )
    {
@@ -95,13 +106,17 @@ int main( int argc, char* argv[] )
       return -1;
    }
 
+   Parser parser( no_threads, &i_map, &g );
+
+
    // proceed all input paths
    auto input_paths = vm["input-path"].as< vector<string> >();
    for( auto p : input_paths )
    {
       cout << "Processing " << p << endl;
-      parser.walk_tree( p, "", ".*\\.[h|cpp]", i_map, g );
+      parser.walk_tree( p, "", ".*\\.[h|cpp]" );
    }
+   parser.wait_for_workers();
 
 
    // prepare the name-map for graphviz output generation

@@ -23,17 +23,58 @@
 #include <regex>
 #include <fstream>
 
-#include "boost/filesystem.hpp"
-
-
 namespace INCLUDE_GARDENER
 {
 
+Parser::Parser( int                  n_file_workers,
+                Include_Entry::Map * i_map,
+                Graph              * graph ) :
+   file_workers       ( n_file_workers ),
+   job_queue          ( ),
+   job_queue_mutex    ( ),
+   job_queue_condition( ),
+   i_map              ( i_map ),
+   graph              ( graph ),
+   graph_mutex        ( ),
+   all_work_is_done   ( false )
+{
+   // Start all worker threads.
+   for( int i=0; i < n_file_workers; i++ )
+   {
+      file_workers[ i ] = std::thread( &Parser::do_work, this, i );
+   }
+}
+
+
+void Parser::add_file_info( const std::string & name,
+                            const boost::filesystem::path & path )
+{
+   std::unique_lock<std::mutex> glck( graph_mutex );
+   auto e_itr = i_map->find( name );
+   if( e_itr != i_map->end() )
+   {
+      auto e = e_itr->second;
+      e->add_path_info(
+            path.relative_path().string(),
+            canonical( path ).string()
+            );
+   }
+   else
+   {
+      Include_Entry::Ptr e = Include_Entry::Ptr (
+            new Include_Entry( name,
+                               path.relative_path().string(),
+                               canonical( path ).string() ) );
+      i_map->insert( std::make_pair( name,  e ) );
+      boost::add_vertex( name, *graph );
+      (*graph)[ name ] = e;
+   }
+}
+
+
 bool Parser::walk_tree( const std::string & base_path,
                         const std::string & sub_path,
-                        const std::string & pattern,
-                        Include_Entry::Map & i_map,
-                        Graph & graph )
+                        const std::string & pattern )
 {
 
    std::regex file_regex( pattern,
@@ -57,45 +98,33 @@ bool Parser::walk_tree( const std::string & base_path,
    {
       path sub_entry( sub_path );
       sub_entry /= itr->path().filename().string();
+
+
+      auto name = sub_entry.string();
+
       if( is_directory( itr->status() ) )
       {
-         std::cout << "recursive call " << sub_entry.string()
-                   << std::endl;
-         walk_tree( base_path, sub_entry.string(), pattern, i_map, graph );
+         // recursive call to process sub-directory
+         walk_tree( base_path, sub_entry.string(), pattern );
       }
       else if( is_regular_file( itr->status() ) )
       {
+         // check if this is a file which we should process.
          if( std::regex_search( itr->path().string(), file_regex ) )
          {
 
-            Include_Entry::Ptr e;
+            // update the i_map and graph
+            add_file_info( name, itr->path() );
 
-            auto e_itr = i_map.find( sub_entry.string() );
-            if( e_itr != i_map.end() )
+            // Add an entry to the queue and notify the workers,
+            // one of them will do the file processing
             {
-               e = e_itr->second;
-               e->add_path_info(
-                     itr->path().relative_path().string(),
-                     canonical( itr->path() ).string()
-                     );
+               std::unique_lock<std::mutex> lck(job_queue_mutex);
+               job_queue.push_front( std::pair< std::string, std::string>(
+                     itr->path().string(),
+                     name ) );
+               job_queue_condition.notify_all();
             }
-            else
-            {
-               e = Include_Entry::Ptr (
-                     new Include_Entry( sub_entry.string(),
-                                        itr->path().relative_path().string(),
-                                        canonical( itr->path() ).string() ) );
-               i_map[ sub_entry.string() ] = e;
-               boost::add_vertex( e->get_name(), graph );
-               graph[ e->get_name() ]     = e;
-
-               std::cout << "found file " << itr->path() << std::endl;
-            }
-
-            walk_file( itr->path().string(),
-                       e,
-                       i_map,
-                       graph );
          }
       }
       else
@@ -106,16 +135,68 @@ bool Parser::walk_tree( const std::string & base_path,
    return true;
 }
 
+void Parser::wait_for_workers( void )
+{
+   // wait until the queue is empty
+   {
+      std::unique_lock<std::mutex> lck( job_queue_mutex );
+      job_queue_condition.wait( lck, [this](){return job_queue.size()==0;});
+      lck.unlock();
+      job_queue_condition.notify_all();
+   }
+
+   // set the done flag
+   {
+      std::unique_lock<std::mutex> lck( job_queue_mutex );
+      all_work_is_done = true;
+      lck.unlock();
+      job_queue_condition.notify_all();
+   }
+
+   for( size_t i = 0; i < file_workers.size(); i++  )
+   {
+      file_workers[i].join();
+   }
+   std::cout << "all threads are done" << std::endl;
+
+}
+
+
+void Parser::do_work( int id )
+{
+
+   std::cout << "started worker " << id << std::endl;
+
+   while( true )
+   {
+      std::unique_lock<std::mutex> lck( job_queue_mutex );
+      job_queue_condition.wait( lck, [this](){return job_queue.size()>0 || all_work_is_done;});
+      if( all_work_is_done )
+      {
+         std::cout << "all work is done" << std::endl;
+         return;
+      }
+
+      auto entry = job_queue.back();
+      job_queue.pop_back();
+      lck.unlock();
+      job_queue_condition.notify_all();
+
+      //std::cout << "["  << id << "]" << " processing" << entry.first << std::endl;
+
+      walk_file( entry.first, entry.second );
+   }
+}
+
+
 void Parser::walk_file( const std::string & path,
-                        Include_Entry::Ptr entry,
-                        Include_Entry::Map & i_map,
-                        Graph & graph )
+                        const std::string & entry_name_1 )
 {
    std::ifstream infile( path );
    int line_cnt = 1;
    std::string line;
-
    std::smatch match;
+
    std::regex  re( "#include\\s+[\"|<](.*?)[\"|>]",
          std::regex_constants::ECMAScript | std::regex_constants::icase);
 
@@ -123,23 +204,31 @@ void Parser::walk_file( const std::string & path,
    {
       if( std::regex_search( line, match, re ) && match.size() > 1 )
       {
-         auto e_itr = i_map.find( match.str( 1 ) );
+         std::unique_lock<std::mutex> glck( graph_mutex );
 
-         if( e_itr == i_map.end() )
+         auto entry_name_2 = match.str(1);
+         auto e_itr = i_map->find( entry_name_2 );
+
+         if( e_itr == i_map->end() )
          {
             // there is no such entry in our data-structures:
             //  -> create it
             Include_Entry::Ptr e = Include_Entry::Ptr(
-                  new Include_Entry( match.str( 1 ) ) );
-            i_map[ match.str( 1 ) ] = e;
+                  new Include_Entry( entry_name_2 ) );
+            i_map->insert( std::make_pair( entry_name_2, e ) );
 
-            boost::add_vertex( e->get_name(), graph );
-            graph[ e->get_name() ]     = e;
+            boost::add_vertex( e->get_name(), *graph );
+            (*graph)[ e->get_name() ]  = e;
          }
+
+         // add the edge between the two vertices
          Edge_Descriptor edge;
          bool   b;
-         boost::tie( edge, b ) = boost::add_edge_by_label( entry->get_name(), match.str(1), graph );
-         graph[ edge ] = Edge{ line_cnt };
+         boost::tie( edge, b ) = boost::add_edge_by_label(
+               entry_name_1,
+               entry_name_2,
+               *graph );
+         (*graph)[ edge ] = Edge{ line_cnt };
       }
 
       line_cnt++;

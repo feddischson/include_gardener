@@ -22,6 +22,13 @@
 #define PARSER_H
 
 #include <iostream>
+#include <thread>
+#include <mutex>
+#include <deque>
+#include <vector>
+#include <condition_variable>
+
+#include "boost/filesystem.hpp"
 
 
 #include "include_entry.h"
@@ -45,7 +52,10 @@ class Parser
 public:
 
    /// @brief Ctor: not implemented!
-   Parser( ) = default;
+   Parser( int                  n_file_workers,
+           Include_Entry::Map * i_map,
+           Graph              * g
+           );
 
    /// @brief  Copy ctor: not implemented!
    Parser(const Parser & parser ) = delete;
@@ -71,18 +81,56 @@ public:
    /// @return True on success, false if the path doesn't exist.
    bool walk_tree( const std::string & base_path,
                    const std::string & sub_path,
-                   const std::string & pattern,
-                   Include_Entry::Map & i_map,
-                   Graph & graph );
+                   const std::string & pattern
+                   );
+
+
+   /// @brief Waits until work is done (job_queue is empty), ends all threads.
+   void wait_for_workers( void );
 
 
 private:
 
+
    /// @brief Processes a file to detect all include entries.
    void walk_file( const std::string & path,
-                   Include_Entry::Ptr entry,
-                   Include_Entry::Map & i_map,
-                   Graph & graph );
+                   const std::string & entry_name_1
+                   );
+
+
+   /// @brief If not already in the i_map and graph: this method adds an entry.
+   void add_file_info( const std::string & name,
+                       const boost::filesystem::path & path );
+
+   /// @brief Threading method: takes an entry from job_queue to processes it.
+   void do_work( int id );
+
+   /// @brief Vector of threads, each calling do_work.
+   std::vector< std::thread > file_workers;
+
+   /// @brief Each entry includes the name and path of the include entry.
+   /// @details
+   ///        The queue is protected by job_queue_mutex and job_queue_condition.
+   std::deque< std::pair< std::string, std::string > > job_queue;
+
+   /// @brief Protects job_queue (all worker threads and main-thread).
+   std::mutex              job_queue_mutex;
+
+   /// @brief Condition variable to sleep thread until jobs are available.
+   std::condition_variable job_queue_condition;
+
+
+   /// @brief Pointer to the global map holding all include entries.
+   Include_Entry::Map   * i_map;
+
+   /// @brief Pointer to the global graph instance.
+   Graph                * graph;
+
+   /// @brief Protects i_map and graph (and all it's content),
+   std::mutex              graph_mutex;
+
+   /// @brief Flag to end worker threads.
+   bool                    all_work_is_done;
 
 }; // class Parser
 
