@@ -26,6 +26,7 @@
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
+#include <boost/graph/graphml.hpp>
 
 #include "parser.h"
 
@@ -55,7 +56,7 @@ int main( int argc, char* argv[] )
     ("verbose,V", "sets verbosity")
     ("input-path,I", po::value< vector< string> >()->composing(), "input path")
     ("out-file,o", po::value< string >(), "output file" )
-    ("format,f", po::value<string>(), "output format (suported formats: dot)")
+    ("format,f", po::value<string>(), "output format (suported formats: dot, xml/graphml)")
     ("threads,j", po::value<int>(), "defines number of worker threads (default=2)");
    po::positional_options_description pos;
    pos.add("input-path", -1);
@@ -113,7 +114,8 @@ int main( int argc, char* argv[] )
       }
    }
 
-   if( !( "" == format || "dot" == format ) )
+   if( !( ""    == format || "dot"     == format ||
+          "xml" == format || "graphml" == format ) )
    {
       cerr << "Unrecognized format: " << format << endl << endl << desc << endl;
       return -1;
@@ -162,6 +164,23 @@ int main( int argc, char* argv[] )
          write_graphviz( cout, g,
                make_vertex_writer( name_map ),
                make_edge_writer( boost::get(&Edge::line, g) ) );
+      }
+   }
+   else if( "xml" == format || "graphml" == format )
+   {
+      boost::dynamic_properties dp;
+      dp.property( "line", boost::get(&Edge::line, g) );
+      dp.property( "name", name_map );
+      if( vm.count( "out-file" ) == true )
+      {
+         auto file = vm["out-file"].as< string >();
+         BOOST_LOG_TRIVIAL(info) << "Writing graph to " << file;
+         ofstream file_stream( file );
+         write_graphml( file_stream, g, dp );
+      }
+      else
+      {
+         write_graphml( cout, g, dp );
       }
    }
 
