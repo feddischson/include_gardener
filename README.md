@@ -8,8 +8,8 @@ and creates an graph or include tree.
 The result can then further analyzed by other tools.
 
 The following output formats are supported at the moment:
- - dot (Graphviz)
-
+ - dot (Graphviz): see http://www.graphviz.org/Documentation.php
+ - XML / Graphml: see http://www.boost.org/doc/libs/1_61_0/libs/graph/doc/write_graphml.html
 
 Build Description
 -----------------
