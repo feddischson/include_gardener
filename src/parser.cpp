@@ -20,7 +20,6 @@
 //
 #include "parser.h"
 
-#include <regex>
 #include <fstream>
 
 #include <boost/log/trivial.hpp>
@@ -29,9 +28,14 @@ namespace INCLUDE_GARDENER
 {
 
 Parser::Parser( int                  n_file_workers,
+                const std::string  & exclude_regex,
                 Include_Entry::Map * i_map,
                 Graph              * graph ) :
    file_workers       ( n_file_workers ),
+   use_exclude_regex  ( exclude_regex.size() > 0  ),
+   exclude_regex      ( exclude_regex,
+         std::regex_constants::ECMAScript |
+         std::regex_constants::icase  ),
    job_queue          ( ),
    job_queue_mutex    ( ),
    job_queue_condition( ),
@@ -103,6 +107,7 @@ bool Parser::walk_tree( const std::string & base_path,
 
 
       auto name = sub_entry.string();
+      std::string itr_path = itr->path().string();
 
       if( is_directory( itr->status() ) )
       {
@@ -111,9 +116,19 @@ bool Parser::walk_tree( const std::string & base_path,
       }
       else if( is_regular_file( itr->status() ) )
       {
-         // check if this is a file which we should process.
-         if( std::regex_search( itr->path().string(), file_regex ) )
+
+         if( true == use_exclude_regex &&
+             std::regex_search( itr_path, exclude_regex ) )
          {
+            BOOST_LOG_TRIVIAL( trace ) << "Excluding " << itr_path;
+            continue;
+         }
+
+         // check if this is a file which we should process.
+         if( std::regex_search( itr_path, file_regex ) )
+         {
+            BOOST_LOG_TRIVIAL( trace ) << "Considering "
+                                       << itr_path;
 
             // update the i_map and graph
             add_file_info( name, itr->path() );
@@ -123,7 +138,7 @@ bool Parser::walk_tree( const std::string & base_path,
             {
                std::unique_lock<std::mutex> lck(job_queue_mutex);
                job_queue.push_front( std::pair< std::string, std::string>(
-                     itr->path().string(),
+                     itr_path,
                      name ) );
                job_queue_condition.notify_all();
             }
@@ -132,6 +147,7 @@ bool Parser::walk_tree( const std::string & base_path,
       else
       {
          // ignore all other files
+         BOOST_LOG_TRIVIAL( trace ) << "Ignoring " << itr_path;
       }
    }
    return true;

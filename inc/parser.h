@@ -27,6 +27,7 @@
 #include <deque>
 #include <vector>
 #include <condition_variable>
+#include <regex>
 
 #include "boost/filesystem.hpp"
 
@@ -53,6 +54,7 @@ public:
 
    /// @brief Ctor: not implemented!
    Parser( int                  n_file_workers,
+           const std::string  & exclude_regex,
            Include_Entry::Map * i_map,
            Graph              * g
            );
@@ -107,6 +109,12 @@ private:
 
    /// @brief Vector of threads, each calling do_work.
    std::vector< std::thread > file_workers;
+
+   /// @brief Flag which indicates, if the exclude-regex is used
+   const bool use_exclude_regex;
+
+   /// @brief Regular expression which is used to exclude files.
+   std::regex exclude_regex;
 
    /// @brief Each entry includes the name and path of the include entry.
    /// @details

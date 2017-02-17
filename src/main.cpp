@@ -57,6 +57,7 @@ int main( int argc, char* argv[] )
     ("input-path,I", po::value< vector< string> >()->composing(), "input path")
     ("out-file,o", po::value< string >(), "output file" )
     ("format,f", po::value<string>(), "output format (suported formats: dot, xml/graphml)")
+    ("exclude,e", po::value<string>(), "Regular expression to exclude specific files" )
     ("threads,j", po::value<int>(), "defines number of worker threads (default=2)");
    po::positional_options_description pos;
    pos.add("input-path", -1);
@@ -102,6 +103,12 @@ int main( int argc, char* argv[] )
       format = vm["format"].as< string >();
    }
 
+   std::string exclude = "";
+   if( true == vm.count( "exclude" ) )
+   {
+      exclude = vm["exclude"].as< string >();
+   }
+
    if( true == vm.count( "threads" ) )
    {
       no_threads = vm["threads"].as< int >();
@@ -130,7 +137,7 @@ int main( int argc, char* argv[] )
       );
    }
 
-   Parser parser( no_threads, &i_map, &g );
+   Parser parser( no_threads, exclude, &i_map, &g );
 
 
    // proceed all input paths
