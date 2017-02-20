@@ -29,7 +29,7 @@ namespace INCLUDE_GARDENER
 
 Parser::Parser( int                  n_file_workers,
                 const std::string  & exclude_regex,
-                Include_Entry::Map * i_map,
+                Include_Path::Ptr    i_path,
                 Graph              * graph ) :
    file_workers       ( n_file_workers ),
    use_exclude_regex  ( exclude_regex.size() > 0  ),
@@ -39,8 +39,8 @@ Parser::Parser( int                  n_file_workers,
    job_queue          ( ),
    job_queue_mutex    ( ),
    job_queue_condition( ),
-   i_map              ( i_map ),
-   graph              ( graph ),
+   i_path             ( i_path ),
+   graph              ( graph  ),
    graph_mutex        ( ),
    all_work_is_done   ( false )
 {
@@ -56,8 +56,8 @@ void Parser::add_file_info( const std::string & name,
                             const boost::filesystem::path & path )
 {
    std::unique_lock<std::mutex> glck( graph_mutex );
-   auto e_itr = i_map->find( name );
-   if( e_itr != i_map->end() )
+   auto e_itr = i_path->find( name );
+   if( e_itr != i_path->end() )
    {
       auto e = e_itr->second;
       e->add_path_info(
@@ -71,7 +71,7 @@ void Parser::add_file_info( const std::string & name,
             new Include_Entry( name,
                                path.relative_path().string(),
                                canonical( path ).string() ) );
-      i_map->insert( std::make_pair( name,  e ) );
+      i_path->insert( std::make_pair( name,  e ) );
       boost::add_vertex( name, *graph );
       (*graph)[ name ] = e;
    }
@@ -130,7 +130,7 @@ bool Parser::walk_tree( const std::string & base_path,
             BOOST_LOG_TRIVIAL( trace ) << "Considering "
                                        << itr_path;
 
-            // update the i_map and graph
+            // update the i_path and graph
             add_file_info( name, itr->path() );
 
             // Add an entry to the queue and notify the workers,
@@ -237,15 +237,15 @@ void Parser::walk_file( const std::string & path,
          std::unique_lock<std::mutex> glck( graph_mutex );
 
          auto entry_name_2 = match.str(1);
-         auto e_itr = i_map->find( entry_name_2 );
+         auto e_itr = i_path->find( entry_name_2 );
 
-         if( e_itr == i_map->end() )
+         if( e_itr == i_path->end() )
          {
             // there is no such entry in our data-structures:
             //  -> create it
             Include_Entry::Ptr e = Include_Entry::Ptr(
                   new Include_Entry( entry_name_2 ) );
-            i_map->insert( std::make_pair( entry_name_2, e ) );
+            i_path->insert( std::make_pair( entry_name_2, e ) );
 
             boost::add_vertex( e->get_name(), *graph );
             (*graph)[ e->get_name() ]  = e;

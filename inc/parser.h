@@ -32,6 +32,7 @@
 #include "boost/filesystem.hpp"
 
 
+#include "include_path.h"
 #include "include_entry.h"
 #include "graph.h"
 
@@ -55,7 +56,7 @@ public:
    /// @brief Ctor: not implemented!
    Parser( int                  n_file_workers,
            const std::string  & exclude_regex,
-           Include_Entry::Map * i_map,
+           Include_Path::Ptr    i_path,
            Graph              * g
            );
 
@@ -100,7 +101,7 @@ private:
                    );
 
 
-   /// @brief If not already in the i_map and graph: this method adds an entry.
+   /// @brief If not already in the i_path and graph: this method adds an entry.
    void add_file_info( const std::string & name,
                        const boost::filesystem::path & path );
 
@@ -129,12 +130,12 @@ private:
 
 
    /// @brief Pointer to the global map holding all include entries.
-   Include_Entry::Map   * i_map;
+   Include_Path::Ptr       i_path;
 
    /// @brief Pointer to the global graph instance.
    Graph                * graph;
 
-   /// @brief Protects i_map and graph (and all it's content),
+   /// @brief Protects i_path and graph (and all it's content),
    std::mutex              graph_mutex;
 
    /// @brief Flag to end worker threads.

@@ -43,7 +43,6 @@ int main( int argc, char* argv[] )
 
    // global instances
    Graph g;
-   Include_Entry::Map i_map;
    int no_threads = 2;
 
    //
@@ -137,11 +136,12 @@ int main( int argc, char* argv[] )
       );
    }
 
-   Parser parser( no_threads, exclude, &i_map, &g );
+   auto input_paths = vm["input-path"].as< vector<string> >();
+   Include_Path::Ptr i_path( new Include_Path( input_paths ) );
+   Parser parser( no_threads, exclude, i_path, &g );
 
 
    // proceed all input paths
-   auto input_paths = vm["input-path"].as< vector<string> >();
    for( auto p : input_paths )
    {
       BOOST_LOG_TRIVIAL(info) << "Processing sources from " << p;

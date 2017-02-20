@@ -41,7 +41,7 @@ add_definitions( -D_GARDENER_VERSION_MINOR=${GARDENER_VERSION_MINOR})
 add_definitions( -D_GARDENER_VERSION_PATCH=${GARDENER_VERSION_PATCH})
 add_definitions( -D_GARDENER_VERSION="${GARDENER_VERSION}")
 
-add_executable ( include_gardener src/main.cpp src/include_entry.cpp src/parser.cpp )
+add_executable ( include_gardener src/main.cpp src/include_entry.cpp src/parser.cpp src/include_path.cpp )
 target_link_libraries( include_gardener ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries( include_gardener ${Boost_LIBRARIES} )
 install( TARGETS include_gardener DESTINATION bin )
