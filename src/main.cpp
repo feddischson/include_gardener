@@ -137,7 +137,11 @@ int main( int argc, char* argv[] )
       );
    }
 
-   auto include_paths = vm["include-path"].as< vector<string> >();
+   vector<string> include_paths;
+   if( true == vm.count( "include-path" ) )
+   {
+      include_paths = vm["include-path"].as< vector<string> >();
+   }
    auto process_paths = vm["process-path"].as< vector<string> >();
 
    Include_Path::Ptr i_path( new Include_Path( include_paths ) );
