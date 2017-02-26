@@ -39,6 +39,15 @@ class Include_Path
    /// @brief A Map with string as key and a pointer to the entry as value.
    using I_Map = std::map< std::string, Include_Entry::Ptr >;
 
+   /// @brief A Map with string as key and a string as value.
+   using S_Map = std::map< std::string, std::string >;
+
+   /// @brief Pair definition for I_Map.
+   using I_Pair = std::pair< const std::string, Include_Entry::Ptr >;
+
+   /// @brief Pair definition for S_Map.
+   using S_Pair = std::pair< const std::string, const std::string >;
+
 public:
 
    /// @brief Smart pointer for Include_Path instances.
@@ -79,15 +88,27 @@ public:
    friend std::ostream& operator<<( std::ostream& os, const Include_Path& p );
 
 
-   /// @brief Forwards call to name_map.find()
-   I_Map::const_iterator find( const std::string & name );
+   /// @brief Searches within the cache and blind_map if an entry already 
+   ///        exists. If exists, the absolute path or blind-name.
+   std::string find_cached( const std::string & name );
 
-   /// @brief Forwards call to name_map.end()
-   I_Map::const_iterator end( void );
+   /// @brief Forwards call to absolute_map.find()
+   I_Map::const_iterator find_abs( const std::string & name );
 
-   /// @brief Forwards call to name_map.insert()
-   std::pair< I_Map::iterator, bool > insert(
-         const std::pair< const std::string, Include_Entry::Ptr > & value );
+   /// @brief Forwards call to absolute_map.end()
+   I_Map::const_iterator end_abs( void );
+
+   /// @brief Adds cache entry
+   void insert_cache( const S_Pair & value );
+
+   /// @brief Adds entry by knowing the absolute file path
+   void insert_abs( const I_Pair & value );
+
+   /// @brief Adds entry by not knowing the absolute file path
+   void insert_blind( const I_Pair & value );
+
+   /// @brief Returs absolute path if the file can be found, otherwise "".
+   std::string is_available( const std::string & name ) const;
 
 private:
 
@@ -95,7 +116,11 @@ private:
    std::vector< std::string > paths;
 
    /// @brief A associative array which maps names to the include entries.
-   I_Map name_map;
+   S_Map cache;
+
+   I_Map absolute_map;
+
+   I_Map blind_map;
 
 }; // class Include_Path
 

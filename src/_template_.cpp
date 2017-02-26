@@ -33,7 +33,7 @@ std::ostream& operator<<( std::ostream& os, const _Template_& tpl )
 }
 
 
-} // namespace SVN_EXTERNALS_DISPOSER
+} // namespace INCLUDE_GARDENER
 
 // vim: filetype=cpp et ts=3 sw=3 sts=3
 

@@ -96,7 +96,7 @@ private:
 
 
    /// @brief Processes a file to detect all include entries.
-   void walk_file( const std::string & path,
+   void walk_file( const std::string & file_path,
                    const std::string & entry_name_1
                    );
 
@@ -133,7 +133,7 @@ private:
    Include_Path::Ptr       i_path;
 
    /// @brief Pointer to the global graph instance.
-   Graph                * graph;
+   Graph                 * graph;
 
    /// @brief Protects i_path and graph (and all it's content),
    std::mutex              graph_mutex;

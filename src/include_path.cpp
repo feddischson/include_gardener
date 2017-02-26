@@ -21,45 +21,92 @@
 #include "include_path.h"
 
 #include "boost/filesystem.hpp"
+#include <boost/log/trivial.hpp>
+
+using namespace std;
 
 namespace INCLUDE_GARDENER
 {
 
-Include_Path::Include_Path( const std::vector< std::string > & paths ) :
+Include_Path::Include_Path( const vector< string > & paths ) :
    paths( paths )
 {
 
 }
 
+string Include_Path::find_cached( const string & name )
+{
+   auto tmp = cache.find( name );
+   if( tmp != cache.end() )
+   {
+      return tmp->second;
+   }
+   else
+   {
+      auto tmp2 = blind_map.find( name );
+      if( tmp2 != blind_map.end() )
+      {
+         return tmp2->first;
+      }
+   }
+   return string( "" );
+}
+
 Include_Path::I_Map::const_iterator
-Include_Path::find( const std::string & name )
+Include_Path::find_abs( const string & name )
 {
-   return name_map.find( name );
+   return absolute_map.find( name );
 }
 
-Include_Path::I_Map::const_iterator Include_Path::end( void )
+
+Include_Path::I_Map::const_iterator Include_Path::end_abs( void )
 {
-   return name_map.end( );
+   return absolute_map.end( );
 }
 
-std::pair< Include_Path::I_Map::iterator, bool > Include_Path::insert(
-   const std::pair< const std::string, Include_Entry::Ptr > & value )
+
+void Include_Path::insert_abs( const I_Pair & value )
 {
-   return name_map.insert( value );
+   absolute_map.insert( value );
 }
 
-std::ostream& operator<<( std::ostream& os, const Include_Path & _p )
+void Include_Path::insert_blind( const I_Pair  & value )
+{
+   blind_map.insert( value );
+}
+
+void Include_Path::insert_cache( const S_Pair & value )
+{
+   cache.insert( value );
+}
+
+ostream& operator<<( ostream& os, const Include_Path & _p )
 {
    os  << "Include Path ("  << reinterpret_cast< const void* >( &_p ) << "): ";
    for( auto p : _p.paths )
    {
-      os << "   " << p << std::endl;
+      os << "   " << p << endl;
    }
    return os;
 }
 
 
-} // namespace SVN_EXTERNALS_DISPOSER
+string Include_Path::is_available( const string & name ) const
+{
+   using namespace boost::filesystem;
+   for( auto p : paths )
+   {
+      path base( p );
+      base /= name;
+      if( exists( base ) )
+      {
+         return canonical( base ).string();
+      }
+   }
+   return string( "" );
+}
+
+} // namespace INCLUDE_GARDENER
 
 // vim: filetype=cpp et ts=3 sw=3 sts=3
 

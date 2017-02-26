@@ -24,18 +24,20 @@
 
 #include <boost/log/trivial.hpp>
 
+using namespace std;
+
 namespace INCLUDE_GARDENER
 {
 
-Parser::Parser( int                  n_file_workers,
-                const std::string  & exclude_regex,
-                Include_Path::Ptr    i_path,
-                Graph              * graph ) :
+Parser::Parser( int                 n_file_workers,
+                const string      & exclude_regex,
+                Include_Path::Ptr   i_path,
+                Graph             * graph ) :
    file_workers       ( n_file_workers ),
    use_exclude_regex  ( exclude_regex.size() > 0  ),
    exclude_regex      ( exclude_regex,
-         std::regex_constants::ECMAScript |
-         std::regex_constants::icase  ),
+                        regex_constants::ECMAScript |
+                        regex_constants::icase  ),
    job_queue          ( ),
    job_queue_mutex    ( ),
    job_queue_condition( ),
@@ -47,44 +49,38 @@ Parser::Parser( int                  n_file_workers,
    // Start all worker threads.
    for( int i=0; i < n_file_workers; i++ )
    {
-      file_workers[ i ] = std::thread( &Parser::do_work, this, i );
+      file_workers[ i ] = thread( &Parser::do_work, this, i );
    }
 }
 
 
-void Parser::add_file_info( const std::string & name,
+void Parser::add_file_info( const string & name,
                             const boost::filesystem::path & path )
 {
-   std::unique_lock<std::mutex> glck( graph_mutex );
-   auto e_itr = i_path->find( name );
-   if( e_itr != i_path->end() )
-   {
-      auto e = e_itr->second;
-      e->add_path_info(
-            path.relative_path().string(),
-            canonical( path ).string()
-            );
-   }
-   else
+   unique_lock<mutex> glck( graph_mutex );
+   auto abs_path = canonical( path ).string();
+   auto e_itr = i_path->find_abs( abs_path );
+   if( e_itr == i_path->end_abs() )
    {
       Include_Entry::Ptr e = Include_Entry::Ptr (
             new Include_Entry( name,
                                path.relative_path().string(),
-                               canonical( path ).string() ) );
-      i_path->insert( std::make_pair( name,  e ) );
-      boost::add_vertex( name, *graph );
-      (*graph)[ name ] = e;
+                               abs_path ) );
+      i_path->insert_abs( make_pair( abs_path,  e ) );
+
+      boost::add_vertex( abs_path, *graph );
+      (*graph)[ abs_path ] = e;
    }
 }
 
 
-bool Parser::walk_tree( const std::string & base_path,
-                        const std::string & sub_path,
-                        const std::string & pattern )
+bool Parser::walk_tree( const string & base_path,
+                        const string & sub_path,
+                        const string & pattern )
 {
 
-   std::regex file_regex( pattern,
-            std::regex_constants::ECMAScript | std::regex_constants::icase);
+   regex file_regex( pattern,
+            regex_constants::ECMAScript | regex_constants::icase);
 
    using namespace boost::filesystem;
 
@@ -107,7 +103,7 @@ bool Parser::walk_tree( const std::string & base_path,
 
 
       auto name = sub_entry.string();
-      std::string itr_path = itr->path().string();
+      string itr_path = itr->path().string();
 
       if( is_directory( itr->status() ) )
       {
@@ -118,14 +114,14 @@ bool Parser::walk_tree( const std::string & base_path,
       {
 
          if( true == use_exclude_regex &&
-             std::regex_search( itr_path, exclude_regex ) )
+             regex_search( itr_path, exclude_regex ) )
          {
             BOOST_LOG_TRIVIAL( trace ) << "Excluding " << itr_path;
             continue;
          }
 
          // check if this is a file which we should process.
-         if( std::regex_search( itr_path, file_regex ) )
+         if( regex_search( itr_path, file_regex ) )
          {
             BOOST_LOG_TRIVIAL( trace ) << "Considering "
                                        << itr_path;
@@ -136,9 +132,9 @@ bool Parser::walk_tree( const std::string & base_path,
             // Add an entry to the queue and notify the workers,
             // one of them will do the file processing
             {
-               std::unique_lock<std::mutex> lck(job_queue_mutex);
-               job_queue.push_front( std::pair< std::string, std::string>(
-                     itr_path,
+               unique_lock<mutex> lck(job_queue_mutex);
+               job_queue.push_front( pair< string, string>(
+                     canonical( path( itr_path ) ).string(),
                      name ) );
                job_queue_condition.notify_all();
             }
@@ -157,7 +153,7 @@ void Parser::wait_for_workers( void )
 {
    // wait until the queue is empty
    {
-      std::unique_lock<std::mutex> lck( job_queue_mutex );
+      unique_lock<mutex> lck( job_queue_mutex );
       job_queue_condition.wait( lck, [this](){return job_queue.size()==0;});
       lck.unlock();
       job_queue_condition.notify_all();
@@ -165,7 +161,7 @@ void Parser::wait_for_workers( void )
 
    // set the done flag
    {
-      std::unique_lock<std::mutex> lck( job_queue_mutex );
+      unique_lock<mutex> lck( job_queue_mutex );
       all_work_is_done = true;
       lck.unlock();
       job_queue_condition.notify_all();
@@ -187,7 +183,7 @@ void Parser::do_work( int id )
 
    while( true )
    {
-      std::unique_lock<std::mutex> lck( job_queue_mutex );
+      unique_lock<mutex> lck( job_queue_mutex );
       job_queue_condition.wait( lck, [this]()
             {
                return job_queue.size()>0 || all_work_is_done;
@@ -214,49 +210,128 @@ void Parser::do_work( int id )
 }
 
 
-void Parser::walk_file( const std::string & path,
-                        const std::string & entry_name_1 )
+void Parser::walk_file( const string & abs_path_1,
+                        const string & )
 {
-   std::ifstream infile( path );
+   using namespace boost::filesystem;
+   ifstream infile( abs_path_1 );
+   path infile_dir = path( abs_path_1 ).parent_path();
    int line_cnt = 1;
-   std::string line;
-   std::smatch match;
+   string line;
+   smatch match;
 
-   std::regex  re( "#include\\s+[\"|<](.*?)[\"|>]",
-         std::regex_constants::ECMAScript | std::regex_constants::icase);
+   regex  re( "#include\\s+[\"|<](.*?)[\"|>]",
+         regex_constants::ECMAScript | regex_constants::icase);
 
-   while ( std::getline( infile, line ) )
+   while ( getline( infile, line ) )
    {
-      if( std::regex_search( line, match, re ) && match.size() > 1 )
+      if( regex_search( line, match, re ) && match.size() > 1 )
       {
          BOOST_LOG_TRIVIAL( trace ) << "Found include entry in "
-                                    << path
+                                    << abs_path_1
                                     << " line "
                                     << line_cnt
                                     << ": \"" << line << "\"";
-         std::unique_lock<std::mutex> glck( graph_mutex );
+         string entry_name_2 = match.str(1);
 
-         auto entry_name_2 = match.str(1);
-         auto e_itr = i_path->find( entry_name_2 );
 
-         if( e_itr == i_path->end() )
+         // construct relative path and check, if the file exists
+         path rel_path;
+
+
+         unique_lock<mutex> glck( graph_mutex );
+
+
+         // 1) check if in cache
+         //    If an cache entry exists, an Include_Entry has already been
+         //    created.
+         string abs_path_2 = i_path->find_cached( entry_name_2 );
+
+         if( abs_path_2.length() > 0 )
          {
-            // there is no such entry in our data-structures:
-            //  -> create it
-            Include_Entry::Ptr e = Include_Entry::Ptr(
-                  new Include_Entry( entry_name_2 ) );
-            i_path->insert( std::make_pair( entry_name_2, e ) );
+            BOOST_LOG_TRIVIAL( trace ) << "Entry "
+                                       << abs_path_2
+                                       << " exists and was cached";
+         }
+         // 2) check if relative
+         else if( exists( rel_path = infile_dir / entry_name_2 ) )
+         {
+            BOOST_LOG_TRIVIAL( trace ) << "Found relative include: "
+                                       << entry_name_2;
 
-            boost::add_vertex( e->get_name(), *graph );
-            (*graph)[ e->get_name() ]  = e;
+            // It seems this is a relative include statement.
+            // Check if an entry has already been added
+            abs_path_2 = canonical( rel_path ).string();
+
+            if( i_path->find_abs( abs_path_2 ) == i_path->end_abs() )
+            {
+               // no entry exists: add one
+               Include_Entry::Ptr e = Include_Entry::Ptr(
+                    new Include_Entry( entry_name_2 ) );
+               i_path->insert_abs( make_pair( abs_path_2, e ) );
+               boost::add_vertex( abs_path_2, *graph );
+               (*graph)[ abs_path_2 ] = e;
+            }
+            else
+            {
+               BOOST_LOG_TRIVIAL( trace ) << "Entry "
+                                          << abs_path_2
+                                          << " already exists";
+            }
+         }
+
+         // check if we should add a new entry
+         else
+         {
+            // we haven't got such an entry before,
+            // it is not a relative statement,
+            // so check if it is available
+            abs_path_2 = i_path->is_available( entry_name_2 );
+            if( abs_path_2.length() > 0 )
+            {
+               // the file exists in the serach path
+               // add a new entry if necessary
+               if( i_path->find_abs( abs_path_2 ) == i_path->end_abs() )
+               {
+
+                  BOOST_LOG_TRIVIAL( trace ) << "Adding a new entry,"
+                                             << " file exists";
+
+                  // no entry exists: add one
+                  Include_Entry::Ptr e = Include_Entry::Ptr(
+                       new Include_Entry( entry_name_2 ) );
+                  i_path->insert_abs( make_pair( abs_path_2, e ) );
+                  i_path->insert_cache( make_pair( entry_name_2, abs_path_2 ) );
+                  boost::add_vertex( abs_path_2, *graph );
+                  (*graph)[ abs_path_2 ] = e;
+               }
+               else
+               {
+                  BOOST_LOG_TRIVIAL( trace )<<"No need to add a new entry, "
+                                            <<"file exists but was not cached: "
+                                            << entry_name_2;
+                  i_path->insert_cache( make_pair( entry_name_2, abs_path_2 ) );
+               }
+            }
+            else
+            {
+               BOOST_LOG_TRIVIAL( trace ) << "Adding a new entry,"
+                                          << " file doesn't exists";
+               abs_path_2 = entry_name_2;
+               Include_Entry::Ptr e = Include_Entry::Ptr(
+                     new Include_Entry( entry_name_2 ) );
+               i_path->insert_blind( make_pair( abs_path_2, e ) );
+               boost::add_vertex( abs_path_2, *graph );
+               (*graph)[ abs_path_2 ] = e;
+            }
          }
 
          // add the edge between the two vertices
          Edge_Descriptor edge;
          bool   b;
          boost::tie( edge, b ) = boost::add_edge_by_label(
-               entry_name_1,
-               entry_name_2,
+               abs_path_1,
+               abs_path_2,
                *graph );
          (*graph)[ edge ] = Edge{ line_cnt };
       }
@@ -265,7 +340,7 @@ void Parser::walk_file( const std::string & path,
    }
 }
 
-} // namespace SVN_EXTERNALS_DISPOSER
+} // namespace INCLUDE_GARDENER
 
 // vim: filetype=cpp et ts=3 sw=3 sts=3
 

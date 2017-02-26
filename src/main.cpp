@@ -145,7 +145,7 @@ int main( int argc, char* argv[] )
    for( auto p : input_paths )
    {
       BOOST_LOG_TRIVIAL(info) << "Processing sources from " << p;
-      parser.walk_tree( p, "", ".*\\.[h|cpp]" );
+      parser.walk_tree( p, "", ".*" );
    }
    parser.wait_for_workers();
 
