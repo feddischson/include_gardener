@@ -53,15 +53,16 @@ int main( int argc, char* argv[] )
     ("help,h", "displays this help message and exit")
     ("version,v", "displays version information" )
     ("verbose,V", "sets verbosity")
-    ("input-path,I", po::value< vector< string> >()->composing(), "input path")
+    ("include-path,I", po::value< vector< string> >()->composing(), "include path")
     ("out-file,o", po::value< string >(), "output file" )
     ("format,f", po::value<string>(), "output format (suported formats: dot, xml/graphml)")
+    ("process-path,P", po::value< vector< string> >()->composing(), "path which is processed")
     ("exclude,e", po::value<string>(), "Regular expression to exclude specific files" )
     ("threads,j", po::value<int>(), "defines number of worker threads (default=2)");
    po::positional_options_description pos;
-   pos.add("input-path", -1);
+   pos.add("process-path", -1);
 
-   // the input-path arguments can also be provided als post-arguments
+   // the process-path arguments can also be provided als post-arguments
    po::variables_map vm;
    try{
       po::store( po::command_line_parser( argc, argv ).
@@ -87,8 +88,8 @@ int main( int argc, char* argv[] )
       return -1;
    }
 
-   // ensure, that at least one input path is provided
-   if ( false == vm.count("input-path") )
+   // ensure, that at least one process path is provided
+   if ( false == vm.count("process-path") )
    {
       cerr << "No input provided!" << endl << endl << desc << endl;
       return -1;
@@ -136,13 +137,14 @@ int main( int argc, char* argv[] )
       );
    }
 
-   auto input_paths = vm["input-path"].as< vector<string> >();
-   Include_Path::Ptr i_path( new Include_Path( input_paths ) );
+   auto include_paths = vm["include-path"].as< vector<string> >();
+   auto process_paths = vm["process-path"].as< vector<string> >();
+
+   Include_Path::Ptr i_path( new Include_Path( include_paths ) );
    Parser parser( no_threads, exclude, i_path, &g );
 
-
    // proceed all input paths
-   for( auto p : input_paths )
+   for( auto p : process_paths )
    {
       BOOST_LOG_TRIVIAL(info) << "Processing sources from " << p;
       parser.walk_tree( p, "", ".*" );
