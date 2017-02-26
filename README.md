@@ -29,12 +29,15 @@ Usage
 ```
 # analyzes recursively all files in path/to/files,
 # the result is written to stdout
-./include_gardener  -I path/to/files
+./include_gardener  -P path/to/files
 
+# multiple P options can be provided, for example
+./include_gardener  -P path/to/files1 -P path/to/files2
 
-# analyzes recursively all files in ./src and ./inc, the result is
-# written to the file graph.dot
-./include_gardener  -I ./src -I ./inc -o graph.dot
+# analyzes recursively all files in the curren directory,
+# the include path is set to ./inc and the result is
+# written to the file graph.dot:
+./include_gardener  -P ./ -I ./inc -o graph.dot
 
 # the result can then be further converted to a scalable vector graphics file.
 dot -Tsvg graph.dot > graph.svg
