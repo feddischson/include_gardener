@@ -11,8 +11,23 @@ The following output formats are supported at the moment:
  - dot (Graphviz): see http://www.graphviz.org/Documentation.php
  - XML / Graphml: see http://graphml.graphdrawing.org/
 
+This tool
+ - is used via command-line
+ - supports recursive file search
+ - is able to process the files via multiple threads
+ - written in C++
+ - testen on Linux (GCC, clang)
+
+
 Build Description
 -----------------
+
+Build dependecies
+ - cmake
+
+Runtime Dependencies:
+ - boost
+
 
 ```
 mkdir build
