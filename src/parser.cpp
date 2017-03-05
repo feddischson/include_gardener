@@ -114,7 +114,7 @@ bool Parser::walk_tree( const string & base_path,
              recursive_cnt < recursive_limit )
          {
             // recursive call to process sub-directory
-            walk_tree( base_path, sub_entry.string(), pattern, recursive_cnt+1 );
+            walk_tree( base_path, sub_entry.string(), pattern, recursive_cnt+1);
          }
       }
       else if( is_regular_file( itr->status() ) )
@@ -227,7 +227,7 @@ void Parser::walk_file( const string & abs_path_1,
    string line;
    smatch match;
 
-   regex  re( "#include\\s+[\"|<](.*?)[\"|>]",
+   regex  re( "#[\\s+]?include\\s+[\"|<](.*?)[\"|>]",
          regex_constants::ECMAScript | regex_constants::icase);
 
    while ( getline( infile, line ) )
