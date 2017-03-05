@@ -55,6 +55,7 @@ public:
 
    /// @brief Ctor: not implemented!
    Parser( int                  n_file_workers,
+           int                  recursive_limit,
            const std::string  & exclude_regex,
            Include_Path::Ptr    i_path,
            Graph              * g
@@ -84,7 +85,8 @@ public:
    /// @return True on success, false if the path doesn't exist.
    bool walk_tree( const std::string & base_path,
                    const std::string & sub_path,
-                   const std::string & pattern
+                   const std::string & pattern,
+                         int           recursive_cnt = 0
                    );
 
 
@@ -111,11 +113,14 @@ private:
    /// @brief Vector of threads, each calling do_work.
    std::vector< std::thread > file_workers;
 
+   /// @brief Limit for the recursive file search.
+   const int recursive_limit;
+
    /// @brief Flag which indicates, if the exclude-regex is used
    const bool use_exclude_regex;
 
    /// @brief Regular expression which is used to exclude files.
-   std::regex exclude_regex;
+   const std::regex exclude_regex;
 
    /// @brief Each entry includes the name and path of the include entry.
    /// @details

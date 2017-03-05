@@ -30,14 +30,16 @@ namespace INCLUDE_GARDENER
 {
 
 Parser::Parser( int                 n_file_workers,
+                int                 recursive_limit,
                 const string      & exclude_regex,
                 Include_Path::Ptr   i_path,
                 Graph             * graph ) :
-   file_workers       ( n_file_workers ),
+   file_workers       ( n_file_workers            ),
+   recursive_limit    ( recursive_limit           ),
    use_exclude_regex  ( exclude_regex.size() > 0  ),
    exclude_regex      ( exclude_regex,
                         regex_constants::ECMAScript |
-                        regex_constants::icase  ),
+                        regex_constants::icase    ),
    job_queue          ( ),
    job_queue_mutex    ( ),
    job_queue_condition( ),
@@ -76,7 +78,8 @@ void Parser::add_file_info( const string & name,
 
 bool Parser::walk_tree( const string & base_path,
                         const string & sub_path,
-                        const string & pattern )
+                        const string & pattern,
+                              int      recursive_cnt )
 {
 
    regex file_regex( pattern,
@@ -107,8 +110,12 @@ bool Parser::walk_tree( const string & base_path,
 
       if( is_directory( itr->status() ) )
       {
-         // recursive call to process sub-directory
-         walk_tree( base_path, sub_entry.string(), pattern );
+         if( recursive_limit >= 0 &&
+             recursive_cnt < recursive_limit )
+         {
+            // recursive call to process sub-directory
+            walk_tree( base_path, sub_entry.string(), pattern, recursive_cnt+1 );
+         }
       }
       else if( is_regular_file( itr->status() ) )
       {

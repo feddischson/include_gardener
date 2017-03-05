@@ -43,8 +43,8 @@ int main( int argc, char* argv[] )
 
    // global instances
    Graph g;
-   int no_threads = 2;
-
+   int no_threads      =  2;
+   int recursive_limit = -1;
    //
    // use boost's command line parser
    //
@@ -58,6 +58,7 @@ int main( int argc, char* argv[] )
     ("format,f", po::value<string>(), "output format (suported formats: dot, xml/graphml)")
     ("process-path,P", po::value< vector< string> >()->composing(), "path which is processed")
     ("exclude,e", po::value<string>(), "Regular expression to exclude specific files" )
+    ("recursive-limit,L",po::value<int>(), "Limits recursive processing (default=-1 = unlimited)")
     ("threads,j", po::value<int>(), "defines number of worker threads (default=2)");
    po::positional_options_description pos;
    pos.add("process-path", -1);
@@ -121,6 +122,11 @@ int main( int argc, char* argv[] )
       }
    }
 
+   if( true == vm.count( "recursive-limit" ) )
+   {
+      recursive_limit = vm["recursive-limit"].as<int>();
+   }
+
    if( !( ""    == format || "dot"     == format ||
           "xml" == format || "graphml" == format ) )
    {
@@ -145,7 +151,7 @@ int main( int argc, char* argv[] )
    auto process_paths = vm["process-path"].as< vector<string> >();
 
    Include_Path::Ptr i_path( new Include_Path( include_paths ) );
-   Parser parser( no_threads, exclude, i_path, &g );
+   Parser parser( no_threads, recursive_limit, exclude, i_path, &g );
 
    // proceed all input paths
    for( auto p : process_paths )
