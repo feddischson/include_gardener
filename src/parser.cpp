@@ -31,15 +31,13 @@ namespace INCLUDE_GARDENER
 
 Parser::Parser( int                 n_file_workers,
                 int                 recursive_limit,
-                const string      & exclude_regex,
+                const vector<string>      & exclude_regex,
                 Include_Path::Ptr   i_path,
                 Graph             * graph ) :
    file_workers       ( n_file_workers            ),
    recursive_limit    ( recursive_limit           ),
    use_exclude_regex  ( exclude_regex.size() > 0  ),
-   exclude_regex      ( exclude_regex,
-                        regex_constants::ECMAScript |
-                        regex_constants::icase    ),
+   exclude_regex      ( init_exclude_regex( exclude_regex ) ),
    job_queue          ( ),
    job_queue_mutex    ( ),
    job_queue_condition( ),
@@ -53,6 +51,34 @@ Parser::Parser( int                 n_file_workers,
    {
       file_workers[ i ] = thread( &Parser::do_work, this, i );
    }
+}
+
+
+vector<std::regex> Parser::init_exclude_regex( const vector<string> & exclude_regex_list ){
+
+    vector<std::regex> return_regex_list;
+
+   for(vector<string>::const_iterator i = exclude_regex_list.begin(); i != exclude_regex_list.end(); i++){
+        if((*i).size() > 0){
+            return_regex_list.push_back(std::regex( *i,
+                                                    regex_constants::ECMAScript |
+                                                    regex_constants::icase) );
+        }
+   }
+    return return_regex_list;
+}
+
+bool Parser::exlude_regex_search( std::string path_string ) const{
+    for(vector<std::regex>::const_iterator i = exclude_regex.begin(); i != exclude_regex.end(); i++){
+
+        if(regex_search( path_string, *i )){
+            return true;
+        }
+
+    }
+
+    return false;
+
 }
 
 
@@ -121,7 +147,7 @@ bool Parser::walk_tree( const string & base_path,
       {
 
          if( true == use_exclude_regex &&
-             regex_search( itr_path, exclude_regex ) )
+             exlude_regex_search( itr_path ) )
          {
             BOOST_LOG_TRIVIAL( trace ) << "Excluding " << itr_path;
             continue;
@@ -220,8 +246,9 @@ void Parser::do_work( int id )
 void Parser::walk_file( const string & abs_path_1,
                         const string & )
 {
-   using namespace boost::filesystem;
+
    ifstream infile( abs_path_1 );
+   using namespace boost::filesystem;
    path infile_dir = path( abs_path_1 ).parent_path();
    int line_cnt = 1;
    string line;
@@ -350,4 +377,3 @@ void Parser::walk_file( const string & abs_path_1,
 } // namespace INCLUDE_GARDENER
 
 // vim: filetype=cpp et ts=3 sw=3 sts=3
-
