@@ -59,6 +59,12 @@ dot -Tsvg graph.dot > graph.svg
 
 ```
 
+Contributors
+------------
+
+ - Vishwas Jain (https://github.com/vjvishjn)
+
+
 Contribution
 ------------
 If you find a bug, unexpected behaviour or if you have a interesting feature
