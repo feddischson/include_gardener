@@ -56,7 +56,7 @@ public:
    /// @brief Ctor: not implemented!
    Parser( int                  n_file_workers,
            int                  recursive_limit,
-           const std::string  & exclude_regex,
+           const std::vector<std::string>   & exclude_regex,
            Include_Path::Ptr    i_path,
            Graph              * g
            );
@@ -95,7 +95,9 @@ public:
 
 
 private:
+   std::vector<std::regex> init_exclude_regex( const std::vector<std::string> & );
 
+    bool exlude_regex_search( std::string ) const;
 
    /// @brief Processes a file to detect all include entries.
    void walk_file( const std::string & file_path,
@@ -119,8 +121,8 @@ private:
    /// @brief Flag which indicates, if the exclude-regex is used
    const bool use_exclude_regex;
 
-   /// @brief Regular expression which is used to exclude files.
-   const std::regex exclude_regex;
+   /// @brief Regular expressions which is used to exclude files.
+   const std::vector<std::regex> exclude_regex;
 
    /// @brief Each entry includes the name and path of the include entry.
    /// @details

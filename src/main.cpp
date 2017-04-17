@@ -57,7 +57,7 @@ int main( int argc, char* argv[] )
     ("out-file,o", po::value< string >(), "output file" )
     ("format,f", po::value<string>(), "output format (suported formats: dot, xml/graphml)")
     ("process-path,P", po::value< vector< string> >()->composing(), "path which is processed")
-    ("exclude,e", po::value<string>(), "Regular expression to exclude specific files" )
+    ("exclude,e", po::value< vector< string> >()->composing(), "Regular expressions to exclude specific files" )
     ("recursive-limit,L",po::value<int>(), "Limits recursive processing (default=-1 = unlimited)")
     ("threads,j", po::value<int>(), "defines number of worker threads (default=2)");
    po::positional_options_description pos;
@@ -104,10 +104,10 @@ int main( int argc, char* argv[] )
       format = vm["format"].as< string >();
    }
 
-   std::string exclude = "";
+   std::vector<string> exclude;
    if( true == vm.count( "exclude" ) )
    {
-      exclude = vm["exclude"].as< string >();
+      exclude = vm["exclude"].as< vector<string> >();
    }
 
    if( true == vm.count( "threads" ) )
