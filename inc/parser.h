@@ -95,9 +95,12 @@ public:
 
 
 private:
+
+   /// @brief Helper function to init the exclude-regex list.
    std::vector<std::regex> init_exclude_regex( const std::vector<std::string> & );
 
-    bool exlude_regex_search( std::string ) const;
+   /// @brief Helper function to check if a file should be excluded.
+   bool exclude_regex_search( std::string ) const;
 
    /// @brief Processes a file to detect all include entries.
    void walk_file( const std::string & file_path,

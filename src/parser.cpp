@@ -54,31 +54,37 @@ Parser::Parser( int                 n_file_workers,
 }
 
 
-vector<std::regex> Parser::init_exclude_regex( const vector<string> & exclude_regex_list ){
+/// @details
+///    The method returns a regex list, initialized by a string-list.
+vector<std::regex>
+Parser::init_exclude_regex( const vector<string> & exclude_regex_list ){
 
-    vector<std::regex> return_regex_list;
+   vector<std::regex> return_regex_list;
 
-   for(vector<string>::const_iterator i = exclude_regex_list.begin(); i != exclude_regex_list.end(); i++){
-        if((*i).size() > 0){
-            return_regex_list.push_back(std::regex( *i,
-                                                    regex_constants::ECMAScript |
-                                                    regex_constants::icase) );
-        }
+   for( auto i  = exclude_regex_list.begin();
+             i != exclude_regex_list.end();
+             i++ )
+   {
+      if( i->size() > 0 )
+      {
+         return_regex_list.push_back(std::regex( *i,
+                                                  regex_constants::ECMAScript |
+                                                  regex_constants::icase) );
+      }
    }
-    return return_regex_list;
+   return return_regex_list;
 }
 
-bool Parser::exlude_regex_search( std::string path_string ) const{
-    for(vector<std::regex>::const_iterator i = exclude_regex.begin(); i != exclude_regex.end(); i++){
-
-        if(regex_search( path_string, *i )){
+bool Parser::exclude_regex_search( std::string path_string ) const
+{
+    for( auto i = exclude_regex.begin(); i != exclude_regex.end(); i++)
+    {
+        if(regex_search( path_string, *i ))
+        {
             return true;
         }
-
     }
-
     return false;
-
 }
 
 
@@ -147,7 +153,7 @@ bool Parser::walk_tree( const string & base_path,
       {
 
          if( true == use_exclude_regex &&
-             exlude_regex_search( itr_path ) )
+             exclude_regex_search( itr_path ) )
          {
             BOOST_LOG_TRIVIAL( trace ) << "Excluding " << itr_path;
             continue;
