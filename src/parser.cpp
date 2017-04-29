@@ -127,6 +127,11 @@ bool Parser::walk_tree( const string & base_path,
    {
       return false;
    }
+   // return false if it is not a directory
+   else if( is_directory( p ) == false )
+   {
+      return false;
+   }
 
    directory_iterator end_itr; // default construction yields past-the-end
    for ( directory_iterator itr( p );
