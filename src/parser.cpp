@@ -147,8 +147,9 @@ bool Parser::walk_tree( const string & base_path,
 
       if( is_directory( itr->status() ) )
       {
-         if( recursive_limit >= 0 &&
-             recursive_cnt < recursive_limit )
+         if( ( recursive_limit == -1 ) || 
+             ( recursive_limit >= 0 &&
+               recursive_cnt < recursive_limit ) )
          {
             // recursive call to process sub-directory
             walk_tree( base_path, sub_entry.string(), pattern, recursive_cnt+1);
