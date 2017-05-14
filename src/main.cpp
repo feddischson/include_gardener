@@ -85,7 +85,7 @@ int main( int argc, char* argv[] )
 
    if( true == vm.count( "version" ) )
    {
-      cout << "Include Gardener Verion " << GARDENER_VERSION << endl;
+      cout << "Include Gardener Version " << GARDENER_VERSION << endl;
       return -1;
    }
 
