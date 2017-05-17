@@ -28,6 +28,11 @@ Build dependecies
 Runtime Dependencies:
  - boost
 
+Test Dependencies:
+ - Python 3.x
+ - PyUnit
+ - PyGraphviz
+ - PyGraphml
 
 ```
 mkdir build
