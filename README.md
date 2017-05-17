@@ -1,7 +1,7 @@
 Include Gardener
 =================
 
-Intorduction
+Introduction
 -------------
 This is a small C++ based commandline-tool which analyzes C/C++ code
 and creates an graph or include tree.
