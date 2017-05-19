@@ -15,7 +15,7 @@ import tempfile
 import pygraphviz as pgv
 import pygraphml  as pgml
 
-from subprocess import Popen,PIPE
+from subprocess import Popen,PIPE,call
 from os.path import abspath
 
 class GardenerTestCases(unittest.TestCase):
@@ -185,15 +185,13 @@ class GardenerTestCases(unittest.TestCase):
         graph_str2 = pipe.communicate()[0].decode("utf-8")
         self.assertEqual( graph_str1, graph_str2 )
 
-
-    def test_SimpleCallWithSinglePath_GraphmlOutput( self ):
-        """ Tests "include_gardener test_files -f xml -I test_files/inc"
-
-        The test expects that the result can be read by graphml
-        and that there is at least one node.
+    def graphml_gardener_call( self, options ):
+        """
+        Runs the include_gardener with the xml option,
+        extracts the result and returns the graph.
         """
         pipe = Popen( [ self.G_PATH, self.T_PATH,
-            '-f', 'xml', '-I', self.T_PATH + '/inc/' ], stdout=PIPE  )
+            '-f', 'xml'  ] + options, stdout=PIPE  )
         graphml_str = pipe.communicate()[0]
         temp = tempfile.NamedTemporaryFile()
         temp.write( graphml_str )
@@ -201,13 +199,98 @@ class GardenerTestCases(unittest.TestCase):
         parser = pgml.GraphMLParser()
 
         # get the result from the system call:
-        g1 = parser.parse( temp.name )
+        return parser.parse( temp.name )
+
+
+    def test_SimpleCallWithSinglePath_GraphmlOutput( self ):
+        """ Tests "include_gardener test_files -f xml -I test_files/inc"
+
+        The test expects that the result can be read by graphml
+        and that there is at least one node.
+        """
+        g1 = self.graphml_gardener_call( [ '-I', self.T_PATH + '/inc/'  ] )
 
         # get a reference graph
         g2 = self.build_reference_graph()
 
         # both graphs shall be the same
         self.compare( g1, g2 )
+
+
+    def test_LevelOption( self ):
+        """ Tests "include_gardener test_files -f xml" once without -L,
+            once with -L 0, once with -L 1 and once with -L 2.
+
+        The test expects that -L 0 counts no nodes, -L 1 counts just the nodes of 
+        the result of processing the files in src, and L 2 the same than wihtout 
+        the -L option.
+        """
+        g1 = self.graphml_gardener_call( [ ] )
+        g2 = self.graphml_gardener_call( [ '-L', '0' ] )
+        g3 = self.graphml_gardener_call( [ '-L', '1' ] )
+        g4 = self.graphml_gardener_call( [ '-L', '2' ] )
+
+        self.assertEqual( len( g2.nodes() ), 0 )
+        self.assertEqual( len( g3.nodes() ), 8 )
+        self.compare( g1, g4 )
+
+
+    def test_ThreadOption( self ):
+        """ Tests "include_gardener test_files -f xml" with -j ranging
+            from 1 to 5, each 10 times. Each call should produce the same
+            result.
+        """
+
+        g1 = None
+        for j in range( 1, 5 ):
+            for cnt in range( 0, 10 ):
+                if not g1:
+                    # initialize reference
+                    g1 = self.graphml_gardener_call( [ '-I', self.T_PATH + '/inc/', '-j', str(j) ] )
+                else:
+                    g2 = self.graphml_gardener_call( [ '-I', self.T_PATH + '/inc/', '-j', str(j) ] )
+                    self.compare( g1, g2 )
+
+
+    def test_ThreadNullOption( self ):
+        """ Tests "include_gardener test_files -f xml -j 0" which should fail.
+        """
+        pipe = Popen( [ self.G_PATH, self.T_PATH,
+            '-f', 'xml', '-j', '0'  ], stderr=PIPE  )
+        graphml_str = pipe.communicate()[1].decode("utf-8")
+        self.assertNotEqual( len( graphml_str ), 0 )
+        self.assertIn( "Error", graphml_str )
+
+
+    def test_ExcludeOption( self ):
+        """ Tests "include_gardener test_files -f xml"
+        once without the -e option, once with -e \.x  and once with -e \.x -e \y.
+
+        The test expects that the first includes all files, 
+        the second call one file less and the third two files less.
+        """
+        g1 = self.graphml_gardener_call( [ ] )
+        g2 = self.graphml_gardener_call( [ '-e', '\.x' ] )
+        g3 = self.graphml_gardener_call( [ '-e', '\.x', '-e', '\.y'] )
+
+        self.assertEqual( len( g1.nodes() ), len( g2.nodes() )+1 )
+        self.assertEqual( len( g1.nodes() ), len( g3.nodes() )+2 )
+
+
+    def test_OutputFile( self ):
+        """ Tests if the gardener can write into an output file.
+
+        The test expects that there is at least one node.
+        """
+        temp = tempfile.NamedTemporaryFile()
+        call( [ self.G_PATH, self.T_PATH,
+            '-f', 'xml', '-o', temp.name  ] )
+        parser = pgml.GraphMLParser()
+
+        # get the result from the system call:
+        g = parser.parse( temp.name )
+
+        self.assertNotEqual( len( g.nodes() ), 0 )
 
 if __name__ == "__main__":
     if len( sys.argv ) > 2:
