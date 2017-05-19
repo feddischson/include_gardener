@@ -115,7 +115,7 @@ int main( int argc, char* argv[] )
       no_threads = vm["threads"].as< int >();
       if( no_threads == 0 )
       {
-         cerr << "Number of threads is set to 0, which is not allwed." << endl
+         cerr << "Error: Number of threads is set to 0, which is not allowed." << endl
               << "Please use at least one worker thread."              << endl;
          return -1;
 
