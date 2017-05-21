@@ -41,7 +41,73 @@ add_definitions( -D_GARDENER_VERSION_MINOR=${GARDENER_VERSION_MINOR})
 add_definitions( -D_GARDENER_VERSION_PATCH=${GARDENER_VERSION_PATCH})
 add_definitions( -D_GARDENER_VERSION="${GARDENER_VERSION}")
 
-add_executable ( include_gardener src/main.cpp src/include_entry.cpp src/parser.cpp src/include_path.cpp )
+add_executable ( include_gardener
+                 src/main.cpp
+                 src/include_entry.cpp
+                 src/parser.cpp
+                 src/include_path.cpp
+                 src/config.cpp )
 target_link_libraries( include_gardener ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries( include_gardener ${Boost_LIBRARIES} )
 install( TARGETS include_gardener DESTINATION bin )
+
+
+enable_testing()
+
+#########
+#
+# Download and unpack googletest at configure time
+#      configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
+#     
+#     
+#     
+# Download and unpack googletest at configure time
+configure_file(CMakeLists.txt.in
+              googletest-download/CMakeLists.txt)
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+  RESULT_VARIABLE result
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+if(result)
+  message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+endif()
+
+
+execute_process(COMMAND ${CMAKE_COMMAND} --build .
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+if(result)
+  message(FATAL_ERROR "Build step for googletest failed: ${result}")
+endif()
+
+# Prevent GoogleTest from overriding our compiler/linker options
+# when building with Visual Studio
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+# Add googletest directly to our build. This adds
+# the following targets: gtest, gtest_main, gmock
+# and gmock_main
+add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
+                ${CMAKE_BINARY_DIR}/googletest-build)
+
+# The gtest/gmock targets carry header search path
+# dependencies automatically when using CMake 2.8.11 or
+# later. Otherwise we have to add them here ourselves.
+if (CMAKE_VERSION VERSION_LESS 2.8.11)
+  include_directories("${gtest_SOURCE_DIR}/include"
+                      "${gmock_SOURCE_DIR}/include")
+endif()
+#     
+########
+add_executable( unit_test src/config.cpp
+                test/unit_test/main.cpp
+                test/unit_test/test_config.cpp )
+
+add_dependencies( unit_test gmock )
+add_dependencies( unit_test gtest )
+add_dependencies( unit_test gtest_main )
+link_directories( ${CMAKE_BINARY_DIR}/googletest-build/googlemock)
+link_directories( ${CMAKE_BINARY_DIR}/googletest-build/googlemock/gtest)
+
+target_link_libraries( unit_test  ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries( unit_test  ${Boost_LIBRARIES} )
+target_link_libraries( unit_test  gtest_main )
+target_link_libraries( unit_test  gmock_main )

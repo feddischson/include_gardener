@@ -29,6 +29,7 @@
 #include <boost/graph/graphml.hpp>
 
 #include "parser.h"
+#include "config.h"
 
 using namespace INCLUDE_GARDENER;
 using namespace std;
@@ -95,6 +96,10 @@ int main( int argc, char* argv[] )
       cerr << "No input provided!" << endl << endl << desc << endl;
       return -1;
    }
+
+   Config::Ptr c = Config::get_cfg( "include_gardener.conf" );
+
+
 
    // extract the format
    // currently, only the dot format is supported
