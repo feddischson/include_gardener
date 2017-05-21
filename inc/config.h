@@ -113,6 +113,8 @@ public:
    /// @brief Returns the configuration path.
    std::string get_cfg_path( void ) const;
 
+   std::vector<unsigned int> get_include_group_select(
+         const std::string & language ) const;
 
 protected:
    /// @brief This ctor only initialiyes cfg_path.

@@ -69,6 +69,20 @@ std::string Config::get_cfg_path( void ) const
    return cfg_path;
 }
 
+std::vector<unsigned int> Config::get_include_group_select(
+      const std::string & language ) const
+{
+   std::vector< unsigned int > select;
+   pt::ptree tmp = root.get_child("languages."+
+                                   language +
+                                  ".group_select" );
+   for( const auto & entry : tmp )
+   {
+      select.push_back( entry.second.get_value< int >() );
+   }
+   return select;
+}
+
 void Config::check_cfg( void ) const
 {
    // check if there is a 'languages' entry
@@ -82,16 +96,16 @@ void Config::check_cfg( void ) const
    // if there is a file_detection or include_detection
    for( pt::ptree::value_type const &lang : root.get_child("languages"))
    {
-      std::string name   = lang.first;
-      auto config        = lang.second;
-      bool found_file    = false;
-      bool found_include = false;
+      std::string name        = lang.first;
+      auto config             = lang.second;
+      bool found_file         = false;
+      bool found_include      = false;
+      bool found_group_select = false;
 
       for( pt::ptree::value_type const &cfg_entry : lang.second )
       {
          std::string cfg_name = cfg_entry.first;
          std::string cfg_data = cfg_entry.second.get_value<std::string>();
-
 
          //
          // check the config entry name
@@ -104,10 +118,15 @@ void Config::check_cfg( void ) const
          {
             found_include = true;
          }
+         else if( cfg_name == "group_select" )
+         {
+            found_group_select = true;
+         }
          else
          {
-            BOOST_LOG_TRIVIAL( error ) << "Only 'file_detection' and "
-                                       << "'include_detection' is supported";
+            BOOST_LOG_TRIVIAL( error ) << "Only 'file_detection', "
+                                       << "'include_detection' and "
+                                       << " 'group_select' is supported";
             throw std::logic_error( "Invalid configuration: "
                                     + name
                                     + "."
@@ -117,7 +136,9 @@ void Config::check_cfg( void ) const
          //
          // check the regex, the length must not be zero
          //
-         if( cfg_data.length() == 0 )
+         if( ( cfg_name == "file_detection" ||
+               cfg_name == "include_detection" ) &&
+               cfg_data.length() == 0 )
          {
             BOOST_LOG_TRIVIAL( error ) << "Wrong configuration of"
                                        << name << "." << cfg_name << ": "
@@ -127,13 +148,25 @@ void Config::check_cfg( void ) const
                                     + "."
                                     + cfg_name );
          }
+
+         if( cfg_name == "group_select" && cfg_entry.second.count("") == 0 )
+         {
+            BOOST_LOG_TRIVIAL( error ) << "Wrong configuration of"
+                                       << name << "." << cfg_name << ": "
+                                       << "Size of group_select must be > 0";
+            throw std::logic_error( "Invalid configuration setup: "
+                                    + name
+                                    + "."
+                                    + cfg_name );
+         }
       }
-      if( !( found_file && found_include ) )
+      if( !( found_file && found_include && found_group_select ) )
       {
             BOOST_LOG_TRIVIAL( error ) << "Wrong configuration of "
                                        << name << ": "
-                                       << "Both, include_detection" 
-                                       << " and file_detection"
+                                       << "All, include_detection,"
+                                       << " file_detection and"
+                                       << " group_select"
                                        << " must be provided";
             throw std::logic_error( "Invalid configuration setup: "
                                     + name );
