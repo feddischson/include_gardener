@@ -133,7 +133,7 @@ bool Parser::walk_tree( const string & base_path,
       return false;
    }
 
-   directory_iterator end_itr; // default construction yields past-the-end
+   directory_iterator end_itr;
    for ( directory_iterator itr( p );
          itr != end_itr;
          ++itr )

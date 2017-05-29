@@ -98,9 +98,12 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
 endif()
 #     
 ########
-add_executable( unit_test src/config.cpp
+add_executable( unit_test
+                src/config.cpp
+                src/detector.cpp
                 test/unit_test/main.cpp
-                test/unit_test/test_config.cpp )
+                test/unit_test/test_config.cpp
+                test/unit_test/test_detector.cpp )
 
 add_dependencies( unit_test gmock )
 add_dependencies( unit_test gtest )
