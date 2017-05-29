@@ -37,13 +37,8 @@ class Detector
 
 public:
 
-   /// @author feddischson
-   /// @brief Ctor: not implemented!
-   Detector(   const std::string                & include_regex,
-               const std::string                & file_regex,
-               const std::vector<std::string>   & exclude_regex,
-               const std::vector<unsigned int>  & include_group_select
-         );
+   /// @brief Smart pointer for Detector
+   using Ptr = std::shared_ptr< Detector >;
 
 
    /// @author feddischson
@@ -78,7 +73,23 @@ public:
    /// @brief Returns true if the statement is an include statement.
    std::string is_include_statement( const std::string & line ) const;
 
+   /// @brief Returns a detector instance.
+   static Ptr get_detector(
+               const std::string                & include_regex,
+               const std::string                & file_regex,
+               const std::vector<std::string>   & exclude_regex,
+               const std::vector<unsigned int>  & include_group_select
+         );
+
 private:
+
+   /// @author feddischson
+   /// @brief Ctor: not implemented!
+   Detector(   const std::string                & include_regex,
+               const std::string                & file_regex,
+               const std::vector<std::string>   & exclude_regex,
+               const std::vector<unsigned int>  & include_group_select
+         );
 
 
    /// @brief Helper function to check if a file should be excluded.

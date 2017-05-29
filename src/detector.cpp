@@ -150,6 +150,19 @@ std::string Detector::is_include_statement( const std::string & line ) const
    return "";
 }
 
+Detector::Ptr Detector::get_detector( 
+         const std::string                & include_regex,
+         const std::string                & file_regex,
+         const std::vector<std::string>   & exclude_regex,
+         const std::vector<unsigned int>  & include_group_select
+      )
+{
+   return Ptr( new Detector(  include_regex,
+                              file_regex,
+                              exclude_regex,
+                              include_group_select ) );
+}
+
 
 } // namespace INCLUDE_GARDENER
 

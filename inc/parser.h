@@ -35,6 +35,7 @@
 #include "include_path.h"
 #include "include_entry.h"
 #include "graph.h"
+#include "detector.h"
 
 namespace INCLUDE_GARDENER
 {
@@ -56,7 +57,7 @@ public:
    /// @brief Ctor: not implemented!
    Parser( int                  n_file_workers,
            int                  recursive_limit,
-           const std::vector<std::string>   & exclude_regex,
+           Detector::Ptr        detector,
            Include_Path::Ptr    i_path,
            Graph              * g
            );
@@ -84,8 +85,7 @@ public:
    /// @brief  Runs through a given file path and proceedes all include files.
    /// @return True on success, false if the path doesn't exist.
    bool walk_tree( const std::string & base_path,
-                   const std::string & sub_path,
-                   const std::string & pattern,
+                   const std::string & sub_path = "",
                          int           recursive_cnt = 0
                    );
 
@@ -95,12 +95,6 @@ public:
 
 
 private:
-
-   /// @brief Helper function to init the exclude-regex list.
-   std::vector<std::regex> init_exclude_regex( const std::vector<std::string> & );
-
-   /// @brief Helper function to check if a file should be excluded.
-   bool exclude_regex_search( std::string ) const;
 
    /// @brief Processes a file to detect all include entries.
    void walk_file( const std::string & file_path,
@@ -121,11 +115,8 @@ private:
    /// @brief Limit for the recursive file search.
    const int recursive_limit;
 
-   /// @brief Flag which indicates, if the exclude-regex is used
-   const bool use_exclude_regex;
-
-   /// @brief Regular expressions which is used to exclude files.
-   const std::vector<std::regex> exclude_regex;
+   /// @brief Pointer to detector instance.
+   const Detector::Ptr detector;
 
    /// @brief Each entry includes the name and path of the include entry.
    /// @details

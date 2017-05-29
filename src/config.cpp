@@ -184,6 +184,18 @@ Config::Ptr Config::get_cfg( const std::string & cfg_path )
 }
 
 
+bool Config::supports_language( const std::string & language ) const
+{
+   for( std::string lang : languages )
+   {
+      if( language == lang )
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
 std::ostream& operator<<( std::ostream& os, const Config & conf )
 {
    os  << "Config ("  << reinterpret_cast< const void* >( &conf ) << "): "

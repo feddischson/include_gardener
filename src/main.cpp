@@ -28,6 +28,7 @@
 #include <boost/log/expressions.hpp>
 #include <boost/graph/graphml.hpp>
 
+#include "detector.h"
 #include "parser.h"
 #include "config.h"
 
@@ -44,8 +45,10 @@ int main( int argc, char* argv[] )
 
    // global instances
    Graph g;
-   int no_threads      =  2;
-   int recursive_limit = -1;
+   int      no_threads      =  2;
+   int      recursive_limit = -1;
+   string   language        = "c";
+   string   config_path     = "gardener.conf";
    //
    // use boost's command line parser
    //
@@ -60,7 +63,9 @@ int main( int argc, char* argv[] )
     ("process-path,P", po::value< vector< string> >()->composing(), "path which is processed")
     ("exclude,e", po::value< vector< string> >()->composing(), "Regular expressions to exclude specific files" )
     ("recursive-limit,L",po::value<int>(), "Limits recursive processing (default=-1 = unlimited)")
-    ("threads,j", po::value<int>(), "defines number of worker threads (default=2)");
+    ("threads,j", po::value<int>(), "defines number of worker threads (default=2)")
+    ("language,l", po::value<string>(), "selects the language (default=c)")
+    ("config,c", po::value<string>(), "path to the config file (default=gardener.conf)" );
    po::positional_options_description pos;
    pos.add("process-path", -1);
 
@@ -97,8 +102,45 @@ int main( int argc, char* argv[] )
       return -1;
    }
 
-   Config::Ptr c = Config::get_cfg( "include_gardener.conf" );
+   std::vector<string> exclude;
+   if( true == vm.count( "exclude" ) )
+   {
+      exclude = vm["exclude"].as< vector<string> >();
+   }
 
+   if( true == vm.count( "config" ) )
+   {
+      config_path = vm["config"].as< string >();
+   }
+
+   if( !boost::filesystem::exists( config_path ) )
+   {
+      cerr << "Error: config file " << config_path << " not found." << endl;
+      return -1;
+   }
+
+
+   if( true == vm.count( "language" ) )
+   {
+      language = vm["language"].as< string >();
+      std::transform( language.begin(), language.end(), language.begin(),
+            ::tolower);
+   }
+
+   Config::Ptr config = Config::get_cfg( config_path );
+
+   if( ! config->supports_language( language ) )
+   {
+      cerr << "Error: Language " << language << " not supported." << endl;
+      return -1;
+   }
+
+   Detector::Ptr detector = Detector::get_detector(
+         config->get_include_detection( language ),
+         config->get_file_detection( language ),
+         exclude,
+         config->get_include_group_select( language )
+         );
 
 
    // extract the format
@@ -107,12 +149,6 @@ int main( int argc, char* argv[] )
    if( true == vm.count( "format" ) )
    {
       format = vm["format"].as< string >();
-   }
-
-   std::vector<string> exclude;
-   if( true == vm.count( "exclude" ) )
-   {
-      exclude = vm["exclude"].as< vector<string> >();
    }
 
    if( true == vm.count( "threads" ) )
@@ -156,13 +192,13 @@ int main( int argc, char* argv[] )
    auto process_paths = vm["process-path"].as< vector<string> >();
 
    Include_Path::Ptr i_path( new Include_Path( include_paths ) );
-   Parser parser( no_threads, recursive_limit, exclude, i_path, &g );
+   Parser parser( no_threads, recursive_limit, detector, i_path, &g );
 
    // proceed all input paths
    for( auto p : process_paths )
    {
       BOOST_LOG_TRIVIAL(info) << "Processing sources from " << p;
-      parser.walk_tree( p, "", ".*" );
+      parser.walk_tree( p );
    }
    parser.wait_for_workers();
 
