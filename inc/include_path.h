@@ -32,7 +32,12 @@ namespace INCLUDE_GARDENER
 {
 
 /// @author feddischson
-/// @brief Template class
+/// @brief This class combines severals Maps, which are used during parsing. 
+/// @details
+///        The map 'cache' is a cache which holds name->path entries.
+///        The map 'absolute_map' holds absolute_path->Include_Entry entries.
+///        And the map 'blind_map' holds entries which can't be found in the
+///        search path.
 class Include_Path
 {
 
@@ -115,11 +120,13 @@ private:
    /// @brief Holds all incpude / input paths.
    std::vector< std::string > paths;
 
-   /// @brief A associative array which maps names to the include entries.
+   /// @brief Associative array which maps names to the include entrie's paths.
    S_Map cache;
 
+   /// @brief Associative array which maps absolute paths to entries.
    I_Map absolute_map;
 
+   /// @brief Ass. array which maps names to entries which unknown location.
    I_Map blind_map;
 
 }; // class Include_Path
