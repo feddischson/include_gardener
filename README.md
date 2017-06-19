@@ -4,7 +4,7 @@ Include Gardener
 Introduction
 -------------
 This is a small C++ based commandline-tool which analyzes C/C++ code
-and creates an graph or include tree.
+and creates a graph or include tree.
 The result can then further analyzed by other tools.
 
 The following output formats are supported at the moment:
@@ -16,7 +16,7 @@ This tool
  - supports recursive file search
  - is able to process the files via multiple threads
  - written in C++
- - testen on Linux (GCC, clang)
+ - tested on Linux (GCC, clang)
 
 
 Build Description
