@@ -68,6 +68,12 @@ std::string Include_Entry::get_name( void ) const
    return name;
 }
 
+void  Include_Entry::set_name( const std::string & name )
+{
+   this->name = name;
+}
+
+
 std::ostream& operator<<( std::ostream& os, const Include_Entry& entry )
 {
    os  << "Include_Entry :" << std::endl

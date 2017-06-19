@@ -198,7 +198,9 @@ bool Config::supports_language( const std::string & language ) const
 
 std::ostream& operator<<( std::ostream& os, const Config & conf )
 {
-   os  << "Config ("  << reinterpret_cast< const void* >( &conf ) << "): "
+   os  << "Config ("  << reinterpret_cast< const void* >( &conf )
+       << "," << conf.get_cfg_path()
+       << "): "
        << std::endl;
    os << "  Languages:" << std::endl;
    for( auto l : conf.get_languages() )
@@ -206,8 +208,14 @@ std::ostream& operator<<( std::ostream& os, const Config & conf )
       os << "     - " << l << std::endl
          << "       file-detection:    "
          << conf.get_file_detection( l ) << std::endl
-         << "       include-detection: " 
-         << conf.get_include_detection( l ) << std::endl;
+         << "       include-detection: "
+         << conf.get_include_detection( l ) << std::endl
+         << "       group-select: [ ";
+      for( auto g : conf.get_include_group_select( l ) )
+      {
+         os << g << " ";
+      }
+      os << "]" << std::endl;
    }
 
    return os;

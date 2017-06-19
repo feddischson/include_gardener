@@ -285,7 +285,8 @@ void Parser::walk_file( const string & abs_path_1,
          {
             // the file exists in the serach path
             // add a new entry if necessary
-            if( i_path->find_abs( abs_path_2 ) == i_path->end_abs() )
+            auto existing_entry = i_path->find_abs( abs_path_2 );
+            if( existing_entry == i_path->end_abs() )
             {
 
                BOOST_LOG_TRIVIAL( trace ) << "Adding a new entry,"
@@ -305,6 +306,9 @@ void Parser::walk_file( const string & abs_path_1,
                                          <<"file exists but was not cached: "
                                          << entry_name_2;
                i_path->insert_cache( make_pair( entry_name_2, abs_path_2 ) );
+
+               // overwrite the name, otherwise the path would be the name
+               existing_entry->second->set_name( entry_name_2 );
             }
          }
          else

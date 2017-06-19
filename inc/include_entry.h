@@ -88,6 +88,9 @@ public:
    /// @brief Returns the name
    std::string get_name( ) const;
 
+   /// @brief Overwrites the name
+   void set_name( const std::string & name );
+
    /// @brief Name of the include entry
    std::string name;
 

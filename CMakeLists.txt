@@ -7,6 +7,10 @@ set ( GARDENER_VERSION_PATCH 0 )
 set ( GARDENER_VERSION
   "${GARDENER_VERSION_MAJOR}.${GARDENER_VERSION_MINOR}.${GARDENER_VERSION_PATCH}" )
 
+
+set ( GARDENER_CONF ${CMAKE_CURRENT_SOURCE_DIR}/include_gardener.conf )
+set ( GARDENER_CONF_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/etc/include_gardener/include_gardener.conf )
+
 find_package(Boost REQUIRED COMPONENTS log system filesystem program_options )
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
@@ -40,6 +44,7 @@ add_definitions( -D_GARDENER_VERSION_MAJOR=${GARDENER_VERSION_MAJOR})
 add_definitions( -D_GARDENER_VERSION_MINOR=${GARDENER_VERSION_MINOR})
 add_definitions( -D_GARDENER_VERSION_PATCH=${GARDENER_VERSION_PATCH})
 add_definitions( -D_GARDENER_VERSION="${GARDENER_VERSION}")
+add_definitions( -D_GARDENER_CONFIG_PATH="${GARDENER_CONF_INSTALL_PATH}")
 
 add_executable ( include_gardener
                  src/main.cpp
@@ -47,11 +52,14 @@ add_executable ( include_gardener
                  src/parser.cpp
                  src/include_path.cpp
                  src/config.cpp
-                 src/detector.cpp )
+                 src/detector.cpp
+                ${GARDENER_CONF} )
+
 target_link_libraries( include_gardener ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries( include_gardener ${Boost_LIBRARIES} )
-install( TARGETS include_gardener DESTINATION bin )
 
+install( TARGETS include_gardener DESTINATION bin )
+install( FILES   ${GARDENER_CONF} DESTINATION etc/include_gardener COMPONENT config )
 
 enable_testing()
 
@@ -103,7 +111,8 @@ add_executable( unit_test
                 src/detector.cpp
                 test/unit_test/main.cpp
                 test/unit_test/test_config.cpp
-                test/unit_test/test_detector.cpp )
+                test/unit_test/test_detector.cpp
+                ${GARDENER_CONF} )
 
 add_dependencies( unit_test gmock )
 add_dependencies( unit_test gtest )

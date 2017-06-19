@@ -48,7 +48,7 @@ int main( int argc, char* argv[] )
    int      no_threads      =  2;
    int      recursive_limit = -1;
    string   language        = "c";
-   string   config_path     = "gardener.conf";
+   string   config_path     = _GARDENER_CONFIG_PATH;
    //
    // use boost's command line parser
    //
@@ -102,6 +102,17 @@ int main( int argc, char* argv[] )
       return -1;
    }
 
+   // Sets log level to warning if verbose is not set.
+   // This must be done bevore useing any BOOST_LOG_TRIVIAL statement.
+   // 
+   if( false == vm.count( "verbose" ) )
+   {
+      boost::log::core::get()->set_filter
+      (
+           boost::log::trivial::severity >= boost::log::trivial::warning
+      );
+   }
+
    std::vector<string> exclude;
    if( true == vm.count( "exclude" ) )
    {
@@ -128,6 +139,10 @@ int main( int argc, char* argv[] )
    }
 
    Config::Ptr config = Config::get_cfg( config_path );
+
+   BOOST_LOG_TRIVIAL(trace) << *config;
+
+
 
    if( ! config->supports_language( language ) )
    {
@@ -173,15 +188,6 @@ int main( int argc, char* argv[] )
    {
       cerr << "Unrecognized format: " << format << endl << endl << desc << endl;
       return -1;
-   }
-
-   // Sets log level to warning if verbose is not set.
-   if( false == vm.count( "verbose" ) )
-   {
-      boost::log::core::get()->set_filter
-      (
-           boost::log::trivial::severity >= boost::log::trivial::warning
-      );
    }
 
    vector<string> include_paths;

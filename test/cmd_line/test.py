@@ -1,8 +1,8 @@
 ###
 #
 # Command-line tests written in Python.
-# Do 
-#    >  python3 test.py ../../build/include_gardener ../test_files/
+# Do
+#    >  python3 test.py ../../include_gardener.conf ../../build/include_gardener ../test_files/
 # to run the tests
 #
 # The first argument is used to defines the include_gardener executable,
@@ -23,6 +23,7 @@ class GardenerTestCases(unittest.TestCase):
     # default paths
     G_PATH="../../build/include_gardener"
     T_PATH="../test_files/"
+    C_PATH="../../include_gardener.conf"
 
     def setUp( self ):
         """Nothing to setup here"""
@@ -51,21 +52,17 @@ class GardenerTestCases(unittest.TestCase):
         lib2_f_4_h  = g.add_node("9")
         lib2_f_1_h  = g.add_node("10")
 
-        e_1_x       = g.add_node("11")
-        e_2_y       = g.add_node("12")
 
         f_1_c      ['key1'] = 'src/f_1.c'
         f_2_c      ['key1'] = 'src/f_2.c'
         f_3_c      ['key1'] = 'src/f_3.c'
         existing_h ['key1'] = '../non/existing.h'
         iostream   ['key1'] = 'iostream'
-        lib_f_1_h  ['key1'] = 'inc/lib/f_1.h'
-        lib_f_2_h  ['key1'] = 'inc/lib/f_2.h'
-        lib_f_3_h  ['key1'] = 'inc/lib/f_3.h'
-        lib2_f_4_h ['key1'] = 'inc/lib2/f_4.h'
-        lib2_f_1_h ['key1'] = 'inc/lib2/f_1.h'
-        e_1_x      ['key1'] = 'inc/lib/e_1.x'
-        e_2_y      ['key1'] = 'inc/lib/e_2.y'
+        lib_f_1_h  ['key1'] = 'lib/f_1.h'
+        lib_f_2_h  ['key1'] = 'lib/f_2.h'
+        lib_f_3_h  ['key1'] = 'lib/f_3.h'
+        lib2_f_4_h ['key1'] = 'lib2/f_4.h'
+        lib2_f_1_h ['key1'] = '../inc/lib2/f_1.h'
 
         g.add_edge( f_3_c, existing_h     )
         g.add_edge( f_3_c, iostream       )
@@ -73,6 +70,7 @@ class GardenerTestCases(unittest.TestCase):
         g.add_edge( f_1_c, iostream       )
         g.add_edge( f_1_c, lib_f_2_h      )
         g.add_edge( f_1_c, lib_f_1_h      )
+        g.add_edge( f_3_c, lib_f_3_h      )
         g.add_edge( lib_f_2_h, lib_f_1_h  )
         g.add_edge( lib_f_1_h, lib_f_3_h  )
         g.add_edge( lib_f_1_h, lib2_f_4_h )
@@ -81,7 +79,7 @@ class GardenerTestCases(unittest.TestCase):
 
 
     def compare( self, G1, G2 ):
-        """ Compares two PyGraphml graphs by using PyUnittest's 
+        """ Compares two PyGraphml graphs by using PyUnittest's
             assert methods.
         """
 
@@ -185,13 +183,11 @@ class GardenerTestCases(unittest.TestCase):
         graph_str2 = pipe.communicate()[0].decode("utf-8")
         self.assertEqual( graph_str1, graph_str2 )
 
-    def graphml_gardener_call( self, options ):
-        """
-        Runs the include_gardener with the xml option,
-        extracts the result and returns the graph.
-        """
-        pipe = Popen( [ self.G_PATH, self.T_PATH,
-            '-f', 'xml'  ] + options, stdout=PIPE  )
+    def gardener_call( self, options ):
+
+        p_args = [ self.G_PATH, self.T_PATH, "-c", self.C_PATH ] + options
+        print( p_args )
+        pipe = Popen( p_args, stdout=PIPE  )
         graphml_str = pipe.communicate()[0]
         temp = tempfile.NamedTemporaryFile()
         temp.write( graphml_str )
@@ -202,13 +198,20 @@ class GardenerTestCases(unittest.TestCase):
         return parser.parse( temp.name )
 
 
+    def graphml_gardener_call( self, options ):
+        """
+        Runs the include_gardener with the xml option,
+        extracts the result and returns the graph.
+        """
+        return self.gardener_call( [ '-f', 'xml' ] + options )
+
     def test_SimpleCallWithSinglePath_GraphmlOutput( self ):
         """ Tests "include_gardener test_files -f xml -I test_files/inc"
 
         The test expects that the result can be read by graphml
         and that there is at least one node.
         """
-        g1 = self.graphml_gardener_call( [ '-I', self.T_PATH + '/inc/'  ] )
+        g1 = self.graphml_gardener_call( [ '-I', self.T_PATH + '/inc/' ] )
 
         # get a reference graph
         g2 = self.build_reference_graph()
@@ -221,8 +224,8 @@ class GardenerTestCases(unittest.TestCase):
         """ Tests "include_gardener test_files -f xml" once without -L,
             once with -L 0, once with -L 1 and once with -L 2.
 
-        The test expects that -L 0 counts no nodes, -L 1 counts just the nodes of 
-        the result of processing the files in src, and L 2 the same than wihtout 
+        The test expects that -L 0 counts no nodes, -L 1 counts just the nodes of
+        the result of processing the files in src, and L 2 the same than wihtout
         the -L option.
         """
         g1 = self.graphml_gardener_call( [ ] )
@@ -231,7 +234,8 @@ class GardenerTestCases(unittest.TestCase):
         g4 = self.graphml_gardener_call( [ '-L', '2' ] )
 
         self.assertEqual( len( g2.nodes() ), 0 )
-        self.assertEqual( len( g3.nodes() ), 8 )
+        self.assertEqual( len( g3.nodes() ), 9 )
+        self.assertEqual( len( g4.nodes() ), 14 )
         self.compare( g1, g4 )
 
 
@@ -264,17 +268,26 @@ class GardenerTestCases(unittest.TestCase):
 
     def test_ExcludeOption( self ):
         """ Tests "include_gardener test_files -f xml"
-        once without the -e option, once with -e \.x  and once with -e \.x -e \y.
+        once without the -e option, once with -e _1\.h and once with -e _1\.h -e _1\.c.
 
-        The test expects that the first includes all files, 
+        The test expects that the first includes all files,
         the second call one file less and the third two files less.
         """
         g1 = self.graphml_gardener_call( [ ] )
-        g2 = self.graphml_gardener_call( [ '-e', '\.x' ] )
-        g3 = self.graphml_gardener_call( [ '-e', '\.x', '-e', '\.y'] )
+        g2 = self.graphml_gardener_call( [ '-e', '_1\.h' ] )
+        g3 = self.graphml_gardener_call( [ '-e', '_1\.h', '-e', '_1\.c'] )
 
+
+        # Note: there are two file which ends with _1.h, but we expect
+        #       a difference of one. Reason: the second file is referenced and
+        #       therefore added to the graph.
         self.assertEqual( len( g1.nodes() ), len( g2.nodes() )+1 )
-        self.assertEqual( len( g1.nodes() ), len( g3.nodes() )+2 )
+
+
+        # because we do not process f_1.c, the second _1.h file mentioned
+        # above is not added to the graph. Therefore, a difference of three
+        # is correct.
+        self.assertEqual( len( g1.nodes() ), len( g3.nodes() )+3 )
 
 
     def test_OutputFile( self ):
@@ -296,5 +309,6 @@ if __name__ == "__main__":
     if len( sys.argv ) > 2:
         GardenerTestCases.T_PATH = abspath( sys.argv.pop() )
         GardenerTestCases.G_PATH = abspath( sys.argv.pop() )
+        GardenerTestCases.C_PATH = abspath( sys.argv.pop() )
     unittest.main() # run all tests
 
