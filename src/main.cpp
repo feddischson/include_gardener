@@ -38,17 +38,120 @@ namespace po = boost::program_options;
 
 static const std::string GARDENER_VERSION = _GARDENER_VERSION;
 
+int init_options( int argc, char* argv[] );
+void print_options( void );
+
 // Note: use "dot -Tsvg graph.dot > graph.svg" to create svg.
+
+
+struct
+{
+   int                  no_threads;
+   int                  recursive_limit;
+   string               language;
+   string               config_path;
+   std::string          format;
+   vector<string>       include_paths;
+   vector<string>       process_paths;
+   std::vector<string>  exclude;
+   std::string          out_file;
+} opts;
+
 
 int main( int argc, char* argv[] )
 {
 
-   // global instances
    Graph g;
-   int      no_threads      =  2;
-   int      recursive_limit = -1;
-   string   language        = "c";
-   string   config_path     = _GARDENER_CONFIG_PATH;
+   Config::Ptr    config   = nullptr;
+   Detector::Ptr  detector = nullptr;
+
+   int ret_val = init_options( argc, argv );
+   if( ret_val != 0 )
+   {
+      return ret_val;
+   }
+   print_options( );
+
+   config = Config::get_cfg( opts.config_path );
+
+   if( ! config->supports_language( opts.language ) )
+   {
+      cerr << "Error: Language " << opts.language << " not supported." << endl;
+      return -1;
+   }
+   BOOST_LOG_TRIVIAL( trace ) << *config;
+
+   detector = Detector::get_detector(
+         config->get_include_detection( opts.language ),
+         config->get_file_detection( opts.language ),
+         opts.exclude,
+         config->get_include_group_select( opts.language )
+         );
+
+   Include_Path::Ptr i_path( new Include_Path( opts.include_paths ) );
+   Parser parser( opts.no_threads, opts.recursive_limit, detector, i_path, &g );
+
+   // proceed all input paths
+   for( auto p : opts.process_paths )
+   {
+      BOOST_LOG_TRIVIAL(info) << "Processing sources from " << p;
+      parser.walk_tree( p );
+   }
+   parser.wait_for_workers();
+
+
+   // prepare the name-map for graphviz output generation
+   auto name_map = boost::make_transform_value_property_map(
+         []( Include_Entry::Ptr e){ return e->get_name(); },
+         get(boost::vertex_bundle, g) );
+
+   if( "dot" == opts.format )
+   {
+      if( opts.out_file.length() > 0 )
+      {
+         BOOST_LOG_TRIVIAL(info) << "Writing graph to " << opts.out_file;
+         ofstream file_stream( opts.out_file );
+         write_graphviz( file_stream, g,
+               make_vertex_writer( name_map ),
+               make_edge_writer( boost::get(&Edge::line, g) ) );
+      }
+      else
+      {
+         write_graphviz( cout, g,
+               make_vertex_writer( name_map ),
+               make_edge_writer( boost::get(&Edge::line, g) ) );
+      }
+   }
+   else if( "xml" == opts.format || "graphml" == opts.format )
+   {
+      boost::dynamic_properties dp;
+      dp.property( "line", boost::get(&Edge::line, g) );
+      dp.property( "name", name_map );
+      if( opts.out_file.length() > 0 )
+      {
+         BOOST_LOG_TRIVIAL(info) << "Writing graph to " << opts.out_file;
+         ofstream file_stream( opts.out_file );
+         write_graphml( file_stream, g, dp );
+      }
+      else
+      {
+         write_graphml( cout, g, dp );
+      }
+   }
+
+   return 0;
+}
+
+
+int init_options( int argc, char* argv[] )
+{
+   opts.no_threads      =  2;
+   opts.recursive_limit = -1;
+   opts.language        = "c";
+   opts.config_path     = _GARDENER_CONFIG_PATH;
+   opts.format          = "dot";
+   opts.out_file        = "";
+
    //
    // use boost's command line parser
    //
@@ -57,15 +160,24 @@ int main( int argc, char* argv[] )
     ("help,h", "displays this help message and exit")
     ("version,v", "displays version information" )
     ("verbose,V", "sets verbosity")
-    ("include-path,I", po::value< vector< string> >()->composing(), "include path")
-    ("out-file,o", po::value< string >(), "output file" )
-    ("format,f", po::value<string>(), "output format (suported formats: dot, xml/graphml)")
-    ("process-path,P", po::value< vector< string> >()->composing(), "path which is processed")
-    ("exclude,e", po::value< vector< string> >()->composing(), "Regular expressions to exclude specific files" )
-    ("recursive-limit,L",po::value<int>(), "Limits recursive processing (default=-1 = unlimited)")
-    ("threads,j", po::value<int>(), "defines number of worker threads (default=2)")
-    ("language,l", po::value<string>(), "selects the language (default=c)")
-    ("config,c", po::value<string>(), "path to the config file (default=gardener.conf)" );
+    ("include-path,I",     po::value< vector< string> >()->composing(),
+         "include path")
+    ("out-file,o",         po::value< string >(),
+         "output file" )
+    ("format,f",           po::value< string >(),
+         "output format (suported formats: dot, xml/graphml)")
+    ("process-path,P",     po::value< vector< string> >()->composing(),
+         "path which is processed")
+    ("exclude,e",          po::value< vector< string> >()->composing(),
+         "regular expressions to exclude specific files" )
+    ("recursive-limit,L",  po::value<int>(),
+         "limits recursive processing (default=-1 = unlimited)")
+    ("threads,j",          po::value<int>(),
+         "defines number of worker threads (default=2)")
+    ("language,l",         po::value<string>(),
+         "selects the language (default=c)")
+    ("config,c",           po::value<string>(),
+         "path to the config file (default=gardener.conf)" );
    po::positional_options_description pos;
    pos.add("process-path", -1);
 
@@ -104,7 +216,7 @@ int main( int argc, char* argv[] )
 
    // Sets log level to warning if verbose is not set.
    // This must be done bevore useing any BOOST_LOG_TRIVIAL statement.
-   // 
+   //
    if( false == vm.count( "verbose" ) )
    {
       boost::log::core::get()->set_filter
@@ -113,146 +225,111 @@ int main( int argc, char* argv[] )
       );
    }
 
-   std::vector<string> exclude;
    if( true == vm.count( "exclude" ) )
    {
-      exclude = vm["exclude"].as< vector<string> >();
+      opts.exclude = vm["exclude"].as< vector<string> >();
    }
 
    if( true == vm.count( "config" ) )
    {
-      config_path = vm["config"].as< string >();
+      opts.config_path = vm["config"].as< string >();
    }
 
-   if( !boost::filesystem::exists( config_path ) )
+   if( !boost::filesystem::exists( opts.config_path ) )
    {
-      cerr << "Error: config file " << config_path << " not found." << endl;
+      cerr << "Error: config file "
+           << opts.config_path
+           << " not found." << endl;
       return -1;
    }
 
 
    if( true == vm.count( "language" ) )
    {
-      language = vm["language"].as< string >();
-      std::transform( language.begin(), language.end(), language.begin(),
-            ::tolower);
+      opts.language = vm["language"].as< string >();
+      std::transform(
+            opts.language.begin(),
+            opts.language.end(),
+            opts.language.begin(),
+            ::tolower );
    }
-
-   Config::Ptr config = Config::get_cfg( config_path );
-
-   BOOST_LOG_TRIVIAL(trace) << *config;
-
-
-
-   if( ! config->supports_language( language ) )
-   {
-      cerr << "Error: Language " << language << " not supported." << endl;
-      return -1;
-   }
-
-   Detector::Ptr detector = Detector::get_detector(
-         config->get_include_detection( language ),
-         config->get_file_detection( language ),
-         exclude,
-         config->get_include_group_select( language )
-         );
-
 
    // extract the format
    // currently, only the dot format is supported
-   std::string format = "";
    if( true == vm.count( "format" ) )
    {
-      format = vm["format"].as< string >();
+      opts.format = vm["format"].as< string >();
    }
 
    if( true == vm.count( "threads" ) )
    {
-      no_threads = vm["threads"].as< int >();
-      if( no_threads == 0 )
+      opts.no_threads = vm["threads"].as< int >();
+      if( opts.no_threads == 0 )
       {
-         cerr << "Error: Number of threads is set to 0, which is not allowed." << endl
-              << "Please use at least one worker thread."              << endl;
+         cerr << "Error: Number of threads is set to 0, which is not allowed."
+              << endl
+              << "Please use at least one worker thread."
+              << endl;
          return -1;
-
       }
    }
 
    if( true == vm.count( "recursive-limit" ) )
    {
-      recursive_limit = vm["recursive-limit"].as<int>();
+      opts.recursive_limit = vm["recursive-limit"].as<int>();
    }
 
-   if( !( ""    == format || "dot"     == format ||
-          "xml" == format || "graphml" == format ) )
+   if( !( ""    == opts.format || "dot"     == opts.format ||
+          "xml" == opts.format || "graphml" == opts.format ) )
    {
-      cerr << "Unrecognized format: " << format << endl << endl << desc << endl;
+      cerr << "Unrecognized format: "
+           << opts.format
+           << endl
+           << endl
+           << desc
+           << endl;
       return -1;
    }
 
-   vector<string> include_paths;
    if( true == vm.count( "include-path" ) )
    {
-      include_paths = vm["include-path"].as< vector<string> >();
+      opts.include_paths = vm["include-path"].as< vector<string> >();
    }
-   auto process_paths = vm["process-path"].as< vector<string> >();
+   opts.process_paths = vm["process-path"].as< vector<string> >();
 
-   Include_Path::Ptr i_path( new Include_Path( include_paths ) );
-   Parser parser( no_threads, recursive_limit, detector, i_path, &g );
-
-   // proceed all input paths
-   for( auto p : process_paths )
+   if( true == vm.count( "out-file" ) )
    {
-      BOOST_LOG_TRIVIAL(info) << "Processing sources from " << p;
-      parser.walk_tree( p );
-   }
-   parser.wait_for_workers();
-
-
-   // prepare the name-map for graphviz output generation
-   auto name_map = boost::make_transform_value_property_map(
-         []( Include_Entry::Ptr e){ return e->get_name(); },
-         get(boost::vertex_bundle, g) );
-
-   if( "" == format || "dot" == format )
-   {
-      if( vm.count( "out-file" ) == true )
-      {
-         auto file = vm["out-file"].as< string >();
-         BOOST_LOG_TRIVIAL(info) << "Writing graph to " << file;
-         ofstream file_stream( file );
-         write_graphviz( file_stream, g,
-               make_vertex_writer( name_map ),
-               make_edge_writer( boost::get(&Edge::line, g) ) );
-      }
-      else
-      {
-         write_graphviz( cout, g,
-               make_vertex_writer( name_map ),
-               make_edge_writer( boost::get(&Edge::line, g) ) );
-      }
-   }
-   else if( "xml" == format || "graphml" == format )
-   {
-      boost::dynamic_properties dp;
-      dp.property( "line", boost::get(&Edge::line, g) );
-      dp.property( "name", name_map );
-      if( vm.count( "out-file" ) == true )
-      {
-         auto file = vm["out-file"].as< string >();
-         BOOST_LOG_TRIVIAL(info) << "Writing graph to " << file;
-         ofstream file_stream( file );
-         write_graphml( file_stream, g, dp );
-      }
-      else
-      {
-         write_graphml( cout, g, dp );
-      }
+      opts.out_file = vm["out-file"].as< string >();
    }
 
    return 0;
 }
 
+
+void print_options( void )
+{
+   BOOST_LOG_TRIVIAL( trace ) << "no_threads:      "  << opts.no_threads;
+   BOOST_LOG_TRIVIAL( trace ) << "recursive_limit: "  << opts.recursive_limit;
+   BOOST_LOG_TRIVIAL( trace ) << "language:        "  << opts.language;
+   BOOST_LOG_TRIVIAL( trace ) << "config_path:     "  << opts.config_path;
+   BOOST_LOG_TRIVIAL( trace ) << "format:          "  << opts.format;
+   BOOST_LOG_TRIVIAL( trace ) << "out_file:        "  << opts.out_file;
+   BOOST_LOG_TRIVIAL( trace ) << "include_paths:   ";
+   for( auto p : opts.include_paths )
+   {
+      BOOST_LOG_TRIVIAL( trace ) << "    " << p;
+   }
+   BOOST_LOG_TRIVIAL( trace ) << "process_paths:   ";
+   for( auto p : opts.process_paths )
+   {
+      BOOST_LOG_TRIVIAL( trace ) << "    " << p;
+   }
+   BOOST_LOG_TRIVIAL( trace ) << "exclude:         ";
+   for( auto e : opts.exclude )
+   {
+      BOOST_LOG_TRIVIAL( trace ) << "    " << e;
+   }
+}
 
 // vim: filetype=cpp et ts=3 sw=3 sts=3
 
