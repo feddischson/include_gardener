@@ -163,6 +163,15 @@ class GardenerTestCases(unittest.TestCase):
         result = pipe.communicate()[0].decode("utf-8")
         self.assertIn( "Version", result )
 
+    def test_UnsuportedLanguage( self ):
+        """ Tests if an error message is given if an unsupported language
+            is selected
+        """
+        pipe = Popen( [ self.G_PATH, "-l", "somelanguage", self.T_PATH ], stderr=PIPE  )
+        result = pipe.communicate()[1].decode("utf-8")
+        self.assertIn( "Error", result )
+        self.assertIn( "somelanguage", result )
+
 
     def test_SimpleCallWithSinglePath( self ):
         """ Tests "include_gardener test_files"
@@ -304,6 +313,7 @@ class GardenerTestCases(unittest.TestCase):
         g = parser.parse( temp.name )
 
         self.assertNotEqual( len( g.nodes() ), 0 )
+
 
 if __name__ == "__main__":
     if len( sys.argv ) > 2:
