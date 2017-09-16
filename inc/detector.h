@@ -24,6 +24,7 @@
 #include <iostream>
 #include <vector>
 #include <regex>
+#include <memory>
 
 namespace INCLUDE_GARDENER
 {

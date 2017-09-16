@@ -23,6 +23,7 @@
 
 #include <memory>
 #include <list>
+#include <vector>
 
 #include <boost/property_tree/ptree.hpp>
 #include <iostream>
