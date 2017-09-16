@@ -22,6 +22,7 @@
 #define GRAPH_H
 
 #include <iostream>
+#include <string>
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/labeled_graph.hpp>

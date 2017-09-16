@@ -25,6 +25,7 @@
 #include <vector>
 #include <regex>
 #include <memory>
+#include <string>
 
 namespace INCLUDE_GARDENER
 {
