@@ -28,6 +28,7 @@
 #include <vector>
 #include <condition_variable>
 #include <regex>
+#include <string>
 
 #include "boost/filesystem.hpp"
 

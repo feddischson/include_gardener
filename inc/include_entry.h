@@ -25,6 +25,7 @@
 #include <map>
 #include <iostream>
 #include <vector>
+#include <string>
 
 namespace INCLUDE_GARDENER
 {
