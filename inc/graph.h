@@ -35,10 +35,13 @@ namespace INCLUDE_GARDENER
 
 /// @brief Edge Properties.
 /// @author feddischson
-typedef struct
+struct Edge
 {
-   int line; ///< The line number where the include statement is defined.
-} Edge;
+   Edge() = default;
+   Edge(int l) : line(l) {}
+
+   int line = -1; ///< The line number where the include statement is defined.
+};
 
 
 /// @brief Graph definition.
