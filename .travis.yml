@@ -113,8 +113,8 @@ before_install:
     - eval "${MATRIX_EVAL}"
 
 install:
-  - pip install --user xmlrunner
-  - pip install --user pygraphviz
+  - pip3 install --user xmlrunner
+  - pip3 install --user pygraphviz
 
 before_script:
   - mkdir build
