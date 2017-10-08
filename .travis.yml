@@ -12,11 +12,19 @@ addons:
     packages:
       - cmake-data
       - cmake
+      - libboost1.55-all-dev
 
 
 
 
 matrix:
+
+  exclude:
+    - os: linux
+      compiler: clang
+    - os: linux
+      compiler: gcc
+
   include:
     - os: linux
       addons:
