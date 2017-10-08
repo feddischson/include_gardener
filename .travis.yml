@@ -26,6 +26,7 @@ matrix:
 
   include:
     - os: linux
+      COMPILER=g++
       addons:
         apt:
           sources:
@@ -35,6 +36,7 @@ matrix:
             - libboost1.55-all-dev
       env:
          - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+         - JOB="gcc-4.9"
 
     - os: linux
       addons:
@@ -46,6 +48,7 @@ matrix:
             - libboost1.55-all-dev
       env:
          - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+         - JOB="gcc-5"
 
     - os: linux
       addons:
@@ -57,6 +60,7 @@ matrix:
             - libboost1.55-all-dev
       env:
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+         - JOB="gcc-6"
 
     - os: linux
       addons:
@@ -68,6 +72,7 @@ matrix:
             - libboost1.55-all-dev
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+         - JOB="gcc-7"
 
     - os: linux
       addons:
@@ -79,6 +84,7 @@ matrix:
             - libboost1.55-all-dev
       env:
         - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
+         - JOB="clang-3.9"
 
     - os: linux
       addons:
@@ -90,6 +96,7 @@ matrix:
             - libboost1.55-all-dev
       env:
         - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
+         - JOB="clang-4.0"
 
     - os: linux
       addons:
@@ -101,6 +108,7 @@ matrix:
             - libboost1.55-all-dev
       env:
         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+         - JOB="clang-5.0"
 
 before_install:
     - eval "${MATRIX_EVAL}"
