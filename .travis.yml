@@ -32,7 +32,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - python3.5
+            - python3
             - g++-4.9
             - libboost1.55-all-dev
       env:
@@ -45,7 +45,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - python3.5
+            - python3
             - g++-5
             - libboost1.55-all-dev
       env:
@@ -58,7 +58,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - python3.5
+            - python3
             - g++-6
             - libboost1.55-all-dev
       env:
@@ -71,7 +71,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - python3.5
+            - python3
             - g++-7
             - libboost1.55-all-dev
       env:
@@ -84,7 +84,7 @@ matrix:
           sources:
             - llvm-toolchain-trusty-3.9
           packages:
-            - python3.5
+            - python3
             - clang-3.9
             - libboost1.55-all-dev
       env:
@@ -97,7 +97,7 @@ matrix:
           sources:
             - llvm-toolchain-trusty-4.0
           packages:
-            - python3.5
+            - python3
             - clang-4.0
             - libboost1.55-all-dev
       env:
@@ -110,7 +110,7 @@ matrix:
           sources:
             - llvm-toolchain-trusty-5.0
           packages:
-            - python3.5
+            - python3
             - clang-5.0
             - libboost1.55-all-dev
       env:
