@@ -114,6 +114,7 @@ before_install:
 
 install:
   - pip install --user xmlrunner
+  - pip install --user pygraphviz
 
 before_script:
   - mkdir build
