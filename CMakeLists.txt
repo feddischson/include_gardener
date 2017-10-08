@@ -124,3 +124,12 @@ target_link_libraries( unit_test  ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries( unit_test  ${Boost_LIBRARIES} )
 target_link_libraries( unit_test  gtest_main )
 target_link_libraries( unit_test  gmock_main )
+
+set ( TEST_DIR ${CMAKE_SOURCE_DIR}/test )
+
+
+add_test( unit_test unit_test --gtest_output=xml:test-reports/unit_test_results.xml )
+add_test( cmdline_test python3 ${TEST_DIR}/cmd_line/test.py
+  test-reports
+  ${CMAKE_SOURCE_DIR}/include_gardener.conf
+  ${CMAKE_BINARY_DIR}/include_gardener ${TEST_DIR}/test_files )
