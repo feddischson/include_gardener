@@ -165,5 +165,5 @@ before_script:
 
 script: 
   - make VERBOSE=1
-  - python3 ../test/cmd_line/test.py test-reports ../include_gardener.conf  include_gardener ../test/test_files
-  - make test
+  - ctest -VV
+
