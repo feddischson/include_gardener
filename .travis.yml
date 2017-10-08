@@ -145,6 +145,8 @@ matrix:
          - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0 && CTEST_OUTPUT_ON_FAILURE=1"
 
 before_install:
+    - pkg-config --libs-only-L libcgraph
+    - pkg-config --cflags-only-I libcgraph
     - python3 -V
     - python -V
     - pip3 -V
