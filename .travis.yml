@@ -12,6 +12,7 @@ addons:
     packages:
       - cmake-data
       - cmake
+      - python3.5
 
 
 
