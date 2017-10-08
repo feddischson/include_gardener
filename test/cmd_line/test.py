@@ -2,14 +2,19 @@
 #
 # Command-line tests written in Python.
 # Do
-#    >  python3 test.py ../../include_gardener.conf ../../build/include_gardener ../test_files/
+#    >  python3 test.py test-reports ../../include_gardener.conf ../../build/include_gardener ../test_files/
 # to run the tests
 #
-# The first argument is used to defines the include_gardener executable,
-# the second one defines where test-tree / files are located.
+# The second argument is used to defines the include_gardener executable, the second
+# defines the config and the third one defines where test-tree / files are located.
 #
 ###
-import unittest
+
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
+
 import sys
 import tempfile
 import pygraphviz as pgv
@@ -324,9 +329,12 @@ class GardenerTestCases(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    print( sys.argv )
     if len( sys.argv ) > 2:
         GardenerTestCases.T_PATH = abspath( sys.argv.pop() )
         GardenerTestCases.G_PATH = abspath( sys.argv.pop() )
         GardenerTestCases.C_PATH = abspath( sys.argv.pop() )
-    unittest.main() # run all tests
+    import xmlrunner
+    out_dir = abspath( sys.argv.pop() )
+    unittest.main(testRunner=xmlrunner.XMLTestRunner(output=out_dir)) # run all tests
 
