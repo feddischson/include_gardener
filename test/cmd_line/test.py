@@ -62,7 +62,7 @@ class GardenerTestCases(unittest.TestCase):
         lib_f_2_h  ['key1'] = 'lib/f_2.h'
         lib_f_3_h  ['key1'] = 'lib/f_3.h'
         lib2_f_4_h ['key1'] = 'lib2/f_4.h'
-        lib2_f_1_h ['key1'] = '../inc/lib2/f_1.h'
+        lib2_f_1_h ['key1'] = 'inc/lib2/f_1.h'
 
         g.add_edge( f_3_c, existing_h     )
         g.add_edge( f_3_c, iostream       )
@@ -113,6 +113,41 @@ class GardenerTestCases(unittest.TestCase):
             self.assertEqual( src1, src2 )
             self.assertCountEqual( dst1, dst2 )
 
+    def gardener_call( self, options ):
+
+        p_args = [ self.G_PATH, self.T_PATH, "-c", self.C_PATH ] + options
+        #print( ' '.join( p_args ) )
+        pipe = Popen( p_args, stdout=PIPE  )
+        result_str = pipe.communicate()[0]
+        return result_str
+
+
+    def dot_gardener_call( self, options ):
+        """
+        Runs the include_gardener with the dot option,
+        extracts the result and returns the graph.
+        """
+        # we don't use '-f dot' because dot is the default!
+        result_str = self.gardener_call( [  ] + options ).decode("utf-8") 
+        G = pgv.AGraph( result_str )
+        return G 
+
+
+    def graphml_gardener_call( self, options ):
+        """
+        Runs the include_gardener with the xml option,
+        extracts the result and returns the graph.
+        """
+        result_str = self.gardener_call( [ '-f', 'xml' ] + options )
+        if len( result_str ) == 0:
+            return None
+        temp = tempfile.NamedTemporaryFile()
+        temp.write( result_str )
+        temp.flush()
+        parser = pgml.GraphMLParser()
+
+        # get the result from the system call:
+        return parser.parse( temp.name )
 
     def test_showsUnrecognisedOption( self ):
         """Tests "include_gardener --xyz"
@@ -167,7 +202,7 @@ class GardenerTestCases(unittest.TestCase):
         """ Tests if an error message is given if an unsupported language
             is selected
         """
-        pipe = Popen( [ self.G_PATH, "-l", "somelanguage", self.T_PATH ], stderr=PIPE  )
+        pipe = Popen( [ self.G_PATH, '-c', self.C_PATH, "-l", "somelanguage", self.T_PATH ], stderr=PIPE  )
         result = pipe.communicate()[1].decode("utf-8")
         self.assertIn( "Error", result )
         self.assertIn( "somelanguage", result )
@@ -179,40 +214,14 @@ class GardenerTestCases(unittest.TestCase):
         The test expects that the result can be read by pygraphviz
         and that there is at least one node.
         """
-        pipe = Popen( [ self.G_PATH, self.T_PATH ], stdout=PIPE  )
-        graph_str1 = pipe.communicate()[0].decode("utf-8")
-        G = pgv.AGraph( graph_str1 )
+        G = self.dot_gardener_call( [ '-j', '1' ] )
 
         # the first node shall not be None ...
         n = G.get_node(1)
         self.assertNotEqual( n, None )
 
-        # ... and the default format shall be dot
-        pipe = Popen( [ self.G_PATH, self.T_PATH, '-f', 'dot' ], stdout=PIPE  )
-        graph_str2 = pipe.communicate()[0].decode("utf-8")
-        self.assertEqual( graph_str1, graph_str2 )
-
-    def gardener_call( self, options ):
-
-        p_args = [ self.G_PATH, self.T_PATH, "-c", self.C_PATH ] + options
-        print( p_args )
-        pipe = Popen( p_args, stdout=PIPE  )
-        graphml_str = pipe.communicate()[0]
-        temp = tempfile.NamedTemporaryFile()
-        temp.write( graphml_str )
-        temp.flush()
-        parser = pgml.GraphMLParser()
-
-        # get the result from the system call:
-        return parser.parse( temp.name )
 
 
-    def graphml_gardener_call( self, options ):
-        """
-        Runs the include_gardener with the xml option,
-        extracts the result and returns the graph.
-        """
-        return self.gardener_call( [ '-f', 'xml' ] + options )
 
     def test_SimpleCallWithSinglePath_GraphmlOutput( self ):
         """ Tests "include_gardener test_files -f xml -I test_files/inc"
@@ -305,13 +314,12 @@ class GardenerTestCases(unittest.TestCase):
         The test expects that there is at least one node.
         """
         temp = tempfile.NamedTemporaryFile()
-        call( [ self.G_PATH, self.T_PATH,
-            '-f', 'xml', '-o', temp.name  ] )
+        self.graphml_gardener_call( ['-o', temp.name] )
         parser = pgml.GraphMLParser()
 
         # get the result from the system call:
         g = parser.parse( temp.name )
-
+        temp = None
         self.assertNotEqual( len( g.nodes() ), 0 )
 
 
