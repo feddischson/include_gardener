@@ -32,6 +32,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
+            - graphviz
             - python3
             - python3-pip
             - g++-4.9
@@ -46,6 +47,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
+            - graphviz
             - python3
             - python3-pip
             - g++-5
@@ -60,6 +62,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
+            - graphviz
             - python3
             - python3-pip
             - g++-6
@@ -74,6 +77,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
+            - graphviz
             - python3
             - python3-pip
             - g++-7
@@ -88,6 +92,7 @@ matrix:
           sources:
             - llvm-toolchain-trusty-3.9
           packages:
+            - graphviz
             - python3
             - python3-pip
             - clang-3.9
@@ -102,6 +107,7 @@ matrix:
           sources:
             - llvm-toolchain-trusty-4.0
           packages:
+            - graphviz
             - python3
             - python3-pip
             - clang-4.0
@@ -116,6 +122,7 @@ matrix:
           sources:
             - llvm-toolchain-trusty-5.0
           packages:
+            - graphviz
             - python3
             - python3-pip
             - clang-5.0
@@ -126,6 +133,7 @@ matrix:
 before_install:
     - python3 -V
     - python -V
+    - pip3 -V
     - pip -V
     - eval "${MATRIX_EVAL}"
 
