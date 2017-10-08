@@ -35,7 +35,7 @@ matrix:
             - g++-4.9
             - libboost1.55-all-dev
       env:
-         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9 && CTEST_OUTPUT_ON_FAILURE=1"
 
     - os: linux
       compiler: gcc-5
@@ -47,7 +47,7 @@ matrix:
             - g++-5
             - libboost1.55-all-dev
       env:
-         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5 && CTEST_OUTPUT_ON_FAILURE=1"
 
     - os: linux
       compiler: gcc-6
@@ -59,7 +59,7 @@ matrix:
             - g++-6
             - libboost1.55-all-dev
       env:
-         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6 && CTEST_OUTPUT_ON_FAILURE=1"
 
     - os: linux
       compiler: gcc-7
@@ -71,7 +71,7 @@ matrix:
             - g++-7
             - libboost1.55-all-dev
       env:
-         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && CTEST_OUTPUT_ON_FAILURE=1"
 
     - os: linux
       compiler: clang-3.9
@@ -83,7 +83,7 @@ matrix:
             - clang-3.9
             - libboost1.55-all-dev
       env:
-         - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
+         - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9 && CTEST_OUTPUT_ON_FAILURE=1"
 
     - os: linux
       compiler: clang-4.0
@@ -95,7 +95,7 @@ matrix:
             - clang-4.0
             - libboost1.55-all-dev
       env:
-         - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
+         - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0 && CTEST_OUTPUT_ON_FAILURE=1"
 
     - os: linux
       compiler: clang-5.0
@@ -107,7 +107,7 @@ matrix:
             - clang-5.0
             - libboost1.55-all-dev
       env:
-         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0 && CTEST_OUTPUT_ON_FAILURE=1"
 
 before_install:
     - eval "${MATRIX_EVAL}"
