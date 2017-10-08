@@ -124,6 +124,9 @@ matrix:
          - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0 && CTEST_OUTPUT_ON_FAILURE=1"
 
 before_install:
+    - python3 -V
+    - python -V
+    - pip -V
     - eval "${MATRIX_EVAL}"
 
 install:
