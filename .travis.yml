@@ -112,6 +112,8 @@ matrix:
 before_install:
     - eval "${MATRIX_EVAL}"
 
+install:
+  - pip install xmlrunner
 
 before_script:
   - mkdir build
@@ -120,4 +122,5 @@ before_script:
 
 script: 
   - make VERBOSE=1
+  - python3 ../test/cmd_line/test.py test-reports ../include_gardener.conf  include_gardener ../test/test_files
   - make test
