@@ -118,4 +118,6 @@ before_script:
   - cd build
   - cmake ..
 
-script: make VERBOSE=1
+script: 
+  - make VERBOSE=1
+  - make test
