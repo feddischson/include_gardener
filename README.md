@@ -1,6 +1,8 @@
 Include Gardener
 =================
 
+[![Build Status](https://travis-ci.org/feddischson/include_gardener.svg?branch=master)](https://travis-ci.org/feddischson/include_gardener)
+
 Introduction
 -------------
 This is a small C++ based commandline-tool which analyzes C/C++ code
@@ -68,7 +70,10 @@ Contributors
 ------------
 
  - Vishwas Jain (https://github.com/vjvishjn)
-
+ - Jonas Karlsson (https://github.com/karjonas)
+ - Kunal Muley (https://github.com/KunalMuley)
+ - Timmy (https://github.com/ralismark)
+ - Shantanu Mishra (https://github.com/thedarksage)
 
 Contribution
 ------------
