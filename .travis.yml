@@ -12,7 +12,6 @@ addons:
     packages:
       - cmake-data
       - cmake
-      - libboost1.55-all-dev
 
 
 
@@ -33,6 +32,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
+            - libboost1.55-all-dev
       env:
          - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
 
@@ -43,6 +43,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
+            - libboost1.55-all-dev
       env:
          - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
 
@@ -53,6 +54,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-6
+            - libboost1.55-all-dev
       env:
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
 
@@ -63,6 +65,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-7
+            - libboost1.55-all-dev
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
@@ -73,6 +76,7 @@ matrix:
             - llvm-toolchain-trusty-3.9
           packages:
             - clang-3.9
+            - libboost1.55-all-dev
       env:
         - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
 
@@ -83,6 +87,7 @@ matrix:
             - llvm-toolchain-trusty-4.0
           packages:
             - clang-4.0
+            - libboost1.55-all-dev
       env:
         - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
 
@@ -93,6 +98,7 @@ matrix:
             - llvm-toolchain-trusty-5.0
           packages:
             - clang-5.0
+            - libboost1.55-all-dev
       env:
         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
 
