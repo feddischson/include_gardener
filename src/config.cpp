@@ -200,22 +200,22 @@ std::ostream& operator<<( std::ostream& os, const Config & conf )
 {
    os  << "Config ("  << reinterpret_cast< const void* >( &conf )
        << "," << conf.get_cfg_path()
-       << "): "
-       << std::endl;
-   os << "  Languages:" << std::endl;
+       << "): \n";
+
+   os << "  Languages:\n";
    for( auto l : conf.get_languages() )
    {
-      os << "     - " << l << std::endl
+      os << "     - " << l << '\n'
          << "       file-detection:    "
-         << conf.get_file_detection( l ) << std::endl
+         << conf.get_file_detection( l ) << '\n'
          << "       include-detection: "
-         << conf.get_include_detection( l ) << std::endl
+         << conf.get_include_detection( l ) << '\n'
          << "       group-select: [ ";
       for( auto g : conf.get_include_group_select( l ) )
       {
          os << g << " ";
       }
-      os << "]" << std::endl;
+      os << "]\n";
    }
 
    return os;

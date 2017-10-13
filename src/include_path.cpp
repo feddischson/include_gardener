@@ -85,7 +85,7 @@ ostream& operator<<( ostream& os, const Include_Path & _p )
    os  << "Include Path ("  << reinterpret_cast< const void* >( &_p ) << "): ";
    for( auto p : _p.paths )
    {
-      os << "   " << p << endl;
+      os << "   " << p << '\n';
    }
    return os;
 }

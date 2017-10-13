@@ -76,7 +76,7 @@ int main( int argc, char* argv[] )
 
    if( ! config->supports_language( opts.language ) )
    {
-      cerr << "Error: Language " << opts.language << " not supported." << endl;
+      cerr << "Error: Language " << opts.language << " not supported.\n";
       return -1;
    }
    BOOST_LOG_TRIVIAL( trace ) << *config;
@@ -190,27 +190,27 @@ int init_options( int argc, char* argv[] )
    }
    catch( boost::program_options::unknown_option & e )
    {
-      cerr << e.what() << endl;
+      cerr << e.what() << '\n';
       return -1;
    }
 
    // print help if required
    if( true == vm.count( "help" ) )
    {
-      cout << desc << endl;
+      cout << desc << '\n';
       return 1;
    }
 
    if( true == vm.count( "version" ) )
    {
-      cout << "Include Gardener Version " << GARDENER_VERSION << endl;
+      cout << "Include Gardener Version " << GARDENER_VERSION << '\n';
       return -1;
    }
 
    // ensure, that at least one process path is provided
    if ( false == vm.count("process-path") )
    {
-      cerr << "No input provided!" << endl << endl << desc << endl;
+      cerr << "No input provided!\n\n" << desc << '\n';
       return -1;
    }
 
@@ -239,7 +239,7 @@ int init_options( int argc, char* argv[] )
    {
       cerr << "Error: config file "
            << opts.config_path
-           << " not found." << endl;
+           << " not found.\n";
       return -1;
    }
 
@@ -266,10 +266,8 @@ int init_options( int argc, char* argv[] )
       opts.no_threads = vm["threads"].as< int >();
       if( opts.no_threads == 0 )
       {
-         cerr << "Error: Number of threads is set to 0, which is not allowed."
-              << endl
-              << "Please use at least one worker thread."
-              << endl;
+         cerr << "Error: Number of threads is set to 0, which is not allowed.\n"
+              << "Please use at least one worker thread.\n";
          return -1;
       }
    }
@@ -284,10 +282,9 @@ int init_options( int argc, char* argv[] )
    {
       cerr << "Unrecognized format: "
            << opts.format
-           << endl
-           << endl
+           << "\n\n"
            << desc
-           << endl;
+           << '\n';
       return -1;
    }
 
