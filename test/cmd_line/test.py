@@ -2,7 +2,7 @@
 #
 # Command-line tests written in Python.
 # Do
-#    >  python3 test.py test-reports ../../include_gardener.conf ../../build/include_gardener ../test_files/
+#    >  python3 test.py test-reports ../../include_gardener.conf ../../build/include_gardener ../test_files/c
 # to run the tests
 #
 # The second argument is used to defines the include_gardener executable, the second

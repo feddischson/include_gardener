@@ -132,4 +132,4 @@ add_test( unit_test unit_test --gtest_output=xml:test-reports/unit_test_results.
 add_test( cmdline_test python3 ${TEST_DIR}/cmd_line/test.py
   test-reports
   ${CMAKE_SOURCE_DIR}/include_gardener.conf
-  ${CMAKE_BINARY_DIR}/include_gardener ${TEST_DIR}/test_files )
+  ${CMAKE_BINARY_DIR}/include_gardener ${TEST_DIR}/test_files/c )
