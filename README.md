@@ -3,6 +3,20 @@ Include Gardener
 
 [![Build Status](https://travis-ci.org/feddischson/include_gardener.svg?branch=master)](https://travis-ci.org/feddischson/include_gardener)
 
+
+This is the multi-language branch. The aim is to re-structure the code to enable support of the following languages:
+ - java-script
+ - java
+ - python
+ - css
+ - php
+ - ruby
+ - C#
+ - Go
+ - Scala
+ - Objective-C
+
+
 Introduction
 -------------
 This is a small C++ based commandline-tool which analyzes C/C++ code
@@ -19,6 +33,7 @@ This tool
  - is able to process the files via multiple threads
  - written in C++
  - tested on Linux (GCC, clang)
+
 
 
 Build Description
