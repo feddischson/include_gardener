@@ -1,21 +1,28 @@
 Include Gardener
 =================
+[TOC]
+
+Include Gardener
+=================
 
 [![Build Status](https://travis-ci.org/feddischson/include_gardener.svg?branch=master)](https://travis-ci.org/feddischson/include_gardener)
 
 
 This is the multi-language branch. The aim is to re-structure the code to enable support of the following languages:
  - java-script
- - java
  - python
  - css
  - php
  - ruby
- - C#
  - Go
- - Scala
  - Objective-C
 
+Not considered anymore:
+ - Scala
+ - java
+ - C#
+ - swift
+You have a use case for one of them? -> Please create a issue and describe it.
 
 Introduction
 -------------
@@ -78,12 +85,10 @@ Usage
 
 # the result can then be further converted to a scalable vector graphics file.
 dot -Tsvg graph.dot > graph.svg
-
 ```
-
 Contributors
 ------------
-
+The following list shows all contributors
  - Vishwas Jain (https://github.com/vjvishjn)
  - Jonas Karlsson (https://github.com/karjonas)
  - Kunal Muley (https://github.com/KunalMuley)
