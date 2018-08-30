@@ -27,6 +27,9 @@ importlib.import_module(name)
 importlib.import_module(name,package=x)
 importlib.import_module(name,x)
 importlib.__import__()
+import a.\
+b.\
+c
 ```
 
 The pre-designated 

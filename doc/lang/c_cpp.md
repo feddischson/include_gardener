@@ -23,6 +23,14 @@ Examples
 
 #include "../file_d.h"
 
+/* also this seems to be possible: */
+#\
+inc\
+lude \
+<std\
+io.h\
+>
+
 ```
 
 The following ways are possible to lookup for a include file
