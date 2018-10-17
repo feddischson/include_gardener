@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.8.11)
 project (INCLUDE_GARDENER)
 
-set ( GARDENER_VERSION_MAJOR 0 )
+set ( GARDENER_VERSION_MAJOR X )
 set ( GARDENER_VERSION_MINOR 1 )
 set ( GARDENER_VERSION_PATCH 0 )
 set ( GARDENER_VERSION
@@ -53,6 +53,8 @@ add_executable ( include_gardener
                  src/include_path.cpp
                  src/config.cpp
                  src/detector.cpp
+                 src/statement_detector.cpp
+                 src/file_detector.cpp
                 ${GARDENER_CONF} )
 
 target_link_libraries( include_gardener ${CMAKE_THREAD_LIBS_INIT})
@@ -109,9 +111,11 @@ endif()
 add_executable( unit_test
                 src/config.cpp
                 src/detector.cpp
+                src/file_detector.cpp
                 test/unit_test/main.cpp
                 test/unit_test/test_config.cpp
                 test/unit_test/test_detector.cpp
+                test/unit_test/test_file_detector.cpp
                 ${GARDENER_CONF} )
 
 add_dependencies( unit_test gmock )

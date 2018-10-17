@@ -28,6 +28,7 @@
 #include <boost/log/expressions.hpp>
 #include <boost/graph/graphml.hpp>
 
+#include "file_detector.h"
 #include "detector.h"
 #include "parser.h"
 #include "config.h"
@@ -63,7 +64,6 @@ int main( int argc, char* argv[] )
 
    Graph g;
    Config::Ptr    config   = nullptr;
-   Detector::Ptr  detector = nullptr;
 
    int ret_val = init_options( argc, argv );
    if( ret_val != 0 )
@@ -81,63 +81,19 @@ int main( int argc, char* argv[] )
    }
    BOOST_LOG_TRIVIAL( trace ) << *config;
 
-   detector = Detector::get_detector(
-         config->get_include_detection( opts.language ),
+   File_Detector detector = File_Detector(
          config->get_file_detection( opts.language ),
          opts.exclude,
-         config->get_include_group_select( opts.language )
+         opts.recursive_limit
          );
-
-   Include_Path::Ptr i_path( new Include_Path( opts.include_paths ) );
-   Parser parser( opts.no_threads, opts.recursive_limit, detector, i_path, &g );
 
    // proceed all input paths
    for( auto p : opts.process_paths )
    {
       BOOST_LOG_TRIVIAL(info) << "Processing sources from " << p;
-      parser.walk_tree( p );
+      detector.walk_tree( p );
    }
-   parser.wait_for_workers();
 
-
-   // prepare the name-map for graphviz output generation
-   auto name_map = boost::make_transform_value_property_map(
-         []( Include_Entry::Ptr e){ return e->get_name(); },
-         get(boost::vertex_bundle, g) );
-
-   if( "dot" == opts.format )
-   {
-      if( opts.out_file.length() > 0 )
-      {
-         BOOST_LOG_TRIVIAL(info) << "Writing graph to " << opts.out_file;
-         ofstream file_stream( opts.out_file );
-         write_graphviz( file_stream, g,
-               make_vertex_writer( name_map ),
-               make_edge_writer( boost::get(&Edge::line, g) ) );
-      }
-      else
-      {
-         write_graphviz( cout, g,
-               make_vertex_writer( name_map ),
-               make_edge_writer( boost::get(&Edge::line, g) ) );
-      }
-   }
-   else if( "xml" == opts.format || "graphml" == opts.format )
-   {
-      boost::dynamic_properties dp;
-      dp.property( "line", boost::get(&Edge::line, g) );
-      dp.property( "name", name_map );
-      if( opts.out_file.length() > 0 )
-      {
-         BOOST_LOG_TRIVIAL(info) << "Writing graph to " << opts.out_file;
-         ofstream file_stream( opts.out_file );
-         write_graphml( file_stream, g, dp );
-      }
-      else
-      {
-         write_graphml( cout, g, dp );
-      }
-   }
 
    return 0;
 }
