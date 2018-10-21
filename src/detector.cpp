@@ -85,7 +85,7 @@ bool Detector::use_file( const std::string & file ) const
       BOOST_LOG_TRIVIAL( trace ) << "Excluding " << file;
       return false;
    }
-   else if( !regex_search( file, file_regex )  )
+   else if( false == regex_search( file, file_regex )  )
    {
       BOOST_LOG_TRIVIAL( trace ) << "Ignoring " << file;
       return false;

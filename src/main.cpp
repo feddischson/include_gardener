@@ -74,7 +74,7 @@ int main( int argc, char* argv[] )
 
    config = Config::get_cfg( opts.config_path );
 
-   if( ! config->supports_language( opts.language ) )
+   if( false == config->supports_language( opts.language ) )
    {
       cerr << "Error: Language " << opts.language << " not supported." << endl;
       return -1;
@@ -235,7 +235,7 @@ int init_options( int argc, char* argv[] )
       opts.config_path = vm["config"].as< string >();
    }
 
-   if( !boost::filesystem::exists( opts.config_path ) )
+   if( false == boost::filesystem::exists( opts.config_path ) )
    {
       cerr << "Error: config file "
            << opts.config_path
@@ -279,8 +279,8 @@ int init_options( int argc, char* argv[] )
       opts.recursive_limit = vm["recursive-limit"].as<int>();
    }
 
-   if( !( ""    == opts.format || "dot"     == opts.format ||
-          "xml" == opts.format || "graphml" == opts.format ) )
+   if( false == ( ""    == opts.format || "dot"     == opts.format ||
+                  "xml" == opts.format || "graphml" == opts.format ) )
    {
       cerr << "Unrecognized format: "
            << opts.format
