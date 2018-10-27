@@ -160,7 +160,7 @@ void Config::check_cfg( void ) const
                                     + cfg_name );
          }
       }
-      if( !( found_file && found_include && found_group_select ) )
+      if( false == ( found_file && found_include && found_group_select ) )
       {
             BOOST_LOG_TRIVIAL( error ) << "Wrong configuration of "
                                        << name << ": "
