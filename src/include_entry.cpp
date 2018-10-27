@@ -76,7 +76,7 @@ void  Include_Entry::set_name( const std::string & name )
 
 std::ostream& operator<<( std::ostream& os, const Include_Entry& entry )
 {
-   os  << "Include_Entry :" << std::endl
+   os  << "Include_Entry :\n"
        << "     name = " << entry.name;
    return os;
 }
