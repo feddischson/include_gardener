@@ -252,9 +252,9 @@ class GardenerTestCases(unittest.TestCase):
         the -L option.
         """
         g1 = self.graphml_gardener_call( [ ] )
-        g2 = self.graphml_gardener_call( [ '-L', '0' ] )
-        g3 = self.graphml_gardener_call( [ '-L', '1' ] )
-        g4 = self.graphml_gardener_call( [ '-L', '2' ] )
+        g2 = self.graphml_gardener_call( [ '-L', '0', '-j', '1' ] )
+        g3 = self.graphml_gardener_call( [ '-L', '1', '-j', '1' ] )
+        g4 = self.graphml_gardener_call( [ '-L', '2', '-j', '1' ] )
 
         self.assertEqual( len( g2.nodes() ), 0 )
         self.assertEqual( len( g3.nodes() ), 9 )
