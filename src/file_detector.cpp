@@ -19,6 +19,7 @@
 // <http://www.gnu.org/licenses/>.
 //
 #include "file_detector.h"
+#include "helper.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
@@ -32,25 +33,9 @@ File_Detector::File_Detector(const string& file_regex,
                              int recursive_limit)
     : file_regex(file_regex,
                  regex_constants::ECMAScript | regex_constants::icase),
-      exclude_regex(init_exclude_regex(exclude_regex)),
+      exclude_regex(init_regex_vector(exclude_regex)),
       use_exclude_regex(exclude_regex.size() > 0),
       recursive_limit(recursive_limit) {}
-
-/// @details
-///    The method returns a regex list, initialized by a string-list.
-vector<regex> File_Detector::init_exclude_regex(
-    const vector<string>& exclude_regex_list) {
-  vector<regex> return_regex_list;
-
-  for (auto i = exclude_regex_list.begin(); i != exclude_regex_list.end();
-       i++) {
-    if (i->size() > 0) {
-      return_regex_list.push_back(
-          regex(*i, regex_constants::ECMAScript | regex_constants::icase));
-    }
-  }
-  return return_regex_list;
-}
 
 vector<regex> File_Detector::get_exclude_regex() { return exclude_regex; }
 

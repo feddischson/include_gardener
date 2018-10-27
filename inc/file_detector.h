@@ -65,16 +65,12 @@ class File_Detector {
   /// @brief Regular expression to check if a file shall be used.
   const std::regex file_regex;
 
-  /// @brief List of regular expressions to check if a file shall not
+  /// @brief Vector of regular expressions to check if a file shall not
   ///        be used.
   const std::vector<std::regex> exclude_regex;
 
   /// @brief Indicates if excludes are used.
   bool use_exclude_regex;
-
-  /// @brief Helper function to initialize the exclude_regex vector.
-  std::vector<std::regex> init_exclude_regex(
-      const std::vector<std::string> &exclude_regex_list);
 
   /// @brief Helper function to check if a file should be excluded.
   bool exclude_regex_search(std::string) const;

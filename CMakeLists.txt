@@ -48,6 +48,7 @@ add_definitions( -D_GARDENER_CONFIG_PATH="${GARDENER_CONF_INSTALL_PATH}")
 
 add_executable ( include_gardener
                  src/main.cpp
+                 src/helper.cpp
                  src/include_entry.cpp
                  src/parser.cpp
                  src/include_path.cpp
@@ -110,12 +111,15 @@ endif()
 ########
 add_executable( unit_test
                 src/config.cpp
+                src/helper.cpp
                 src/detector.cpp
                 src/file_detector.cpp
+                src/statement_detector.cpp
                 test/unit_test/main.cpp
                 test/unit_test/test_config.cpp
                 test/unit_test/test_detector.cpp
                 test/unit_test/test_file_detector.cpp
+                test/unit_test/test_statement_detector.cpp
                 ${GARDENER_CONF} )
 
 add_dependencies( unit_test gmock )
