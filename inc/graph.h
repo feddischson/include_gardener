@@ -29,6 +29,8 @@
 
 #include "include_entry.h"
 
+static const int START_LINE = -1;
+
 namespace INCLUDE_GARDENER
 {
 
@@ -40,7 +42,7 @@ struct Edge
    Edge() = default;
    Edge(int l) : line(l) {}
 
-   int line = -1; ///< The line number where the include statement is defined.
+   int line = START_LINE; ///< The line number where the include statement is defined.
 };
 
 
