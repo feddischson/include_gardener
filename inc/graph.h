@@ -29,7 +29,7 @@
 
 #include "include_entry.h"
 
-#define START_LINE      ((int) -1)
+static const int START_LINE = -1;
 
 namespace INCLUDE_GARDENER
 {
