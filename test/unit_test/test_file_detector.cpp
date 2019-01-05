@@ -32,18 +32,20 @@ class File_Detector_Test : public ::testing::Test {};
 TEST_F(File_Detector_Test, empty_initialization) {
   string file_regex = "";
   vector<string> exclude_regex;
+  vector<string> base_paths;
 
-  File_Detector d = File_Detector(file_regex, exclude_regex);
+  File_Detector d = File_Detector(file_regex, exclude_regex, base_paths);
   EXPECT_EQ(d.get_exclude_regex().size(), 0);
 }
 
 TEST_F(File_Detector_Test, exclude_list) {
   string file_regex = "";
   vector<string> exclude_regex;
+  vector<string> base_paths;
   exclude_regex.push_back("abc");
   exclude_regex.push_back("def");
 
-  File_Detector d = File_Detector(file_regex, exclude_regex);
+  File_Detector d = File_Detector(file_regex, exclude_regex, base_paths);
   auto l = d.get_exclude_regex();
 
   regex r1 = regex("abc", regex_constants::ECMAScript | regex_constants::icase);
@@ -58,7 +60,8 @@ TEST_F(File_Detector_Test, exclude_list) {
 TEST_F(File_Detector_Test, test_c_file_detection_without_exclude) {
   string file_regex = "(.*)\\.(c|cc|h|hh|cpp|hpp)";
   vector<string> exclude_regex;
-  File_Detector d = File_Detector(file_regex, exclude_regex);
+  vector<string> base_paths;
+  File_Detector d = File_Detector(file_regex, exclude_regex, base_paths);
 
   EXPECT_EQ(d.use_file("abc.h"), true);
   EXPECT_EQ(d.use_file("def.hh"), true);
@@ -74,12 +77,13 @@ TEST_F(File_Detector_Test, test_c_file_detection_without_exclude) {
 TEST_F(File_Detector_Test, test_c_file_detection_with_exclude) {
   string file_regex = "(.*)\\.(c|cc|h|hh|cpp|hpp)";
   vector<string> exclude_regex;
+  vector<string> base_paths;
 
   // exclude all *_tmp.c and *-k.c files
   exclude_regex.push_back("(.*)_tmp\\.(c|cc|h|hh|cpp|hpp)");
   exclude_regex.push_back("(.*)-k\\.(c|cc|h|hh|cpp|hpp)");
 
-  File_Detector d = File_Detector(file_regex, exclude_regex);
+  File_Detector d = File_Detector(file_regex, exclude_regex, base_paths);
 
   EXPECT_EQ(d.use_file("abc.h"), true);
   EXPECT_EQ(d.use_file("def.hh"), true);

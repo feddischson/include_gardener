@@ -56,6 +56,7 @@ add_executable ( include_gardener
                  src/detector.cpp
                  src/statement_detector.cpp
                  src/file_detector.cpp
+                 src/input_files.cpp
                 ${GARDENER_CONF} )
 
 target_link_libraries( include_gardener ${CMAKE_THREAD_LIBS_INIT})

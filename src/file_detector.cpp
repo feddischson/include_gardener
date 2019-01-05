@@ -30,10 +30,12 @@ namespace INCLUDE_GARDENER {
 
 File_Detector::File_Detector(const string& file_regex,
                              const vector<string>& exclude_regex,
+                             const vector<string>& base_paths,
                              int recursive_limit)
     : file_regex(file_regex,
                  regex_constants::ECMAScript | regex_constants::icase),
       exclude_regex(init_regex_vector(exclude_regex)),
+      base_paths(base_paths),
       use_exclude_regex(exclude_regex.size() > 0),
       recursive_limit(recursive_limit) {}
 
@@ -64,6 +66,13 @@ bool File_Detector::exclude_regex_search(std::string path_string) const {
     }
   }
   return false;
+}
+
+void File_Detector::get() {
+  for (auto p : base_paths) {
+    BOOST_LOG_TRIVIAL(info) << "Processing sources from " << p;
+    walk_tree(p);
+  }
 }
 
 bool File_Detector::walk_tree(const string& base_path, const string& sub_path,

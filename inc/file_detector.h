@@ -25,14 +25,17 @@
 #include <string>
 #include <vector>
 
+#include "input_files.h"
+
 namespace INCLUDE_GARDENER {
 
 /// @brief File_Detector class
-class File_Detector {
+class File_Detector : Input_Files {
  public:
   /// @brief Ctor TODO!
   File_Detector(const std::string &file_regex,
                 const std::vector<std::string> &exclude_regex,
+                const std::vector<std::string> &base_paths,
                 int recursive_limit = 0);
 
   /// @brief  Default copy ctor!
@@ -56,18 +59,24 @@ class File_Detector {
   /// @brief Returns true if the file shall be considered, otherwise false.
   bool use_file(const std::string &file) const;
 
+  /// @brief Puts all input files in the private storage files.
+  virtual void get();
+
+ private:
   /// @brief  Runs through a given file path and proceedes all include files.
   /// @return True on success, false if the path doesn't exist.
   bool walk_tree(const std::string &base_path, const std::string &sub_path = "",
                  int recursive_cnt = 0);
 
- private:
   /// @brief Regular expression to check if a file shall be used.
   const std::regex file_regex;
 
   /// @brief Vector of regular expressions to check if a file shall not
   ///        be used.
   const std::vector<std::regex> exclude_regex;
+
+  /// @brief Paths of the base directories.
+  const std::vector<std::string> base_paths;
 
   /// @brief Indicates if excludes are used.
   bool use_exclude_regex;
