@@ -18,51 +18,61 @@
 // Public License along with this program; if not, see
 // <http://www.gnu.org/licenses/>.
 //
-#ifndef INPUT_FILES_H
-#define INPUT_FILES_H
+#ifndef VERTEX_H
+#define VERTEX_H
 
+#include <memory>
+#include <map>
 #include <string>
-#include <vector>
-
-#include "solver.h"
 
 namespace INCLUDE_GARDENER {
 
-/// @brief Input_Files class
-class Input_Files {
+/// @brief Vertex class
+class Vertex {
  public:
-  /// @brief Ctor: not implemented!
-  Input_Files() = default;
+  /// @brief Smart pointer for Vertex
+  using Ptr = std::shared_ptr<Vertex>;
+
+  /// @brief A Map with string as key and a pointer to the Vertex as value.
+  using Map = std::map< std::string, Ptr >;
+
+  /// @brief Ctor
+  /// @param abs_path absolute path
+  /// @param rel_path relative path (seen from execution of this tool)
+  /// @param name file name including file ending
+  Vertex(const std::string &name, const std::string &abs_path = "",
+         const std::string &rel_path = "");
 
   /// @brief  Copy ctor: not implemented!
-  Input_Files(const Input_Files &other) = default;
+  Vertex(const Vertex &other) = delete;
 
   /// @brief  Assignment operator: not implemented!
-  Input_Files &operator=(const Input_Files &rhs) = default;
+  Vertex &operator=(const Vertex &rhs) = delete;
 
   /// @brief  Move constructor: not implemented!
-  Input_Files(Input_Files &&rhs) = default;
+  Vertex(Vertex &&rhs) = delete;
 
   /// @brief  Move assignment operator: not implemented!
-  Input_Files &operator=(Input_Files &&rhs) = default;
+  Vertex &operator=(Vertex &&rhs) = delete;
 
   /// @brief Default dtor
-  ~Input_Files() = default;
-
-  /// @brief Shall put all input files in the private storage files.
-  virtual void get(Solver::Ptr solver) = 0;
-
-  /// @brief Processes all input files of the private storage files.
-  void run();
+  ~Vertex() = default;
 
  private:
-  /// @brief File storage vector.
-  std::vector<std::string> files;
+  /// @brief file name, including file ending
+  const std::string name;
 
-};  // class Input_Files
+  /// @brief Absolute path
+  const std::string abs_path;
+
+  /// @brief Relative path
+  /// (seen from execution of this tool)
+  const std::string rel_path;
+
+};  // class Vertex
 
 }  // namespace INCLUDE_GARDENER
 
-#endif  // INPUT_FILES_H
+#endif  // VERTEX_H
 
 // vim: filetype=cpp et ts=2 sw=2 sts=2

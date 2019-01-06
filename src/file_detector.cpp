@@ -68,15 +68,15 @@ bool File_Detector::exclude_regex_search(std::string path_string) const {
   return false;
 }
 
-void File_Detector::get() {
+void File_Detector::get(Solver::Ptr solver) {
   for (auto p : base_paths) {
     BOOST_LOG_TRIVIAL(info) << "Processing sources from " << p;
-    walk_tree(p);
+    walk_tree(p, solver);
   }
 }
 
-bool File_Detector::walk_tree(const string& base_path, const string& sub_path,
-                              int recursive_cnt) {
+bool File_Detector::walk_tree(const string& base_path, Solver::Ptr solver,
+                              const string& sub_path, int recursive_cnt) {
   using namespace boost::filesystem;
 
   path p(base_path);
@@ -103,15 +103,16 @@ bool File_Detector::walk_tree(const string& base_path, const string& sub_path,
       if ((recursive_limit == -1) ||
           (recursive_limit >= 0 && recursive_cnt < recursive_limit)) {
         // recursive call to process sub-directory
-        walk_tree(base_path, sub_entry.string(), recursive_cnt + 1);
+        walk_tree(base_path, solver, sub_entry.string(), recursive_cnt + 1);
       }
     } else if (is_regular_file(itr->status())) {
       if (false == use_file(itr_path)) {
         continue;
       }
 
-      // TODO process file
-      {}
+      path abs_path = canonical(current_path()/itr_path);
+      BOOST_LOG_TRIVIAL(trace) << "(Absolute path=" << abs_path << ")";
+      solver->add_vertex(name, abs_path.string(), itr_path);
     } else {
       // ignore all other files
       BOOST_LOG_TRIVIAL(trace) << "Ignoring " << itr_path;

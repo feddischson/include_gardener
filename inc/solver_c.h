@@ -18,51 +18,51 @@
 // Public License along with this program; if not, see
 // <http://www.gnu.org/licenses/>.
 //
-#ifndef INPUT_FILES_H
-#define INPUT_FILES_H
+#ifndef SOLVER_C_H
+#define SOLVER_C_H
 
-#include <string>
-#include <vector>
+#include <memory>
 
 #include "solver.h"
 
 namespace INCLUDE_GARDENER {
 
-/// @brief Input_Files class
-class Input_Files {
+/// @brief Solver_C class
+class Solver_C : public Solver {
  public:
-  /// @brief Ctor: not implemented!
-  Input_Files() = default;
+  /// @brief Smart pointer for Solver_C
+  using Ptr = std::shared_ptr<Solver_C>;
+
+  /// @brief Ctor: only calls super ctor.
+  explicit Solver_C(Graph *graph);
 
   /// @brief  Copy ctor: not implemented!
-  Input_Files(const Input_Files &other) = default;
+  Solver_C(const Solver_C &other) = delete;
 
   /// @brief  Assignment operator: not implemented!
-  Input_Files &operator=(const Input_Files &rhs) = default;
+  Solver_C &operator=(const Solver_C &rhs) = delete;
 
   /// @brief  Move constructor: not implemented!
-  Input_Files(Input_Files &&rhs) = default;
+  Solver_C(Solver_C &&rhs) = delete;
 
   /// @brief  Move assignment operator: not implemented!
-  Input_Files &operator=(Input_Files &&rhs) = default;
+  Solver_C &operator=(Solver_C &&rhs) = delete;
 
   /// @brief Default dtor
-  ~Input_Files() = default;
+  virtual ~Solver_C() = default;
 
-  /// @brief Shall put all input files in the private storage files.
-  virtual void get(Solver::Ptr solver) = 0;
+  /// @brief Adds an edge to the graph.
+  virtual void add_edge();
 
-  /// @brief Processes all input files of the private storage files.
-  void run();
+  /// @brief Returns the statements which shall be
+  ///        detected as regex.
+  virtual std::vector<std::string> get_statements();
 
  private:
-  /// @brief File storage vector.
-  std::vector<std::string> files;
-
-};  // class Input_Files
+};  // class Solver_C
 
 }  // namespace INCLUDE_GARDENER
 
-#endif  // INPUT_FILES_H
+#endif  // SOLVER_C_H
 
 // vim: filetype=cpp et ts=2 sw=2 sts=2

@@ -30,6 +30,9 @@ namespace INCLUDE_GARDENER {
 /// @brief Statement_Detector class
 class Statement_Detector {
  public:
+  /// @brief Smart pointer for Statement_Detector
+  using Ptr = std::shared_ptr<Statement_Detector>;
+
   /// @brief Default ctor.
   Statement_Detector(const std::vector<std::string> &statement_list);
 

@@ -60,13 +60,13 @@ class File_Detector : Input_Files {
   bool use_file(const std::string &file) const;
 
   /// @brief Puts all input files in the private storage files.
-  virtual void get();
+  virtual void get(Solver::Ptr solver);
 
  private:
   /// @brief  Runs through a given file path and proceedes all include files.
   /// @return True on success, false if the path doesn't exist.
-  bool walk_tree(const std::string &base_path, const std::string &sub_path = "",
-                 int recursive_cnt = 0);
+  bool walk_tree(const std::string &base_path, Solver::Ptr solver,
+                 const std::string &sub_path = "", int recursive_cnt = 0);
 
   /// @brief Regular expression to check if a file shall be used.
   const std::regex file_regex;

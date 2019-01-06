@@ -27,7 +27,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/labeled_graph.hpp>
 
-#include "include_entry.h"
+#include "vertex.h"
 
 namespace INCLUDE_GARDENER
 {
@@ -48,7 +48,7 @@ struct Edge
 /// @author feddischson
 using Graph_ = boost::adjacency_list<
          boost::listS, boost::vecS, boost::directedS,
-            Include_Entry::Ptr, Edge >;
+            Vertex::Ptr, Edge >;
 
 /// @brief Labeled-graph definition
 /// @author feddischson

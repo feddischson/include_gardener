@@ -49,14 +49,15 @@ add_definitions( -D_GARDENER_CONFIG_PATH="${GARDENER_CONF_INSTALL_PATH}")
 add_executable ( include_gardener
                  src/main.cpp
                  src/helper.cpp
-                 src/include_entry.cpp
-                 src/parser.cpp
                  src/include_path.cpp
                  src/config.cpp
                  src/detector.cpp
                  src/statement_detector.cpp
                  src/file_detector.cpp
                  src/input_files.cpp
+                 src/vertex.cpp
+                 src/solver.cpp
+                 src/solver_c.cpp
                 ${GARDENER_CONF} )
 
 target_link_libraries( include_gardener ${CMAKE_THREAD_LIBS_INIT})

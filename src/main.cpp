@@ -32,6 +32,7 @@
 #include "detector.h"
 #include "file_detector.h"
 #include "parser.h"
+#include "solver_c.h"
 
 using namespace INCLUDE_GARDENER;
 using namespace std;
@@ -74,11 +75,14 @@ int main(int argc, char* argv[]) {
    }
    BOOST_LOG_TRIVIAL(trace) << *config;
 
+   auto solver_c = std::make_shared<Solver_C>(&g);
+   auto solver = std::dynamic_pointer_cast<Solver>(solver_c);
+
    File_Detector detector =
        File_Detector(config->get_file_detection(opts.language), opts.exclude,
                      opts.process_paths, opts.recursive_limit);
 
-   detector.get();
+   detector.get(solver);
 
    return 0;
 }

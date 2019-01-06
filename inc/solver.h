@@ -18,51 +18,64 @@
 // Public License along with this program; if not, see
 // <http://www.gnu.org/licenses/>.
 //
-#ifndef INPUT_FILES_H
-#define INPUT_FILES_H
+#ifndef SOLVER_H
+#define SOLVER_H
 
-#include <string>
-#include <vector>
+#include <memory>
 
-#include "solver.h"
+#include "graph.h"
+#include "vertex.h"
 
 namespace INCLUDE_GARDENER {
 
-/// @brief Input_Files class
-class Input_Files {
+/// @brief Solver class
+class Solver {
  public:
-  /// @brief Ctor: not implemented!
-  Input_Files() = default;
+  /// @brief Smart pointer for Solver
+  using Ptr = std::shared_ptr<Solver>;
+
+  /// @brief Default ctor.
+  explicit Solver(Graph *graph);
 
   /// @brief  Copy ctor: not implemented!
-  Input_Files(const Input_Files &other) = default;
+  Solver(const Solver &other) = delete;
 
   /// @brief  Assignment operator: not implemented!
-  Input_Files &operator=(const Input_Files &rhs) = default;
+  Solver &operator=(const Solver &rhs) = delete;
 
   /// @brief  Move constructor: not implemented!
-  Input_Files(Input_Files &&rhs) = default;
+  Solver(Solver &&rhs) = delete;
 
   /// @brief  Move assignment operator: not implemented!
-  Input_Files &operator=(Input_Files &&rhs) = default;
+  Solver &operator=(Solver &&rhs) = delete;
 
   /// @brief Default dtor
-  ~Input_Files() = default;
+  virtual ~Solver() = default;
 
-  /// @brief Shall put all input files in the private storage files.
-  virtual void get(Solver::Ptr solver) = 0;
+  /// @brief Adds a vertex / entry.
+  virtual void add_vertex(const std::string &name,
+                          const std::string &abs_path = "",
+                          const std::string &rel_path = "");
 
-  /// @brief Processes all input files of the private storage files.
-  void run();
+  /// @brief Shall add an edge.
+  virtual void add_edge() = 0;
+
+  /// @brief Shall return the statements which shall be
+  ///        detected as regex.
+  virtual std::vector<std::string> get_statements() = 0;
+
+ protected:
+  /// @brief Pointer to the global graph instance.
+  Graph *graph;
+
+  /// @brief Storage of all added vertexes.
+  Vertex::Map vertexes;
 
  private:
-  /// @brief File storage vector.
-  std::vector<std::string> files;
-
-};  // class Input_Files
+};  // class Solver
 
 }  // namespace INCLUDE_GARDENER
 
-#endif  // INPUT_FILES_H
+#endif  // SOLVER_H
 
 // vim: filetype=cpp et ts=2 sw=2 sts=2
