@@ -31,8 +31,9 @@ class Statement_Detector_Test : public ::testing::Test {};
 TEST_F(Statement_Detector_Test, empty_initialization) {
   vector<string> string_list;
 
-  Statement_Detector d = Statement_Detector(string_list);
-  EXPECT_EQ(d.get_statements().size(), 0);
+  auto d = std::make_shared<Statement_Detector>(string_list);
+  EXPECT_EQ(d->get_statements().size(), 0);
+  d->wait_for_workers();
 }
 
 // vim: filetype=cpp et ts=2 sw=2 sts=2
