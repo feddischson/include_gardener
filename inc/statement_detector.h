@@ -29,6 +29,8 @@
 #include <thread>
 #include <vector>
 
+#include "solver.h"
+
 namespace INCLUDE_GARDENER {
 
 /// @brief Statement_Detector class
@@ -39,7 +41,7 @@ class Statement_Detector {
 
   /// @brief Default ctor.
   explicit Statement_Detector(const std::vector<std::string> &statement_list,
-                              int n_workers = 1);
+                              Solver::Ptr solver, int n_workers = 1);
 
   /// @brief  Default copy ctor.
   Statement_Detector(const Statement_Detector &other) = default;
@@ -63,13 +65,13 @@ class Statement_Detector {
   void wait_for_workers(void);
 
  protected:
- private:
   /// @brief Detects include / import statements.
   std::string detect(const std::string &line) const;
 
-  /// @brief Walk through a file and searches for include / import statements.
-  void walk_file(std::istream &input);
+  /// @brief Walk through a stream and searches for include / import statements.
+  void process_stream(std::istream &input);
 
+ private:
   /// @brief Threading method: takes an entry from job_queue to processes it.
   void do_work(int id);
 
@@ -92,6 +94,9 @@ class Statement_Detector {
 
   /// @brief Flag to end worker threads.
   bool all_work_done;
+
+  /// @brief Pointer to solver instance.
+  Solver::Ptr solver;
 
 };  // class Statement_Detector
 

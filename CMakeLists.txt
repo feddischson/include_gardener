@@ -117,6 +117,10 @@ add_executable( unit_test
                 src/detector.cpp
                 src/file_detector.cpp
                 src/statement_detector.cpp
+                src/input_files.cpp
+                src/vertex.cpp
+                src/solver.cpp
+                src/solver_c.cpp
                 test/unit_test/main.cpp
                 test/unit_test/test_config.cpp
                 test/unit_test/test_detector.cpp

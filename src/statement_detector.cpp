@@ -29,13 +29,14 @@ using namespace std;
 namespace INCLUDE_GARDENER {
 
 Statement_Detector::Statement_Detector(const vector<string>& statement_vector,
-    int n_workers )
+                                       Solver::Ptr solver, int n_workers)
     : statements(init_regex_vector(statement_vector)),
       workers(n_workers),
       job_queue(),
       job_queue_mutex(),
       job_queue_condition(),
-      all_work_done(false) {
+      all_work_done(false),
+      solver(solver) {
   for (int i = 0; i < n_workers; ++i) {
     workers[i] = thread(&Statement_Detector::do_work, this, i);
   }
@@ -61,15 +62,73 @@ std::string Statement_Detector::detect(const std::string& line) const {
   return "";
 }
 
-void Statement_Detector::walk_file(istream& input) {
+void Statement_Detector::process_stream(istream& input) {
+  string multi_line;
   string line;
+  bool found_multi_line = false;
   int line_cnt = 0;
+  string statement;
   while (getline(input, line)) {
-    string statement = detect(line);
-    if (0 == statement.length()) {
-      continue;
+    // handle empty lines
+    if (line.size() == 0) {
+      // if we previously got a multi-line statement: process it!
+      if (found_multi_line == true) {
+        statement = detect(multi_line);
+        if (0 == statement.length()) {
+          continue;
+        } else {
+          solver->add_edge();
+        }
+        found_multi_line = false;
+      } else {
+        // ... if not: move on.
+        line_cnt++;
+        continue;
+      }
+    }
+
+    if (line.back() == '\\') {
+      line.pop_back();
+      multi_line.append(line);
+      BOOST_LOG_TRIVIAL(trace) << "found multiline statement: " << line << endl;
+      found_multi_line = true;
+    } else {
+      if (found_multi_line) {
+        multi_line.append(line);
+        statement = detect(multi_line);
+        if (0 == statement.length()) {
+          continue;
+        } else {
+          solver->add_edge();
+        }
+        found_multi_line = false;
+      } else {
+        statement = detect(line);
+        if (0 == statement.length()) {
+          continue;
+        } else {
+          solver->add_edge();
+        }
+      }
     }
     line_cnt++;
+  }
+
+  // If 'found_multi_line' this is true:
+  // This means that the last line contains a backslash-newline,
+  // which is invalid.
+  if (found_multi_line) {
+    // A c-compiler warns here with
+    // "backslash-newline at the end of file".
+    // Assume, that the previous lines are a complete statement
+    // and process this multi-line statement.
+    //
+    BOOST_LOG_TRIVIAL(warning) << "Missing line at the end of stream" << endl;
+    statement = detect(multi_line);
+    if (0 != statement.length()) {
+      solver->add_edge();
+    }
+    found_multi_line = false;
   }
 }
 
@@ -92,7 +151,7 @@ void Statement_Detector::do_work(int id) {
 
     BOOST_LOG_TRIVIAL(debug) << "[" << id << "]"
                              << " processing" << entry.first;
-    // walk_file();
+    // process_stream();
   }
 }
 
