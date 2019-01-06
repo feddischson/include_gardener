@@ -32,7 +32,7 @@ class Statement_Detector_Test : public ::testing::Test {};
 class Mock_Solver : public Solver {
  public:
   Mock_Solver() : Solver(nullptr) {}
-  MOCK_METHOD0(add_edge, void());
+  MOCK_METHOD3(add_edge, void(const string &, const string &, unsigned int));
   MOCK_METHOD0(get_statements, std::vector<string>());
 };
 
@@ -40,11 +40,14 @@ class Mock_Statement_Detector : public Statement_Detector {
  public:
   Mock_Statement_Detector(const vector<string> &v, Solver::Ptr solver)
       : Statement_Detector(v, solver, 0) {}
-  std::string call_detect(const std::string &line) const {
+  optional<pair<string, unsigned int>> call_detect(
+      const std::string &line) const {
     return detect(line);
   }
 
-  void call_process_stream(istream &input) { process_stream(input); }
+  void call_process_stream(istream &input, const string &p) {
+    process_stream(input, p);
+  }
 };
 
 TEST_F(Statement_Detector_Test, empty_initialization) {
@@ -61,11 +64,15 @@ TEST_F(Statement_Detector_Test, simple_detection) {
   auto s = std::make_shared<Mock_Solver>();
   auto d = std::make_shared<Mock_Statement_Detector>(string_list, s);
   EXPECT_EQ(d->get_statements().size(), 1);
-  EXPECT_EQ(d->call_detect("  #include \"abc.h\""), "abc.h");
+  auto res = d->call_detect("  #include \"abc.h\"");
+  EXPECT_EQ(static_cast<bool>(res), true);
+  EXPECT_EQ(res->first, "abc.h");
+  EXPECT_EQ(res->second, 0);
   d->wait_for_workers();
 }
 
 TEST_F(Statement_Detector_Test, no_detection) {
+  using ::testing::_;
   vector<string> string_list;
   string_list.push_back("\\s*#\\s*(include|import)\\s+\"(\\S+)\"");
   auto s = std::make_shared<Mock_Solver>();
@@ -78,8 +85,8 @@ TEST_F(Statement_Detector_Test, no_detection) {
   sstream << "xyz" << endl;
 
   EXPECT_EQ(d->get_statements().size(), 1);
-  EXPECT_CALL(*s, add_edge()).Times(0);
-  d->call_process_stream(sstream);
+  EXPECT_CALL(*s, add_edge(_, _, _)).Times(0);
+  d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
 
@@ -96,8 +103,8 @@ TEST_F(Statement_Detector_Test, detection_from_stream) {
   sstream << "xyz" << endl;
 
   EXPECT_EQ(d->get_statements().size(), 1);
-  EXPECT_CALL(*s, add_edge()).Times(1);
-  d->call_process_stream(sstream);
+  EXPECT_CALL(*s, add_edge("id", "abc.h", 0)).Times(1);
+  d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
 
@@ -120,8 +127,8 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_1) {
   sstream << "xyz" << endl;
 
   EXPECT_EQ(d->get_statements().size(), 1);
-  EXPECT_CALL(*s, add_edge()).Times(1);
-  d->call_process_stream(sstream);
+  EXPECT_CALL(*s, add_edge("id", "abc.h", 0)).Times(1);
+  d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
 
@@ -139,11 +146,11 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_2) {
   sstream << "#\\" << endl;
   sstream << "inc\\" << endl;
   sstream << "lude \\" << endl;
-  sstream << "\"abc.h\"";  // valid statement, should get
+  sstream << "\"xyz.h\"";  // valid statement, should get
                            // detected!
   EXPECT_EQ(d->get_statements().size(), 1);
-  EXPECT_CALL(*s, add_edge()).Times(1);
-  d->call_process_stream(sstream);
+  EXPECT_CALL(*s, add_edge("other_id", "xyz.h", 0)).Times(1);
+  d->call_process_stream(sstream, "other_id");
   d->wait_for_workers();
 }
 
@@ -166,8 +173,8 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_3) {
   sstream << "\"abc.h\"\\";  // valid statement, should get
                              // detected!
   EXPECT_EQ(d->get_statements().size(), 1);
-  EXPECT_CALL(*s, add_edge()).Times(1);
-  d->call_process_stream(sstream);
+  EXPECT_CALL(*s, add_edge("id", "abc.h", 0)).Times(1);
+  d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
 
@@ -176,6 +183,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_3) {
 // separated by one line
 //
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_4) {
+  using ::testing::_;
   vector<string> string_list;
   string_list.push_back("\\s*#\\s*(include|import)\\s+\"(\\S+)\"");
   string_list.push_back("\\s*#\\s*(include|import)\\s+<(\\S+)>");
@@ -190,12 +198,12 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_4) {
   sstream << "\"abc.h\"" << endl;  // valid statement, should get
                                    // detected!
   sstream << "xyz" << endl;
-  sstream << "#include <abc.h>" << endl;  // next valid statement
+  sstream << "#include <xyz.h>" << endl;  // next valid statement
   sstream << "xyz" << endl;
 
   EXPECT_EQ(d->get_statements().size(), 2);
-  EXPECT_CALL(*s, add_edge()).Times(2);
-  d->call_process_stream(sstream);
+  EXPECT_CALL(*s, add_edge("id", _, _)).Times(2);
+  d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
 
@@ -204,6 +212,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_4) {
 // not separated (direct following)
 //
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_5) {
+  using ::testing::_;
   vector<string> string_list;
   string_list.push_back("\\s*#\\s*(include|import)\\s+\"(\\S+)\"");
   string_list.push_back("\\s*#\\s*(include|import)\\s+<(\\S+)>");
@@ -221,8 +230,8 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_5) {
   sstream << "xyz" << endl;
 
   EXPECT_EQ(d->get_statements().size(), 2);
-  EXPECT_CALL(*s, add_edge()).Times(2);
-  d->call_process_stream(sstream);
+  EXPECT_CALL(*s, add_edge("id", _, _)).Times(2);
+  d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
 
@@ -232,6 +241,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_5) {
 // statement first.
 //
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_6) {
+  using ::testing::_;
   vector<string> string_list;
   string_list.push_back("\\s*#\\s*(include|import)\\s+\"(\\S+)\"");
   string_list.push_back("\\s*#\\s*(include|import)\\s+<(\\S+)>");
@@ -248,8 +258,8 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_6) {
   sstream << "xyz" << endl;
 
   EXPECT_EQ(d->get_statements().size(), 2);
-  EXPECT_CALL(*s, add_edge()).Times(2);
-  d->call_process_stream(sstream);
+  EXPECT_CALL(*s, add_edge("id", _, _)).Times(2);
+  d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
 

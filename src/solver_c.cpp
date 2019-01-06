@@ -25,7 +25,7 @@
 
 namespace INCLUDE_GARDENER {
 
-Solver_C::Solver_C(Graph* graph) : Solver(graph) {}
+Solver_C::Solver_C(Graph *graph) : Solver(graph) {}
 
 std::vector<std::string> Solver_C::get_statements() {
   std::vector<std::string> statements = {
@@ -34,10 +34,8 @@ std::vector<std::string> Solver_C::get_statements() {
   return statements;
 }
 
-void Solver_C::add_edge(){
-
-}
-
+void Solver_C::add_edge(const std::string &, const std::string &,
+                        unsigned int) {}
 
 }  // namespace INCLUDE_GARDENER
 

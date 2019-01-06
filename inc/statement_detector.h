@@ -24,6 +24,7 @@
 #include <condition_variable>
 #include <iostream>
 #include <mutex>
+#include <optional>
 #include <regex>
 #include <string>
 #include <thread>
@@ -58,6 +59,9 @@ class Statement_Detector {
   /// @brief Default dtor
   ~Statement_Detector() = default;
 
+  /// @brief Adds a further job (path to file, which is processed).
+  void add_job(const std::string &abs_path);
+
   /// @brief Returns list of statements (as regex)
   std::vector<std::regex> get_statements();
 
@@ -66,10 +70,11 @@ class Statement_Detector {
 
  protected:
   /// @brief Detects include / import statements.
-  std::string detect(const std::string &line) const;
+  std::optional<std::pair<std::string, unsigned int>> detect(
+      const std::string &line) const;
 
   /// @brief Walk through a stream and searches for include / import statements.
-  void process_stream(std::istream &input);
+  void process_stream(std::istream &input, const std::string &p);
 
  private:
   /// @brief Threading method: takes an entry from job_queue to processes it.
@@ -84,7 +89,7 @@ class Statement_Detector {
   /// @brief Each entry includes the name and path of the include entry.
   /// @details
   ///        The queue is protected by job_queue_mutex and job_queue_condition.
-  std::deque<std::pair<std::string, std::string> > job_queue;
+  std::deque<std::string> job_queue;
 
   /// @brief Protects job_queue (all worker threads and main-thread).
   std::mutex job_queue_mutex;

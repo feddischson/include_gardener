@@ -58,7 +58,8 @@ class Solver {
                           const std::string &rel_path = "");
 
   /// @brief Shall add an edge.
-  virtual void add_edge() = 0;
+  virtual void add_edge(const std::string &input_path,
+                        const std::string &statement, unsigned int idx) = 0;
 
   /// @brief Shall return the statements which shall be
   ///        detected as regex.

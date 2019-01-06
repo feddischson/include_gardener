@@ -21,6 +21,7 @@
 #include "statement_detector.h"
 
 #include <boost/log/trivial.hpp>
+#include <fstream>
 
 #include "helper.h"
 
@@ -42,42 +43,49 @@ Statement_Detector::Statement_Detector(const vector<string>& statement_vector,
   }
 }
 
-std::vector<std::regex> Statement_Detector::get_statements() {
-  return statements;
+void Statement_Detector::add_job(const string& abs_path) {
+  unique_lock<mutex> lck(job_queue_mutex);
+  job_queue.push_front(abs_path);
+  job_queue_condition.notify_all();
 }
 
-std::string Statement_Detector::detect(const std::string& line) const {
+vector<regex> Statement_Detector::get_statements() { return statements; }
+
+optional<pair<string, unsigned int>> Statement_Detector::detect(
+    const string& line) const {
   smatch match;
-  for (auto s : statements) {
+  for (unsigned int i = 0; i < statements.size(); i++) {
+    auto s = statements[i];
     if (regex_search(line, match, s)) {
       if (match.size() == 0) {
         continue;
       } else {
         BOOST_LOG_TRIVIAL(trace) << "Statement matched:" << endl;
         BOOST_LOG_TRIVIAL(trace) << "Size: " << match.size();
-        return match[match.size() - 1];
+        return pair<string, unsigned int>(match[match.size() - 1], i);
       }
     }
   }
-  return "";
+  return {};
 }
 
-void Statement_Detector::process_stream(istream& input) {
+void Statement_Detector::process_stream(istream& input,
+                                        const string& input_path) {
   string multi_line;
   string line;
   bool found_multi_line = false;
   int line_cnt = 0;
-  string statement;
+  optional<pair<string, int>> statement;
   while (getline(input, line)) {
     // handle empty lines
     if (line.size() == 0) {
       // if we previously got a multi-line statement: process it!
       if (found_multi_line == true) {
         statement = detect(multi_line);
-        if (0 == statement.length()) {
+        if (!statement) {
           continue;
         } else {
-          solver->add_edge();
+          solver->add_edge(input_path, statement->first, statement->second);
         }
         found_multi_line = false;
       } else {
@@ -96,18 +104,18 @@ void Statement_Detector::process_stream(istream& input) {
       if (found_multi_line) {
         multi_line.append(line);
         statement = detect(multi_line);
-        if (0 == statement.length()) {
+        if (!statement) {
           continue;
         } else {
-          solver->add_edge();
+          solver->add_edge(input_path, statement->first, statement->second);
         }
         found_multi_line = false;
       } else {
         statement = detect(line);
-        if (0 == statement.length()) {
+        if (!statement) {
           continue;
         } else {
-          solver->add_edge();
+          solver->add_edge(input_path, statement->first, statement->second);
         }
       }
     }
@@ -125,8 +133,8 @@ void Statement_Detector::process_stream(istream& input) {
     //
     BOOST_LOG_TRIVIAL(warning) << "Missing line at the end of stream" << endl;
     statement = detect(multi_line);
-    if (0 != statement.length()) {
-      solver->add_edge();
+    if (statement) {
+      solver->add_edge(input_path, statement->first, statement->second);
     }
     found_multi_line = false;
   }
@@ -150,8 +158,9 @@ void Statement_Detector::do_work(int id) {
     job_queue_condition.notify_all();
 
     BOOST_LOG_TRIVIAL(debug) << "[" << id << "]"
-                             << " processing" << entry.first;
-    // process_stream();
+                             << " processing" << entry;
+    ifstream ifs(entry, ifstream::in);
+    process_stream(ifs, entry);
   }
 }
 

@@ -52,7 +52,8 @@ class Solver_C : public Solver {
   virtual ~Solver_C() = default;
 
   /// @brief Adds an edge to the graph.
-  virtual void add_edge();
+  virtual void add_edge(const std::string &input_path,
+                        const std::string &statement, unsigned int idx);
 
   /// @brief Returns the statements which shall be
   ///        detected as regex.
