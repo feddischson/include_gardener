@@ -230,6 +230,10 @@ Solver::Ptr init_options(int argc, char* argv[]) {
    }
 
    auto solver = Solver::get_solver(opts.language, &g);
+   if (nullptr == solver) {
+      cerr << "Error: Unsuported language \""<<opts.language << "\"" << "\n";
+      exit(-1);
+   }
    solver->extract_options(vm);
 
    BOOST_LOG_TRIVIAL(trace) << "n_threads:      " << opts.n_threads;
