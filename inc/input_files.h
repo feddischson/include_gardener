@@ -28,7 +28,11 @@
 
 namespace INCLUDE_GARDENER {
 
-/// @brief Input_Files class
+/// @brief Abstract Input_Files class.
+/// @details
+///     Derived classes shall give the possibility to provide a list of
+///     input files, e.g. by searching the file system.
+/// @author feddischson
 class Input_Files {
  public:
   /// @brief String-list iterator alias.
@@ -37,16 +41,16 @@ class Input_Files {
   /// @brief Ctor: not implemented!
   Input_Files() = default;
 
-  /// @brief  Copy ctor: not implemented!
+  /// @brief Copy ctor: not implemented!
   Input_Files(const Input_Files &other) = default;
 
-  /// @brief  Assignment operator: not implemented!
+  /// @brief Assignment operator: not implemented!
   Input_Files &operator=(const Input_Files &rhs) = default;
 
-  /// @brief  Move constructor: not implemented!
+  /// @brief Move constructor: not implemented!
   Input_Files(Input_Files &&rhs) = default;
 
-  /// @brief  Move assignment operator: not implemented!
+  /// @brief Move assignment operator: not implemented!
   Input_Files &operator=(Input_Files &&rhs) = default;
 
   /// @brief Default dtor
@@ -62,7 +66,7 @@ class Input_Files {
   Itr end();
 
  protected:
-  /// @brief File storage vector.
+  /// @brief List of detected files.
   std::list<std::string> files;
 
 };  // class Input_Files

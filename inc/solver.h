@@ -31,25 +31,40 @@
 
 namespace INCLUDE_GARDENER {
 
-/// @brief Solver class
+/// @brief Solvers are used to solve an include relation ship between to files.
+/// @details
+///     Different solvers exist, depending on the language.
+///     In case of c-language, the c_solver behaves similar like the
+///     c-preprocessor in case of include statements.
+///     Of course, this behaviour is different for other languages.
+///     The important method which needs to be implemented by a derived
+///     solver class is add_edge.
+///     Furthermore, get_statement_regex and get_file_regex needs to be
+///     implemented to provide language-specific regular expressions.
+///     Moreover, each solver provides each own options (via static method
+///     add_options), and each solver instance can extract the options via
+///     extract_options.
+///
+/// @TODO The Graph g could be moved into this class.
 class Solver {
  public:
   /// @brief Smart pointer for Solver
   using Ptr = std::shared_ptr<Solver>;
 
-  /// @brief Default ctor.
+  /// @brief Initializes all members.
+  /// @param graph Pointer to the global graph instance.
   explicit Solver(Graph *graph);
 
-  /// @brief  Copy ctor: not implemented!
+  /// @brief Copy ctor: not implemented!
   Solver(const Solver &other) = delete;
 
-  /// @brief  Assignment operator: not implemented!
+  /// @brief Assignment operator: not implemented!
   Solver &operator=(const Solver &rhs) = delete;
 
-  /// @brief  Move constructor: not implemented!
+  /// @brief Move constructor: not implemented!
   Solver(Solver &&rhs) = delete;
 
-  /// @brief  Move assignment operator: not implemented!
+  /// @brief Move assignment operator: not implemented!
   Solver &operator=(Solver &&rhs) = delete;
 
   /// @brief Default dtor
@@ -65,6 +80,7 @@ class Solver {
                         unsigned int line_no) = 0;
 
   /// @brief Shall return the regex for the statements which shall be
+  //
   ///        detected.
   virtual std::vector<std::string> get_statement_regex() = 0;
 

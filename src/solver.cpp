@@ -28,7 +28,7 @@
 
 namespace INCLUDE_GARDENER {
 
-Solver::Solver(Graph* graph) : graph(graph) {}
+Solver::Solver(Graph* graph) : graph(graph), vertexes(), graph_mutex() {}
 
 void Solver::add_vertex(const std::string& name, const std::string& abs_path) {
   using namespace std;

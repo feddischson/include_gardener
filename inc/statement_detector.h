@@ -34,25 +34,40 @@
 
 namespace INCLUDE_GARDENER {
 
-/// @brief Statement_Detector class
+/// @brief Instances of this class are used to search for include-statements.
+/// @details
+///   This class can be used for any language.
+///   One or multiple regular expressions can be provided to search for
+///   include/import statements.
+///   This class implements also a multi-threading mechanism, where
+///   a file which shall be processed is added to a queue (via add_job).
+///   The number of worker-threads is defined by n_workers in the ctor.
+///
+///   @TODO It would be good to ensure that wait_for_workers() is called in any
+///   case.
 class Statement_Detector {
  public:
   /// @brief Smart pointer for Statement_Detector
   using Ptr = std::shared_ptr<Statement_Detector>;
 
-  /// @brief Default ctor.
+  /// @brief Initializes all members.
+  ///       The member all_work_done is initialized with false.
+  /// @param solver
+  ///     A language-specific solver which is used to process a detected
+  ///     statement.
+  // @param n_workers Limits the number of threads. Must be >= 1.
   explicit Statement_Detector(Solver::Ptr solver, int n_workers = 1);
 
-  /// @brief  Default copy ctor.
+  /// @brief Default copy ctor.
   Statement_Detector(const Statement_Detector &other) = default;
 
-  /// @brief  Default assignment operator.
+  /// @brief Default assignment operator.
   Statement_Detector &operator=(const Statement_Detector &rhs) = default;
 
-  /// @brief  Default move constructor.
+  /// @brief Default move constructor.
   Statement_Detector(Statement_Detector &&rhs) = default;
 
-  /// @brief  Default move assignment operator.
+  /// @brief Default move assignment operator.
   Statement_Detector &operator=(Statement_Detector &&rhs) = default;
 
   /// @brief Default dtor

@@ -31,7 +31,7 @@ namespace INCLUDE_GARDENER {
 namespace po = boost::program_options;
 using namespace std;
 
-Solver_C::Solver_C(Graph *graph) : Solver(graph) {}
+Solver_C::Solver_C(Graph *graph) : Solver(graph), include_paths() {}
 
 vector<string> Solver_C::get_statement_regex() {
   vector<string> regex_str = {"\\s*#\\s*(include|import)\\s+\"(\\S+)\"",
@@ -60,7 +60,7 @@ void Solver_C::extract_options(const po::variables_map &vm) {
 void Solver_C::add_edge(const string &src_path, const string &statement,
                         unsigned int idx, unsigned int line_no) {
   using namespace boost::filesystem;
-  unique_lock<mutex> glck( graph_mutex );
+  unique_lock<mutex> glck(graph_mutex);
   BOOST_LOG_TRIVIAL(trace) << "add_edge: " << src_path << " -> " << statement
                            << ", idx = " << idx << ", line_no = " << line_no;
 

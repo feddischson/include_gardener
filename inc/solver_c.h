@@ -27,7 +27,13 @@
 
 namespace INCLUDE_GARDENER {
 
-/// @brief Solver_C class
+/// @brief Solver class for C/C++/Obj-C language.
+/// @details
+///   Instances of this class behave simlar to the C-pre-processor.
+///   When an include statement is detected:
+///   Depending if it is a #include "" or #include <> statement,
+///   the file is searched relative to the source file first, or
+///   in the include paths, provided by the option c-include-path list.
 class Solver_C : public Solver {
  public:
   /// @brief Smart pointer for Solver_C
@@ -36,22 +42,26 @@ class Solver_C : public Solver {
   /// @brief Ctor: only calls super ctor.
   explicit Solver_C(Graph *graph);
 
-  /// @brief  Copy ctor: not implemented!
+  /// @brief Copy ctor: not implemented!
   Solver_C(const Solver_C &other) = delete;
 
-  /// @brief  Assignment operator: not implemented!
+  /// @brief Assignment operator: not implemented!
   Solver_C &operator=(const Solver_C &rhs) = delete;
 
-  /// @brief  Move constructor: not implemented!
+  /// @brief Move constructor: not implemented!
   Solver_C(Solver_C &&rhs) = delete;
 
-  /// @brief  Move assignment operator: not implemented!
+  /// @brief Move assignment operator: not implemented!
   Solver_C &operator=(Solver_C &&rhs) = delete;
 
   /// @brief Default dtor
   virtual ~Solver_C() = default;
 
   /// @brief Adds an edge to the graph.
+  /// @param src_path Path the the source path (where the statement is detected.
+  /// @param statement The detected statement
+  /// @param idx The index of the regular expression, which matched.
+  /// @param line_no The line number where the statement is detected.
   virtual void add_edge(const std::string &src_path,
                         const std::string &statement, unsigned int idx,
                         unsigned int line_no);
@@ -71,11 +81,17 @@ class Solver_C : public Solver {
   static void add_options(boost::program_options::options_description *options);
 
  protected:
+  /// @brief Adds an edge
+  /// @param src_path Path the the source path (where the statement is detected.
+  /// @param dst_path Path of the destination file (the file which is included).
+  /// @param name The statement (mostly the name of the file).
+  /// @param line_no The line number where the statement is detected.
   virtual void insert_edge(const std::string &src_path,
                            const std::string &dst_path, const std::string &name,
                            unsigned int line_no);
 
  private:
+  /// @brief Search path for include statements.
   std::vector<std::string> include_paths;
 };  // class Solver_C
 

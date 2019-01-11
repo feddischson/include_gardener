@@ -29,25 +29,34 @@
 
 namespace INCLUDE_GARDENER {
 
-/// @brief File_Detector class
+/// @brief Instances of this class are used to search for specific input files.
+/// @details
+///   A regular expression is provided to define the search pattern.
+///   In addition, a list of regular expressions can be given to define,
+///   which files shall be excluded.
+/// @author feddischson
 class File_Detector : public Input_Files {
  public:
-  /// @brief Ctor TODO!
+  /// @brief Ctor: Initializes all members.
+  /// @param file_regex The regex which defines the input files
+  /// @param exlucde_regex The regex which defines the exluded files
+  /// @param base_paths All paths in this vector are processed.
+  /// @param recursive_limit Defines the recursive search limit when != 0
   File_Detector(const std::string &file_regex,
                 const std::vector<std::string> &exclude_regex,
                 const std::vector<std::string> &base_paths,
                 int recursive_limit = 0);
 
-  /// @brief  Default copy ctor!
+  /// @brief Default copy ctor!
   File_Detector(const File_Detector &other) = default;
 
-  /// @brief  Default assignment operator!
+  /// @brief Default assignment operator!
   File_Detector &operator=(const File_Detector &rhs) = default;
 
-  /// @brief  Default move constructor!
+  /// @brief Default move constructor!
   File_Detector(File_Detector &&rhs) = default;
 
-  /// @brief  Default move assignment operator!
+  /// @brief Default move assignment operator!
   File_Detector &operator=(File_Detector &&rhs) = default;
 
   /// @brief Default dtor
@@ -65,6 +74,10 @@ class File_Detector : public Input_Files {
  private:
   /// @brief  Runs through a given file path and proceedes all include files.
   /// @return True on success, false if the path doesn't exist.
+  /// @param base_path The base path in which the search is started.
+  /// @param solver Pointer to the solver instance
+  /// @param sub_path The sub_path (within base_path) which is processed
+  /// @param recusive_cnt The current recursive counter.
   bool walk_tree(const std::string &base_path, Solver::Ptr solver,
                  const std::string &sub_path = "", int recursive_cnt = 0);
 
@@ -82,7 +95,7 @@ class File_Detector : public Input_Files {
   bool use_exclude_regex;
 
   /// @brief Helper function to check if a file should be excluded.
-  bool exclude_regex_search(std::string) const;
+  bool exclude_regex_search(std::string path_string) const;
 
   /// @brief Limit for the recursive file search.
   const int recursive_limit;

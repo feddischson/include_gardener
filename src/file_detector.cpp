@@ -75,6 +75,9 @@ void File_Detector::get(Solver::Ptr solver) {
   }
 }
 
+/// @details
+///   Runs through all entries. If an entry is a file,  it is processed.
+///   In case of an directory, a recursive call is done.
 bool File_Detector::walk_tree(const string& base_path, Solver::Ptr solver,
                               const string& sub_path, int recursive_cnt) {
   using namespace boost::filesystem;

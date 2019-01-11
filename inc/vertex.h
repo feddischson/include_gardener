@@ -27,7 +27,10 @@
 
 namespace INCLUDE_GARDENER {
 
-/// @brief Vertex class
+/// @brief Instances of this class represent a vertex
+/// @details
+///     A vertex is a file (existing or not existing) found or processed
+///     by this tool.
 class Vertex {
  public:
   /// @brief Smart pointer for Vertex
@@ -38,20 +41,19 @@ class Vertex {
 
   /// @brief Ctor
   /// @param abs_path absolute path
-  /// @param rel_path relative path (seen from execution of this tool)
   /// @param name file name including file ending
   Vertex(const std::string &name, const std::string &abs_path = "");
 
-  /// @brief  Copy ctor: not implemented!
+  /// @brief Copy ctor: not implemented!
   Vertex(const Vertex &other) = delete;
 
-  /// @brief  Assignment operator: not implemented!
+  /// @brief Assignment operator: not implemented!
   Vertex &operator=(const Vertex &rhs) = delete;
 
-  /// @brief  Move constructor: not implemented!
+  /// @brief Move constructor: not implemented!
   Vertex(Vertex &&rhs) = delete;
 
-  /// @brief  Move assignment operator: not implemented!
+  /// @brief Move assignment operator: not implemented!
   Vertex &operator=(Vertex &&rhs) = delete;
 
   /// @brief Default dtor
@@ -66,10 +68,6 @@ class Vertex {
 
   /// @brief Absolute path
   const std::string abs_path;
-
-  /// @brief Relative path
-  /// (seen from execution of this tool)
-  const std::string rel_path;
 
 };  // class Vertex
 
