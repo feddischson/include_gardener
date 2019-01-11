@@ -30,12 +30,12 @@ namespace INCLUDE_GARDENER {
 
 File_Detector::File_Detector(const string& file_regex,
                              const vector<string>& exclude_regex,
-                             const vector<string>& base_paths,
+                             const vector<string>& process_paths,
                              int recursive_limit)
     : file_regex(file_regex,
                  regex_constants::ECMAScript | regex_constants::icase),
       exclude_regex(init_regex_vector(exclude_regex)),
-      base_paths(base_paths),
+      process_paths(process_paths),
       use_exclude_regex(exclude_regex.size() > 0),
       recursive_limit(recursive_limit) {}
 
@@ -69,7 +69,7 @@ bool File_Detector::exclude_regex_search(std::string path_string) const {
 }
 
 void File_Detector::get(Solver::Ptr solver) {
-  for (auto p : base_paths) {
+  for (auto p : process_paths) {
     BOOST_LOG_TRIVIAL(info) << "Processing sources from " << p;
     walk_tree(p, solver);
   }
@@ -110,9 +110,10 @@ bool File_Detector::walk_tree(const string& base_path, Solver::Ptr solver,
         continue;
       }
 
-      path abs_path = canonical(current_path()/itr_path);
+      path abs_path = canonical(current_path() / itr_path);
       BOOST_LOG_TRIVIAL(trace) << "(Absolute path=" << abs_path << ")";
-      solver->add_vertex(name, abs_path.string(), itr_path);
+      solver->add_vertex(name, abs_path.string());
+      files.push_back(abs_path.string());
     } else {
       // ignore all other files
       BOOST_LOG_TRIVIAL(trace) << "Ignoring " << itr_path;

@@ -21,8 +21,8 @@
 #ifndef VERTEX_H
 #define VERTEX_H
 
-#include <memory>
 #include <map>
+#include <memory>
 #include <string>
 
 namespace INCLUDE_GARDENER {
@@ -34,14 +34,13 @@ class Vertex {
   using Ptr = std::shared_ptr<Vertex>;
 
   /// @brief A Map with string as key and a pointer to the Vertex as value.
-  using Map = std::map< std::string, Ptr >;
+  using Map = std::map<std::string, Ptr>;
 
   /// @brief Ctor
   /// @param abs_path absolute path
   /// @param rel_path relative path (seen from execution of this tool)
   /// @param name file name including file ending
-  Vertex(const std::string &name, const std::string &abs_path = "",
-         const std::string &rel_path = "");
+  Vertex(const std::string &name, const std::string &abs_path = "");
 
   /// @brief  Copy ctor: not implemented!
   Vertex(const Vertex &other) = delete;
@@ -57,6 +56,9 @@ class Vertex {
 
   /// @brief Default dtor
   ~Vertex() = default;
+
+  /// @brief Returns the name of the vertex.
+  std::string get_name();
 
  private:
   /// @brief file name, including file ending

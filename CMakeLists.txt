@@ -8,9 +8,6 @@ set ( GARDENER_VERSION
   "${GARDENER_VERSION_MAJOR}.${GARDENER_VERSION_MINOR}.${GARDENER_VERSION_PATCH}" )
 
 
-set ( GARDENER_CONF ${CMAKE_CURRENT_SOURCE_DIR}/include_gardener.conf )
-set ( GARDENER_CONF_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/etc/include_gardener/include_gardener.conf )
-
 find_package(Boost REQUIRED COMPONENTS log system filesystem program_options )
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
@@ -44,27 +41,21 @@ add_definitions( -D_GARDENER_VERSION_MAJOR=${GARDENER_VERSION_MAJOR})
 add_definitions( -D_GARDENER_VERSION_MINOR=${GARDENER_VERSION_MINOR})
 add_definitions( -D_GARDENER_VERSION_PATCH=${GARDENER_VERSION_PATCH})
 add_definitions( -D_GARDENER_VERSION="${GARDENER_VERSION}")
-add_definitions( -D_GARDENER_CONFIG_PATH="${GARDENER_CONF_INSTALL_PATH}")
 
 add_executable ( include_gardener
                  src/main.cpp
                  src/helper.cpp
-                 src/include_path.cpp
-                 src/config.cpp
-                 src/detector.cpp
                  src/statement_detector.cpp
                  src/file_detector.cpp
                  src/input_files.cpp
                  src/vertex.cpp
                  src/solver.cpp
-                 src/solver_c.cpp
-                ${GARDENER_CONF} )
+                 src/solver_c.cpp )
 
 target_link_libraries( include_gardener ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries( include_gardener ${Boost_LIBRARIES} )
 
 install( TARGETS include_gardener DESTINATION bin )
-install( FILES   ${GARDENER_CONF} DESTINATION etc/include_gardener COMPONENT config )
 
 enable_testing()
 
@@ -72,9 +63,9 @@ enable_testing()
 #
 # Download and unpack googletest at configure time
 #      configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
-#     
-#     
-#     
+#
+#
+#
 # Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.in
               googletest-download/CMakeLists.txt)
@@ -109,12 +100,10 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
   include_directories("${gtest_SOURCE_DIR}/include"
                       "${gmock_SOURCE_DIR}/include")
 endif()
-#     
+#
 ########
 add_executable( unit_test
-                src/config.cpp
                 src/helper.cpp
-                src/detector.cpp
                 src/file_detector.cpp
                 src/statement_detector.cpp
                 src/input_files.cpp
@@ -122,11 +111,8 @@ add_executable( unit_test
                 src/solver.cpp
                 src/solver_c.cpp
                 test/unit_test/main.cpp
-                test/unit_test/test_config.cpp
-                test/unit_test/test_detector.cpp
                 test/unit_test/test_file_detector.cpp
-                test/unit_test/test_statement_detector.cpp
-                ${GARDENER_CONF} )
+                test/unit_test/test_statement_detector.cpp )
 
 add_dependencies( unit_test gmock )
 add_dependencies( unit_test gtest )

@@ -21,8 +21,8 @@
 #ifndef INPUT_FILES_H
 #define INPUT_FILES_H
 
+#include <list>
 #include <string>
-#include <vector>
 
 #include "solver.h"
 
@@ -31,6 +31,9 @@ namespace INCLUDE_GARDENER {
 /// @brief Input_Files class
 class Input_Files {
  public:
+  /// @brief String-list iterator alias.
+  using Itr = std::list<std::string>::const_iterator;
+
   /// @brief Ctor: not implemented!
   Input_Files() = default;
 
@@ -47,17 +50,20 @@ class Input_Files {
   Input_Files &operator=(Input_Files &&rhs) = default;
 
   /// @brief Default dtor
-  ~Input_Files() = default;
+  virtual ~Input_Files() = default;
 
   /// @brief Shall put all input files in the private storage files.
   virtual void get(Solver::Ptr solver) = 0;
 
-  /// @brief Processes all input files of the private storage files.
-  void run();
+  /// @brief Returns the beginning of the files.
+  Itr begin();
 
- private:
+  /// @brief Returns the end of the files.
+  Itr end();
+
+ protected:
   /// @brief File storage vector.
-  std::vector<std::string> files;
+  std::list<std::string> files;
 
 };  // class Input_Files
 

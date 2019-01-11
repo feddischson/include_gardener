@@ -29,9 +29,8 @@ using namespace std;
 
 namespace INCLUDE_GARDENER {
 
-Statement_Detector::Statement_Detector(const vector<string>& statement_vector,
-                                       Solver::Ptr solver, int n_workers)
-    : statements(init_regex_vector(statement_vector)),
+Statement_Detector::Statement_Detector(Solver::Ptr solver, int n_workers)
+    : statements(init_regex_vector(solver->get_statement_regex())),
       workers(n_workers),
       job_queue(),
       job_queue_mutex(),
@@ -60,7 +59,8 @@ optional<pair<string, unsigned int>> Statement_Detector::detect(
       if (match.size() == 0) {
         continue;
       } else {
-        BOOST_LOG_TRIVIAL(trace) << "Statement matched:" << endl;
+        BOOST_LOG_TRIVIAL(trace) << "Statement matched:"
+                                 << "\n";
         BOOST_LOG_TRIVIAL(trace) << "Size: " << match.size();
         return pair<string, unsigned int>(match[match.size() - 1], i);
       }
@@ -74,7 +74,7 @@ void Statement_Detector::process_stream(istream& input,
   string multi_line;
   string line;
   bool found_multi_line = false;
-  int line_cnt = 0;
+  unsigned int line_cnt = 0;
   optional<pair<string, int>> statement;
   while (getline(input, line)) {
     // handle empty lines
@@ -85,7 +85,8 @@ void Statement_Detector::process_stream(istream& input,
         if (!statement) {
           continue;
         } else {
-          solver->add_edge(input_path, statement->first, statement->second);
+          solver->add_edge(input_path, statement->first, statement->second,
+                           line_cnt);
         }
         found_multi_line = false;
       } else {
@@ -98,24 +99,28 @@ void Statement_Detector::process_stream(istream& input,
     if (line.back() == '\\') {
       line.pop_back();
       multi_line.append(line);
-      BOOST_LOG_TRIVIAL(trace) << "found multiline statement: " << line << endl;
+      BOOST_LOG_TRIVIAL(trace) << "found multiline statement: " << line << "\n";
       found_multi_line = true;
     } else {
       if (found_multi_line) {
         multi_line.append(line);
         statement = detect(multi_line);
         if (!statement) {
+          line_cnt++;
           continue;
         } else {
-          solver->add_edge(input_path, statement->first, statement->second);
+          solver->add_edge(input_path, statement->first, statement->second,
+                           line_cnt);
         }
         found_multi_line = false;
       } else {
         statement = detect(line);
         if (!statement) {
+          line_cnt++;
           continue;
         } else {
-          solver->add_edge(input_path, statement->first, statement->second);
+          solver->add_edge(input_path, statement->first, statement->second,
+                           line_cnt);
         }
       }
     }
@@ -131,10 +136,12 @@ void Statement_Detector::process_stream(istream& input,
     // Assume, that the previous lines are a complete statement
     // and process this multi-line statement.
     //
-    BOOST_LOG_TRIVIAL(warning) << "Missing line at the end of stream" << endl;
+    BOOST_LOG_TRIVIAL(warning) << "Missing line at the end of stream"
+                               << "\n";
     statement = detect(multi_line);
     if (statement) {
-      solver->add_edge(input_path, statement->first, statement->second);
+      solver->add_edge(input_path, statement->first, statement->second,
+                       line_cnt);
     }
     found_multi_line = false;
   }

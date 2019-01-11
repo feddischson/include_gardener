@@ -23,19 +23,103 @@
 #include <string>
 #include <vector>
 
+#include <boost/filesystem.hpp>
+#include <boost/log/trivial.hpp>
+
 namespace INCLUDE_GARDENER {
+
+namespace po = boost::program_options;
+using namespace std;
 
 Solver_C::Solver_C(Graph *graph) : Solver(graph) {}
 
-std::vector<std::string> Solver_C::get_statements() {
-  std::vector<std::string> statements = {
-      "\\s*#\\s*(include|import)\\s+\"(\\S+)\"",
-      "\\s*#\\s*(include|import)\\s+<(\\S+)>"};
-  return statements;
+vector<string> Solver_C::get_statement_regex() {
+  vector<string> regex_str = {"\\s*#\\s*(include|import)\\s+\"(\\S+)\"",
+                              "\\s*#\\s*(include|import)\\s+<(\\S+)>"};
+  return regex_str;
 }
 
-void Solver_C::add_edge(const std::string &, const std::string &,
-                        unsigned int) {}
+string Solver_C::get_file_regex() { return string("(.*)\\.(c|h)$"); }
+
+void Solver_C::add_options(po::options_description *desc) {
+  desc->add_options()("c-include-path,I",
+                      po::value<vector<string> >()->composing(),
+                      "c-include path");
+}
+
+void Solver_C::extract_options(const po::variables_map &vm) {
+  if (true == vm.count("c-include-path")) {
+    include_paths = vm["c-include-path"].as<vector<string> >();
+  }
+  BOOST_LOG_TRIVIAL(trace) << "c-include-paths:   ";
+  for (auto p : include_paths) {
+    BOOST_LOG_TRIVIAL(trace) << "    " << p;
+  }
+}
+
+void Solver_C::add_edge(const string &src_path, const string &statement,
+                        unsigned int idx, unsigned int line_no) {
+  using namespace boost::filesystem;
+  unique_lock<mutex> glck( graph_mutex );
+  BOOST_LOG_TRIVIAL(trace) << "add_edge: " << src_path << " -> " << statement
+                           << ", idx = " << idx << ", line_no = " << line_no;
+
+  if (0 == idx) {
+    // construct relative path from the same directory as
+    // the file that contains the #include statement.
+    path base = path(src_path).parent_path();
+    path dst_path = base / statement;
+    if (exists(dst_path)) {
+      dst_path = canonical(dst_path);
+      BOOST_LOG_TRIVIAL(trace) << "   |>> Relative Edge";
+      insert_edge(src_path, dst_path.string(), statement, line_no);
+      return;
+    }
+  }
+
+  // search in preconfigured list of standard system directories
+  for (auto i_path : include_paths) {
+    path dst_path = i_path / statement;
+    if (exists(dst_path)) {
+      dst_path = canonical(dst_path);
+      BOOST_LOG_TRIVIAL(trace) << "   |>> Absolute Edge";
+      insert_edge(src_path, dst_path.string(), statement, line_no);
+      return;
+    }
+  }
+
+  // if non of the cases above found a file:
+  // -> add an dummy entry
+  insert_edge(src_path, "", statement, line_no);
+}
+
+void Solver_C::insert_edge(const std::string &src_path,
+                           const std::string &dst_path, const std::string &name,
+                           unsigned int line_no) {
+  add_vertex(name, dst_path);
+  string key;
+
+  Edge_Descriptor edge;
+  bool b;
+
+  if (0 == dst_path.length()) {
+    BOOST_LOG_TRIVIAL(trace) << "insert_edge: "
+                             << "\n"
+                             << "   src = " << src_path << "\n"
+                             << "   dst = " << name << "\n"
+                             << "   name = " << name;
+    boost::tie(edge, b) = boost::add_edge_by_label(src_path, name, *graph);
+  } else {
+    BOOST_LOG_TRIVIAL(trace) << "insert_edge: "
+                             << "\n"
+                             << "   src = " << src_path << "\n"
+                             << "   dst = " << dst_path << "\n"
+                             << "   name = " << name;
+    boost::tie(edge, b) = boost::add_edge_by_label(src_path, dst_path, *graph);
+  }
+
+  (*graph)[edge] = Edge{static_cast<int>(line_no)};
+}
 
 }  // namespace INCLUDE_GARDENER
 

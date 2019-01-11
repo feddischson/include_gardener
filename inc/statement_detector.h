@@ -41,8 +41,7 @@ class Statement_Detector {
   using Ptr = std::shared_ptr<Statement_Detector>;
 
   /// @brief Default ctor.
-  explicit Statement_Detector(const std::vector<std::string> &statement_list,
-                              Solver::Ptr solver, int n_workers = 1);
+  explicit Statement_Detector(Solver::Ptr solver, int n_workers = 1);
 
   /// @brief  Default copy ctor.
   Statement_Detector(const Statement_Detector &other) = default;

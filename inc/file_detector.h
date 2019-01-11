@@ -30,7 +30,7 @@
 namespace INCLUDE_GARDENER {
 
 /// @brief File_Detector class
-class File_Detector : Input_Files {
+class File_Detector : public Input_Files {
  public:
   /// @brief Ctor TODO!
   File_Detector(const std::string &file_regex,
@@ -51,7 +51,7 @@ class File_Detector : Input_Files {
   File_Detector &operator=(File_Detector &&rhs) = default;
 
   /// @brief Default dtor
-  ~File_Detector() = default;
+  virtual ~File_Detector() = default;
 
   /// @brief Returns exlcude regex list
   std::vector<std::regex> get_exclude_regex();
@@ -76,7 +76,7 @@ class File_Detector : Input_Files {
   const std::vector<std::regex> exclude_regex;
 
   /// @brief Paths of the base directories.
-  const std::vector<std::string> base_paths;
+  const std::vector<std::string> process_paths;
 
   /// @brief Indicates if excludes are used.
   bool use_exclude_regex;

@@ -52,14 +52,31 @@ class Solver_C : public Solver {
   virtual ~Solver_C() = default;
 
   /// @brief Adds an edge to the graph.
-  virtual void add_edge(const std::string &input_path,
-                        const std::string &statement, unsigned int idx);
+  virtual void add_edge(const std::string &src_path,
+                        const std::string &statement, unsigned int idx,
+                        unsigned int line_no);
 
-  /// @brief Returns the statements which shall be
-  ///        detected as regex.
-  virtual std::vector<std::string> get_statements();
+  /// @brief Returns the regex which
+  ///        detectes the statements.
+  virtual std::vector<std::string> get_statement_regex();
+
+  /// @brief Returns the regex which
+  ///        detectes the files.
+  virtual std::string get_file_regex();
+
+  /// @brief Extracts solver-specific options (variables).
+  virtual void extract_options(const boost::program_options::variables_map &vm);
+
+  /// @brief Adds solver-specific options.
+  static void add_options(boost::program_options::options_description *options);
+
+ protected:
+  virtual void insert_edge(const std::string &src_path,
+                           const std::string &dst_path, const std::string &name,
+                           unsigned int line_no);
 
  private:
+  std::vector<std::string> include_paths;
 };  // class Solver_C
 
 }  // namespace INCLUDE_GARDENER

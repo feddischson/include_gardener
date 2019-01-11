@@ -22,6 +22,9 @@
 #define SOLVER_H
 
 #include <memory>
+#include <mutex>
+
+#include <boost/program_options.hpp>
 
 #include "graph.h"
 #include "vertex.h"
@@ -54,16 +57,31 @@ class Solver {
 
   /// @brief Adds a vertex / entry.
   virtual void add_vertex(const std::string &name,
-                          const std::string &abs_path = "",
-                          const std::string &rel_path = "");
+                          const std::string &abs_path = "");
 
-  /// @brief Shall add an edge.
-  virtual void add_edge(const std::string &input_path,
-                        const std::string &statement, unsigned int idx) = 0;
+  /// @brief Shall add an edge and shall ensure exclusive access.
+  virtual void add_edge(const std::string &src_path,
+                        const std::string &statement, unsigned int idx,
+                        unsigned int line_no) = 0;
 
-  /// @brief Shall return the statements which shall be
-  ///        detected as regex.
-  virtual std::vector<std::string> get_statements() = 0;
+  /// @brief Shall return the regex for the statements which shall be
+  ///        detected.
+  virtual std::vector<std::string> get_statement_regex() = 0;
+
+  /// @brief Shall return the regex for the files which shall be
+  ///        detected.
+  virtual std::string get_file_regex() = 0;
+
+  /// @brief Shall extract the solver-specific options (variables).
+  virtual void extract_options(
+      const boost::program_options::variables_map &vm) = 0;
+
+  /// @brief Adds solver-specific options.
+  static void add_options(boost::program_options::options_description *options);
+
+  /// @brief Returns a specific solver.
+  /// @param name Name of the solver.
+  static Ptr get_solver(const std::string &name, Graph *g);
 
  protected:
   /// @brief Pointer to the global graph instance.
@@ -71,6 +89,9 @@ class Solver {
 
   /// @brief Storage of all added vertexes.
   Vertex::Map vertexes;
+
+  /// @brief Shall be used to ensure exclusive access to graph.
+  std::mutex graph_mutex;
 
  private:
 };  // class Solver

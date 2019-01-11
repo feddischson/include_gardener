@@ -26,20 +26,28 @@
 
 using namespace INCLUDE_GARDENER;
 using namespace std;
+namespace po = boost::program_options;
 
 class Statement_Detector_Test : public ::testing::Test {};
 
 class Mock_Solver : public Solver {
  public:
   Mock_Solver() : Solver(nullptr) {}
-  MOCK_METHOD3(add_edge, void(const string &, const string &, unsigned int));
-  MOCK_METHOD0(get_statements, std::vector<string>());
+  MOCK_METHOD4(add_edge, void(const string &, const string &, unsigned int,
+                              unsigned int));
+  virtual vector<string> get_statement_regex() {
+    return {"\\s*#\\s*(include|import)\\s+\"(\\S+)\"",
+            "\\s*#\\s*(include|import)\\s+<(\\S+)>"};
+  }
+  MOCK_METHOD0(get_file_regex, string());
+  MOCK_CONST_METHOD0(name, string());
+  MOCK_CONST_METHOD1(add_options, void(po::options_description *));
+  MOCK_METHOD1(extract_options, void(const po::variables_map &));
 };
 
 class Mock_Statement_Detector : public Statement_Detector {
  public:
-  Mock_Statement_Detector(const vector<string> &v, Solver::Ptr solver)
-      : Statement_Detector(v, solver, 0) {}
+  Mock_Statement_Detector(Solver::Ptr solver) : Statement_Detector(solver, 0) {}
   optional<pair<string, unsigned int>> call_detect(
       const std::string &line) const {
     return detect(line);
@@ -51,19 +59,16 @@ class Mock_Statement_Detector : public Statement_Detector {
 };
 
 TEST_F(Statement_Detector_Test, empty_initialization) {
-  vector<string> string_list;
   auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Statement_Detector>(string_list, s);
-  EXPECT_EQ(d->get_statements().size(), 0);
+  auto d = std::make_shared<Statement_Detector>(s);
+  EXPECT_EQ(d->get_statements().size(), 2);
   d->wait_for_workers();
 }
 
 TEST_F(Statement_Detector_Test, simple_detection) {
-  vector<string> string_list;
-  string_list.push_back("\\s*#\\s*(include|import)\\s+\"(\\S+)\"");
   auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(string_list, s);
-  EXPECT_EQ(d->get_statements().size(), 1);
+  auto d = std::make_shared<Mock_Statement_Detector>(s);
+  EXPECT_EQ(d->get_statements().size(), 2);
   auto res = d->call_detect("  #include \"abc.h\"");
   EXPECT_EQ(static_cast<bool>(res), true);
   EXPECT_EQ(res->first, "abc.h");
@@ -73,10 +78,8 @@ TEST_F(Statement_Detector_Test, simple_detection) {
 
 TEST_F(Statement_Detector_Test, no_detection) {
   using ::testing::_;
-  vector<string> string_list;
-  string_list.push_back("\\s*#\\s*(include|import)\\s+\"(\\S+)\"");
   auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(string_list, s);
+  auto d = std::make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;
@@ -84,17 +87,15 @@ TEST_F(Statement_Detector_Test, no_detection) {
                                           // detected!
   sstream << "xyz" << endl;
 
-  EXPECT_EQ(d->get_statements().size(), 1);
-  EXPECT_CALL(*s, add_edge(_, _, _)).Times(0);
+  EXPECT_EQ(d->get_statements().size(), 2);
+  EXPECT_CALL(*s, add_edge(_, _, _, _)).Times(0);
   d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
 
 TEST_F(Statement_Detector_Test, detection_from_stream) {
-  vector<string> string_list;
-  string_list.push_back("\\s*#\\s*(include|import)\\s+\"(\\S+)\"");
   auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(string_list, s);
+  auto d = std::make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;
@@ -102,8 +103,8 @@ TEST_F(Statement_Detector_Test, detection_from_stream) {
                                             // detected!
   sstream << "xyz" << endl;
 
-  EXPECT_EQ(d->get_statements().size(), 1);
-  EXPECT_CALL(*s, add_edge("id", "abc.h", 0)).Times(1);
+  EXPECT_EQ(d->get_statements().size(), 2);
+  EXPECT_CALL(*s, add_edge("id", "abc.h", 0, 1)).Times(1);
   d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
@@ -112,10 +113,8 @@ TEST_F(Statement_Detector_Test, detection_from_stream) {
 // Multi-line statement in the middle of the stream
 //
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_1) {
-  vector<string> string_list;
-  string_list.push_back("\\s*#\\s*(include|import)\\s+\"(\\S+)\"");
   auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(string_list, s);
+  auto d = std::make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;
@@ -126,8 +125,8 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_1) {
                                    // detected!
   sstream << "xyz" << endl;
 
-  EXPECT_EQ(d->get_statements().size(), 1);
-  EXPECT_CALL(*s, add_edge("id", "abc.h", 0)).Times(1);
+  EXPECT_EQ(d->get_statements().size(), 2);
+  EXPECT_CALL(*s, add_edge("id", "abc.h", 0, 4)).Times(1);
   d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
@@ -136,10 +135,8 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_1) {
 // Multi-line statement at the end of the stream
 //
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_2) {
-  vector<string> string_list;
-  string_list.push_back("\\s*#\\s*(include|import)\\s+\"(\\S+)\"");
   auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(string_list, s);
+  auto d = std::make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;
@@ -148,8 +145,8 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_2) {
   sstream << "lude \\" << endl;
   sstream << "\"xyz.h\"";  // valid statement, should get
                            // detected!
-  EXPECT_EQ(d->get_statements().size(), 1);
-  EXPECT_CALL(*s, add_edge("other_id", "xyz.h", 0)).Times(1);
+  EXPECT_EQ(d->get_statements().size(), 2);
+  EXPECT_CALL(*s, add_edge("other_id", "xyz.h", 0, 4)).Times(1);
   d->call_process_stream(sstream, "other_id");
   d->wait_for_workers();
 }
@@ -160,10 +157,8 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_2) {
 // This should not happend in real-world, but we can handle it.
 //
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_3) {
-  vector<string> string_list;
-  string_list.push_back("\\s*#\\s*(include|import)\\s+\"(\\S+)\"");
   auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(string_list, s);
+  auto d = std::make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;
@@ -172,8 +167,8 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_3) {
   sstream << "lude \\" << endl;
   sstream << "\"abc.h\"\\";  // valid statement, should get
                              // detected!
-  EXPECT_EQ(d->get_statements().size(), 1);
-  EXPECT_CALL(*s, add_edge("id", "abc.h", 0)).Times(1);
+  EXPECT_EQ(d->get_statements().size(), 2);
+  EXPECT_CALL(*s, add_edge("id", "abc.h", 0, 5)).Times(1);
   d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
@@ -184,11 +179,9 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_3) {
 //
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_4) {
   using ::testing::_;
-  vector<string> string_list;
-  string_list.push_back("\\s*#\\s*(include|import)\\s+\"(\\S+)\"");
-  string_list.push_back("\\s*#\\s*(include|import)\\s+<(\\S+)>");
+  using ::testing::Ge;
   auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(string_list, s);
+  auto d = std::make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;
@@ -202,7 +195,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_4) {
   sstream << "xyz" << endl;
 
   EXPECT_EQ(d->get_statements().size(), 2);
-  EXPECT_CALL(*s, add_edge("id", _, _)).Times(2);
+  EXPECT_CALL(*s, add_edge("id", _, _, Ge(4))).Times(2);
   d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
@@ -213,11 +206,9 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_4) {
 //
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_5) {
   using ::testing::_;
-  vector<string> string_list;
-  string_list.push_back("\\s*#\\s*(include|import)\\s+\"(\\S+)\"");
-  string_list.push_back("\\s*#\\s*(include|import)\\s+<(\\S+)>");
+  using ::testing::Ge;
   auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(string_list, s);
+  auto d = std::make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;
@@ -230,7 +221,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_5) {
   sstream << "xyz" << endl;
 
   EXPECT_EQ(d->get_statements().size(), 2);
-  EXPECT_CALL(*s, add_edge("id", _, _)).Times(2);
+  EXPECT_CALL(*s, add_edge("id", _, _, Ge(4))).Times(2);
   d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
@@ -242,11 +233,9 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_5) {
 //
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_6) {
   using ::testing::_;
-  vector<string> string_list;
-  string_list.push_back("\\s*#\\s*(include|import)\\s+\"(\\S+)\"");
-  string_list.push_back("\\s*#\\s*(include|import)\\s+<(\\S+)>");
+  using ::testing::Ge;
   auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(string_list, s);
+  auto d = std::make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;
@@ -258,7 +247,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_6) {
   sstream << "xyz" << endl;
 
   EXPECT_EQ(d->get_statements().size(), 2);
-  EXPECT_CALL(*s, add_edge("id", _, _)).Times(2);
+  EXPECT_CALL(*s, add_edge("id", _, _, Ge(1))).Times(2);
   d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }

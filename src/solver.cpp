@@ -20,26 +20,47 @@
 //
 #include "solver.h"
 
+#include "solver_c.h"
+
+#include <memory>
+
 #include <boost/log/trivial.hpp>
 
 namespace INCLUDE_GARDENER {
 
 Solver::Solver(Graph* graph) : graph(graph) {}
 
-void Solver::add_vertex(const std::string& name, const std::string& abs_path,
-                        const std::string& rel_path) {
-  // TODO: handle empty abs-path
+void Solver::add_vertex(const std::string& name, const std::string& abs_path) {
+  using namespace std;
+  // if abs_path is empty, take the name as key!
+  const string& key = abs_path.length() == 0 ? name : abs_path;
 
-  if (vertexes.find(abs_path) != vertexes.end()) {
-    BOOST_LOG_TRIVIAL(warning)
-        << "No need to add a new vertex, "
-        << "vertex already exists: " << name << ", " << abs_path;
+  if (vertexes.find(key) != vertexes.end()) {
+    BOOST_LOG_TRIVIAL(trace) << "No need to add a new vertex, "
+                             << "vertex already exists: "
+                             << "\n"
+                             << "    key = " << key << ", "
+                             << "\n"
+                             << "    abs_path = " << abs_path << "\n"
+                             << "    name = " << name;
 
   } else {
-    Vertex::Ptr v(new Vertex(name, abs_path, rel_path));
-    vertexes.insert(std::pair<std::string,Vertex::Ptr>(abs_path, v));
-
+    Vertex::Ptr v(new Vertex(name, abs_path));
+    vertexes.insert(pair<string, Vertex::Ptr>(key, v));
+    boost::add_vertex(key, *graph);
+    (*graph)[key] = v;
   }
+}
+
+void Solver::add_options(boost::program_options::options_description* options) {
+  Solver_C::add_options(options);
+}
+
+Solver::Ptr Solver::get_solver(const std::string& name, Graph* g) {
+  if (name == "c") {
+    return std::dynamic_pointer_cast<Solver>(std::make_shared<Solver_C>(g));
+  }
+  return nullptr;
 }
 
 }  // namespace INCLUDE_GARDENER
