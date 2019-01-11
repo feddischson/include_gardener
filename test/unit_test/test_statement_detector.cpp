@@ -104,7 +104,7 @@ TEST_F(Statement_Detector_Test, detection_from_stream) {
   sstream << "xyz" << endl;
 
   EXPECT_EQ(d->get_statements().size(), 2);
-  EXPECT_CALL(*s, add_edge("id", "abc.h", 0, 1)).Times(1);
+  EXPECT_CALL(*s, add_edge("id", "abc.h", 0, 2)).Times(1);
   d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
@@ -126,7 +126,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_1) {
   sstream << "xyz" << endl;
 
   EXPECT_EQ(d->get_statements().size(), 2);
-  EXPECT_CALL(*s, add_edge("id", "abc.h", 0, 4)).Times(1);
+  EXPECT_CALL(*s, add_edge("id", "abc.h", 0, 5)).Times(1);
   d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
@@ -146,7 +146,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_2) {
   sstream << "\"xyz.h\"";  // valid statement, should get
                            // detected!
   EXPECT_EQ(d->get_statements().size(), 2);
-  EXPECT_CALL(*s, add_edge("other_id", "xyz.h", 0, 4)).Times(1);
+  EXPECT_CALL(*s, add_edge("other_id", "xyz.h", 0, 5)).Times(1);
   d->call_process_stream(sstream, "other_id");
   d->wait_for_workers();
 }
@@ -168,7 +168,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_3) {
   sstream << "\"abc.h\"\\";  // valid statement, should get
                              // detected!
   EXPECT_EQ(d->get_statements().size(), 2);
-  EXPECT_CALL(*s, add_edge("id", "abc.h", 0, 5)).Times(1);
+  EXPECT_CALL(*s, add_edge("id", "abc.h", 0, 6)).Times(1);
   d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
@@ -195,7 +195,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_4) {
   sstream << "xyz" << endl;
 
   EXPECT_EQ(d->get_statements().size(), 2);
-  EXPECT_CALL(*s, add_edge("id", _, _, Ge(4))).Times(2);
+  EXPECT_CALL(*s, add_edge("id", _, _, Ge(5))).Times(2);
   d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
@@ -221,7 +221,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_5) {
   sstream << "xyz" << endl;
 
   EXPECT_EQ(d->get_statements().size(), 2);
-  EXPECT_CALL(*s, add_edge("id", _, _, Ge(4))).Times(2);
+  EXPECT_CALL(*s, add_edge("id", _, _, Ge(5))).Times(2);
   d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
@@ -247,7 +247,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_6) {
   sstream << "xyz" << endl;
 
   EXPECT_EQ(d->get_statements().size(), 2);
-  EXPECT_CALL(*s, add_edge("id", _, _, Ge(1))).Times(2);
+  EXPECT_CALL(*s, add_edge("id", _, _, Ge(2))).Times(2);
   d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }

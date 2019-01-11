@@ -74,7 +74,7 @@ void Statement_Detector::process_stream(istream& input,
   string multi_line;
   string line;
   bool found_multi_line = false;
-  unsigned int line_cnt = 0;
+  unsigned int line_cnt = 1;
   optional<pair<string, int>> statement;
   while (getline(input, line)) {
     // handle empty lines
