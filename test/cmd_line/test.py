@@ -15,6 +15,7 @@ try:
 except ImportError:
     import unittest
 
+import os
 import sys
 import tempfile
 import pygraphviz as pgv
@@ -28,7 +29,6 @@ class GardenerTestCases(unittest.TestCase):
     # default paths
     G_PATH="../../build/include_gardener"
     T_PATH="../test_files/"
-    C_PATH="../../include_gardener.conf"
 
     def setUp( self ):
         """Nothing to setup here"""
@@ -63,10 +63,10 @@ class GardenerTestCases(unittest.TestCase):
         f_3_c      ['key1'] = 'src/f_3.c'
         existing_h ['key1'] = '../non/existing.h'
         iostream   ['key1'] = 'iostream'
-        lib_f_1_h  ['key1'] = 'lib/f_1.h'
-        lib_f_2_h  ['key1'] = 'lib/f_2.h'
-        lib_f_3_h  ['key1'] = 'lib/f_3.h'
-        lib2_f_4_h ['key1'] = 'lib2/f_4.h'
+        lib_f_1_h  ['key1'] = 'inc/lib/f_1.h'
+        lib_f_2_h  ['key1'] = 'inc/lib/f_2.h'
+        lib_f_3_h  ['key1'] = 'inc/lib/f_3.h'
+        lib2_f_4_h ['key1'] = 'inc/lib2/f_4.h'
         lib2_f_1_h ['key1'] = 'inc/lib2/f_1.h'
 
         g.add_edge( f_3_c, existing_h     )
@@ -118,34 +118,38 @@ class GardenerTestCases(unittest.TestCase):
             self.assertEqual( src1, src2 )
             self.assertCountEqual( dst1, dst2 )
 
-    def gardener_call( self, options ):
+    def gardener_call( self, options, subpath="" ):
 
-        p_args = [ self.G_PATH, self.T_PATH, "-c", self.C_PATH ] + options
+        p_args = [ self.G_PATH, os.path.join(self.T_PATH, subpath) ] + options
         #print( ' '.join( p_args ) )
         pipe = Popen( p_args, stdout=PIPE  )
         result_str = pipe.communicate()[0]
         return result_str
 
 
-    def dot_gardener_call( self, options ):
+    def dot_gardener_call( self, options, subpath="" ):
         """
         Runs the include_gardener with the dot option,
         extracts the result and returns the graph.
         """
         # we don't use '-f dot' because dot is the default!
-        result_str = self.gardener_call( [  ] + options ).decode("utf-8") 
+        result_str = self.gardener_call( [  ] + options, subpath ).decode("utf-8") 
+        #print("result:")
+        #print(result_str)
         G = pgv.AGraph( result_str )
         return G 
 
 
-    def graphml_gardener_call( self, options ):
+    def graphml_gardener_call( self, options, subpath="" ):
         """
         Runs the include_gardener with the xml option,
         extracts the result and returns the graph.
         """
-        result_str = self.gardener_call( [ '-f', 'xml' ] + options )
+        result_str = self.gardener_call( [ '-f', 'xml' ] + options, subpath )
         if len( result_str ) == 0:
             return None
+        #print("result:")
+        #print(result_str.decode('utf-8'))
         temp = tempfile.NamedTemporaryFile()
         temp.write( result_str )
         temp.flush()
@@ -207,7 +211,7 @@ class GardenerTestCases(unittest.TestCase):
         """ Tests if an error message is given if an unsupported language
             is selected
         """
-        pipe = Popen( [ self.G_PATH, '-c', self.C_PATH, "-l", "somelanguage", self.T_PATH ], stderr=PIPE  )
+        pipe = Popen( [ self.G_PATH, "-l", "somelanguage", self.T_PATH ], stderr=PIPE  )
         result = pipe.communicate()[1].decode("utf-8")
         self.assertIn( "Error", result )
         self.assertIn( "somelanguage", result )
@@ -258,7 +262,7 @@ class GardenerTestCases(unittest.TestCase):
 
         self.assertEqual( len( g2.nodes() ), 0 )
         self.assertEqual( len( g3.nodes() ), 9 )
-        self.assertEqual( len( g4.nodes() ), 14 )
+        self.assertEqual( len( g4.nodes() ), 15 )
         self.compare( g1, g4 )
 
 
@@ -296,21 +300,18 @@ class GardenerTestCases(unittest.TestCase):
         The test expects that the first includes all files,
         the second call one file less and the third two files less.
         """
-        g1 = self.graphml_gardener_call( [ ] )
-        g2 = self.graphml_gardener_call( [ '-e', '_1\.h' ] )
-        g3 = self.graphml_gardener_call( [ '-e', '_1\.h', '-e', '_1\.c'] )
+        g1 = self.graphml_gardener_call( [ '-I', self.T_PATH + '/inc/' ] )
+        g2 = self.graphml_gardener_call( [ '-I', self.T_PATH + '/inc/', '-e', '_2\.c' ] )
+        g3 = self.graphml_gardener_call( [ '-I', self.T_PATH + '/inc/', '-e', '_2\.c', '-e', '_3\.c' ] )
 
+        self.assertEqual( len(g1.nodes()), 10)
+        self.assertEqual( len(g2.nodes()), 9)
 
-        # Note: there are two file which ends with _1.h, but we expect
-        #       a difference of one. Reason: the second file is referenced and
-        #       therefore added to the graph.
-        self.assertEqual( len( g1.nodes() ), len( g2.nodes() )+1 )
-
-
-        # because we do not process f_1.c, the second _1.h file mentioned
-        # above is not added to the graph. Therefore, a difference of three
-        # is correct.
-        self.assertEqual( len( g1.nodes() ), len( g3.nodes() )+3 )
+        # note: there are two three lodes less than in g1:
+        # - f_2.c
+        # - f_3.c
+        # - non/existing.h (which is referenced in f_3.c)
+        self.assertEqual( len(g3.nodes()), 7)
 
 
     def test_OutputFile( self ):
@@ -333,7 +334,6 @@ if __name__ == "__main__":
     if len( sys.argv ) > 2:
         GardenerTestCases.T_PATH = abspath( sys.argv.pop() )
         GardenerTestCases.G_PATH = abspath( sys.argv.pop() )
-        GardenerTestCases.C_PATH = abspath( sys.argv.pop() )
     import xmlrunner
     out_dir = abspath( sys.argv.pop() )
     unittest.main(testRunner=xmlrunner.XMLTestRunner(output=out_dir)) # run all tests
