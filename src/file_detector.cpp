@@ -69,9 +69,17 @@ bool File_Detector::exclude_regex_search(std::string path_string) const {
 }
 
 void File_Detector::get(Solver::Ptr solver) {
+  using namespace boost::filesystem;
   for (auto p : process_paths) {
     BOOST_LOG_TRIVIAL(info) << "Processing sources from " << p;
-    walk_tree(p, solver);
+    // Check if we got a relative path.
+    // If yes, convert it to an absolute path.
+    path rel_path = current_path() / p;
+    if (exists(rel_path)) {
+      walk_tree(rel_path.string(), solver);
+    } else if (exists(p)) {
+      walk_tree(p, solver);
+    }
   }
 }
 
@@ -100,7 +108,7 @@ bool File_Detector::walk_tree(const string& base_path, Solver::Ptr solver,
     sub_entry /= itr->path().filename().string();
 
     auto name = sub_entry.string();
-    string itr_path = itr->path().string();
+    string itr_path = canonical(itr->path()).string();
 
     if (is_directory(itr->status())) {
       if ((recursive_limit == -1) ||
@@ -113,10 +121,9 @@ bool File_Detector::walk_tree(const string& base_path, Solver::Ptr solver,
         continue;
       }
 
-      path abs_path = canonical(current_path() / itr_path);
-      BOOST_LOG_TRIVIAL(trace) << "(Absolute path=" << abs_path << ")";
-      solver->add_vertex(name, abs_path.string());
-      files.push_back(abs_path.string());
+      BOOST_LOG_TRIVIAL(trace) << "(Absolute path=" << itr_path << ")";
+      solver->add_vertex(name, itr_path);
+      files.push_back(itr_path);
     } else {
       // ignore all other files
       BOOST_LOG_TRIVIAL(trace) << "Ignoring " << itr_path;
