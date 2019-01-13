@@ -253,11 +253,11 @@ Solver::Ptr init_options(int argc, char* argv[], Options* opts, Graph* graph) {
    BOOST_LOG_TRIVIAL(trace) << "format:          " << opts->format;
    BOOST_LOG_TRIVIAL(trace) << "out_file:        " << opts->out_file;
    BOOST_LOG_TRIVIAL(trace) << "process_paths:   ";
-   for (auto p : opts->process_paths) {
+   for (const auto & p : opts->process_paths) {
       BOOST_LOG_TRIVIAL(trace) << "    " << p;
    }
    BOOST_LOG_TRIVIAL(trace) << "exclude:         ";
-   for (auto e : opts->exclude) {
+   for (const auto & e : opts->exclude) {
       BOOST_LOG_TRIVIAL(trace) << "    " << e;
    }
 

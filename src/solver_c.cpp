@@ -55,7 +55,7 @@ void Solver_C::extract_options(const po::variables_map &vm) {
     include_paths = vm["c-include-path"].as<vector<string> >();
   }
   BOOST_LOG_TRIVIAL(trace) << "c-include-paths:   ";
-  for (auto p : include_paths) {
+  for (const auto & p : include_paths) {
     BOOST_LOG_TRIVIAL(trace) << "    " << p;
   }
 }
@@ -82,7 +82,7 @@ void Solver_C::add_edge(const string &src_path, const string &statement,
   }
 
   // search in preconfigured list of standard system directories
-  for (auto i_path : include_paths) {
+  for (const auto & i_path : include_paths) {
     path dst_path = i_path / statement;
     if (exists(dst_path)) {
       dst_path = canonical(dst_path);

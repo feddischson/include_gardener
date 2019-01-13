@@ -77,7 +77,7 @@ void File_Detector::get(Solver::Ptr solver) {
   using boost::filesystem::exists;
   using boost::filesystem::path;
   using boost::filesystem::operator/;
-  for (auto p : process_paths) {
+  for (const auto& p : process_paths) {
     BOOST_LOG_TRIVIAL(info) << "Processing sources from " << p;
     // Check if we got a relative path.
     // If yes, convert it to an absolute path.
