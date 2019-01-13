@@ -42,7 +42,7 @@ class Vertex {
   /// @brief Ctor
   /// @param abs_path absolute path
   /// @param name file name including file ending
-  Vertex(const std::string &name, const std::string &abs_path = "");
+  explicit Vertex(std::string name, std::string abs_path = "");
 
   /// @brief Copy ctor: not implemented!
   Vertex(const Vertex &other) = delete;

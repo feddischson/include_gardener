@@ -44,23 +44,23 @@ class File_Detector : public Input_Files {
   /// @param recursive_limit Defines the recursive search limit when != 0
   File_Detector(const std::string &file_regex,
                 const std::vector<std::string> &exclude_regex,
-                const std::vector<std::string> &base_paths,
+                std::vector<std::string> process_paths,
                 int recursive_limit = 0);
 
-  /// @brief Default copy ctor!
-  File_Detector(const File_Detector &other) = default;
+  /// @brief Deleted copy ctor!
+  File_Detector(const File_Detector &other) = delete;
 
-  /// @brief Default assignment operator!
-  File_Detector &operator=(const File_Detector &rhs) = default;
+  /// @brief Deleted assignment operator!
+  File_Detector &operator=(const File_Detector &rhs) = delete;
 
-  /// @brief Default move constructor!
-  File_Detector(File_Detector &&rhs) = default;
+  /// @brief Deleted move constructor!
+  File_Detector(File_Detector &&rhs) = delete;
 
-  /// @brief Default move assignment operator!
-  File_Detector &operator=(File_Detector &&rhs) = default;
+  /// @brief Deleted move assignment operator!
+  File_Detector &operator=(File_Detector &&rhs) = delete;
 
   /// @brief Default dtor
-  virtual ~File_Detector() = default;
+  ~File_Detector() override = default;
 
   /// @brief Returns exlcude regex list
   std::vector<std::regex> get_exclude_regex();
@@ -69,7 +69,7 @@ class File_Detector : public Input_Files {
   bool use_file(const std::string &file) const;
 
   /// @brief Puts all input files in the private storage files.
-  virtual void get(Solver::Ptr solver);
+  void get(Solver::Ptr solver) override;
 
  private:
   /// @brief  Runs through a given file path and proceedes all include files.
@@ -78,7 +78,7 @@ class File_Detector : public Input_Files {
   /// @param solver Pointer to the solver instance
   /// @param sub_path The sub_path (within base_path) which is processed
   /// @param recusive_cnt The current recursive counter.
-  bool walk_tree(const std::string &base_path, Solver::Ptr solver,
+  bool walk_tree(const std::string &base_path, const Solver::Ptr & solver,
                  const std::string &sub_path = "", int recursive_cnt = 0);
 
   /// @brief Regular expression to check if a file shall be used.
@@ -95,7 +95,7 @@ class File_Detector : public Input_Files {
   bool use_exclude_regex;
 
   /// @brief Helper function to check if a file should be excluded.
-  bool exclude_regex_search(std::string path_string) const;
+  bool exclude_regex_search(const std::string & path_string) const;
 
   /// @brief Limit for the recursive file search.
   const int recursive_limit;

@@ -28,10 +28,11 @@
 
 namespace INCLUDE_GARDENER {
 
-Solver::Solver(Graph* graph) : graph(graph), vertexes(), graph_mutex() {}
+Solver::Solver(Graph* graph) : graph(graph) {}
 
 void Solver::add_vertex(const std::string& name, const std::string& abs_path) {
-  using namespace std;
+  using std::string;
+  using std::pair;
   // if abs_path is empty, take the name as key!
   const string& key = abs_path.length() == 0 ? name : abs_path;
 

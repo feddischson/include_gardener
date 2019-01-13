@@ -29,26 +29,29 @@
 namespace INCLUDE_GARDENER {
 
 namespace po = boost::program_options;
-using namespace std;
+using std::mutex;
+using std::string;
+using std::vector;
+using std::unique_lock;
 
-Solver_C::Solver_C(Graph *graph) : Solver(graph), include_paths() {}
+Solver_C::Solver_C(Graph *graph) : Solver(graph) {}
 
-vector<string> Solver_C::get_statement_regex() {
-  vector<string> regex_str = {"\\s*#\\s*(include|import)\\s+\"(\\S+)\"",
-                              "\\s*#\\s*(include|import)\\s+<(\\S+)>"};
+vector<string> Solver_C::get_statement_regex() const {
+  vector<string> regex_str = {R"(\s*#\s*(include|import)\s+\"(\S+)\")",
+                              R"(\s*#\s*(include|import)\s+<(\S+)>)"};
   return regex_str;
 }
 
 string Solver_C::get_file_regex() { return string("(.*)\\.(c|h)$"); }
 
-void Solver_C::add_options(po::options_description *desc) {
-  desc->add_options()("c-include-path,I",
-                      po::value<vector<string> >()->composing(),
-                      "c-include path");
+void Solver_C::add_options(po::options_description *options) {
+  options->add_options()("c-include-path,I",
+                         po::value<vector<string> >()->composing(),
+                         "c-include path");
 }
 
 void Solver_C::extract_options(const po::variables_map &vm) {
-  if (true == vm.count("c-include-path")) {
+  if (vm.count("c-include-path")!= 0u) {
     include_paths = vm["c-include-path"].as<vector<string> >();
   }
   BOOST_LOG_TRIVIAL(trace) << "c-include-paths:   ";
@@ -59,7 +62,8 @@ void Solver_C::extract_options(const po::variables_map &vm) {
 
 void Solver_C::add_edge(const string &src_path, const string &statement,
                         unsigned int idx, unsigned int line_no) {
-  using namespace boost::filesystem;
+  using boost::filesystem::path;
+  using boost::filesystem::operator/;
   unique_lock<mutex> glck(graph_mutex);
   BOOST_LOG_TRIVIAL(trace) << "add_edge: " << src_path << " -> " << statement
                            << ", idx = " << idx << ", line_no = " << line_no;

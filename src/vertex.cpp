@@ -22,10 +22,12 @@
 
 namespace INCLUDE_GARDENER {
 
-Vertex::Vertex(const std::string &name, const std::string &abs_path)
-    : name(name), abs_path(abs_path) {}
+using std::string;
 
-std::string Vertex::get_name() { return name; }
+Vertex::Vertex(string name, string abs_path)
+    : name(move(name)), abs_path(move(abs_path)) {}
+
+string Vertex::get_name() { return name; }
 
 }  // namespace INCLUDE_GARDENER
 

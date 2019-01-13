@@ -35,7 +35,7 @@ namespace INCLUDE_GARDENER {
 /// @author feddischson
 struct Edge {
    Edge() = default;
-   Edge(int l) : line(l) {}
+   explicit Edge(int l) : line(l) {}
 
    int line = -1;  ///< The line number where the include statement is defined.
 };
@@ -63,8 +63,9 @@ using Edge_Iterator = boost::graph_traits<Graph>::edge_iterator;
 template <class T>
 class Vertex_Writer {
   public:
-   Vertex_Writer(T t) : t(t) {}
+   explicit Vertex_Writer(T t) : t(t) {}
    template <class T_v>
+   // NOLINTNEXTLINE(fuchsia-overloaded-operator)
    void operator()(std::ostream& out, const T_v& vertex) const {
       out << "[label=\"" << t[vertex] << "\"]";
    }
@@ -85,8 +86,9 @@ inline Vertex_Writer<T> make_vertex_writer(T t) {
 template <class T>
 class Edge_Writer {
   public:
-   Edge_Writer(T t) : t(t) {}
+   explicit Edge_Writer(T t) : t(t) {}
    template <class T_Edge>
+   // NOLINTNEXTLINE(fuchsia-overloaded-operator)
    void operator()(std::ostream& out, const T_Edge& e) const {
       out << "[label=\""
           << "line " << t[e] << "\"]";

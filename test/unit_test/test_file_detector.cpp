@@ -22,15 +22,21 @@
 
 #include "file_detector.h"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
-using namespace INCLUDE_GARDENER;
-using namespace std;
+using INCLUDE_GARDENER::File_Detector;
+
+using std::regex;
+using std::string;
+using std::vector;
+using std::regex_constants::ECMAScript;
+using std::regex_constants::icase;
 
 class File_Detector_Test : public ::testing::Test {};
 
+// NOLINTNEXTLINE
 TEST_F(File_Detector_Test, empty_initialization) {
-  string file_regex = "";
+  string file_regex;
   vector<string> exclude_regex;
   vector<string> base_paths;
 
@@ -38,18 +44,19 @@ TEST_F(File_Detector_Test, empty_initialization) {
   EXPECT_EQ(d.get_exclude_regex().size(), 0);
 }
 
+// NOLINTNEXTLINE
 TEST_F(File_Detector_Test, exclude_list) {
-  string file_regex = "";
+  string file_regex;
   vector<string> exclude_regex;
   vector<string> base_paths;
-  exclude_regex.push_back("abc");
-  exclude_regex.push_back("def");
+  exclude_regex.emplace_back("abc");
+  exclude_regex.emplace_back("def");
 
   File_Detector d = File_Detector(file_regex, exclude_regex, base_paths);
   auto l = d.get_exclude_regex();
 
-  regex r1 = regex("abc", regex_constants::ECMAScript | regex_constants::icase);
-  regex r2 = regex("def", regex_constants::ECMAScript | regex_constants::icase);
+  regex r1 = regex("abc", ECMAScript | icase);
+  regex r2 = regex("def", ECMAScript | icase);
 
   EXPECT_EQ(l.size(), 2);
   EXPECT_EQ(r1.flags(), l[0].flags());
@@ -57,6 +64,7 @@ TEST_F(File_Detector_Test, exclude_list) {
   // note: it is not possible to compare the regex it self
 }
 
+// NOLINTNEXTLINE
 TEST_F(File_Detector_Test, test_c_file_detection_without_exclude) {
   string file_regex = "(.*)\\.(c|cc|h|hh|cpp|hpp)";
   vector<string> exclude_regex;
@@ -74,14 +82,15 @@ TEST_F(File_Detector_Test, test_c_file_detection_without_exclude) {
   EXPECT_EQ(d.use_file("x."), false);
 }
 
+// NOLINTNEXTLINE
 TEST_F(File_Detector_Test, test_c_file_detection_with_exclude) {
   string file_regex = "(.*)\\.(c|cc|h|hh|cpp|hpp)";
   vector<string> exclude_regex;
   vector<string> base_paths;
 
   // exclude all *_tmp.c and *-k.c files
-  exclude_regex.push_back("(.*)_tmp\\.(c|cc|h|hh|cpp|hpp)");
-  exclude_regex.push_back("(.*)-k\\.(c|cc|h|hh|cpp|hpp)");
+  exclude_regex.emplace_back("(.*)_tmp\\.(c|cc|h|hh|cpp|hpp)");
+  exclude_regex.emplace_back("(.*)-k\\.(c|cc|h|hh|cpp|hpp)");
 
   File_Detector d = File_Detector(file_regex, exclude_regex, base_paths);
 

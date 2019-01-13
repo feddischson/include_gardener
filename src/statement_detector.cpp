@@ -25,16 +25,23 @@
 
 #include "helper.h"
 
-using namespace std;
+using std::ifstream;
+using std::istream;
+using std::mutex;
+using std::optional;
+using std::pair;
+using std::regex;
+using std::smatch;
+using std::string;
+using std::thread;
+using std::unique_lock;
+using std::vector;
 
 namespace INCLUDE_GARDENER {
 
-Statement_Detector::Statement_Detector(Solver::Ptr solver, int n_workers)
+Statement_Detector::Statement_Detector(const Solver::Ptr& solver, int n_workers)
     : statements(init_regex_vector(solver->get_statement_regex())),
       workers(n_workers),
-      job_queue(),
-      job_queue_mutex(),
-      job_queue_condition(),
       all_work_done(false),
       solver(solver) {
   for (int i = 0; i < n_workers; ++i) {
@@ -56,9 +63,7 @@ optional<pair<string, unsigned int>> Statement_Detector::detect(
   for (unsigned int i = 0; i < statements.size(); i++) {
     auto s = statements[i];
     if (regex_search(line, match, s)) {
-      if (match.size() == 0) {
-        continue;
-      } else {
+      if (!match.empty()) {
         BOOST_LOG_TRIVIAL(trace) << "Statement matched:"
                                  << "\n";
         BOOST_LOG_TRIVIAL(trace) << "Size: " << match.size();
@@ -78,13 +83,10 @@ void Statement_Detector::process_stream(istream& input,
   optional<pair<string, int>> statement;
   while (getline(input, line)) {
     // handle empty lines
-    if (line.size() == 0) {
+    if (line.empty()) {
       // if we previously got a multi-line statement: process it!
-      if (found_multi_line == true) {
-        statement = detect(multi_line);
-        if (!statement) {
-          continue;
-        } else {
+      if (found_multi_line) {
+        if (detect(multi_line)) {
           solver->add_edge(input_path, statement->first, statement->second,
                            line_cnt);
         }
@@ -92,11 +94,8 @@ void Statement_Detector::process_stream(istream& input,
       } else {
         // ... if not: move on.
         line_cnt++;
-        continue;
       }
-    }
-
-    if (line.back() == '\\') {
+    } else if (line.back() == '\\') {
       line.pop_back();
       multi_line.append(line);
       BOOST_LOG_TRIVIAL(trace) << "found multiline statement: " << line << "\n";
@@ -105,20 +104,14 @@ void Statement_Detector::process_stream(istream& input,
       if (found_multi_line) {
         multi_line.append(line);
         statement = detect(multi_line);
-        if (!statement) {
-          line_cnt++;
-          continue;
-        } else {
+        if (statement) {
           solver->add_edge(input_path, statement->first, statement->second,
                            line_cnt);
         }
         found_multi_line = false;
       } else {
         statement = detect(line);
-        if (!statement) {
-          line_cnt++;
-          continue;
-        } else {
+        if (statement) {
           solver->add_edge(input_path, statement->first, statement->second,
                            line_cnt);
         }
@@ -143,7 +136,6 @@ void Statement_Detector::process_stream(istream& input,
       solver->add_edge(input_path, statement->first, statement->second,
                        line_cnt);
     }
-    found_multi_line = false;
   }
 }
 
@@ -153,7 +145,7 @@ void Statement_Detector::do_work(int id) {
   while (true) {
     unique_lock<mutex> lck(job_queue_mutex);
     job_queue_condition.wait(
-        lck, [this]() { return job_queue.size() > 0 || all_work_done; });
+        lck, [this]() { return (!job_queue.empty()) || all_work_done; });
     if (all_work_done) {
       BOOST_LOG_TRIVIAL(debug) << "[" << id << "] All work is done";
       return;
@@ -175,11 +167,11 @@ void Statement_Detector::do_work(int id) {
 ///   It first waits until the job-queue is empty. If this is the case,
 ///   the done flag is set and join() is called on all threads to wait
 ///   for all of them.
-void Statement_Detector::wait_for_workers(void) {
-  // wait until the queue is empty
+void Statement_Detector::wait_for_workers() {
   {
+    // wait until the queue is empty
     unique_lock<mutex> lck(job_queue_mutex);
-    job_queue_condition.wait(lck, [this]() { return job_queue.size() == 0; });
+    job_queue_condition.wait(lck, [this]() { return job_queue.empty(); });
     lck.unlock();
     job_queue_condition.notify_all();
   }
@@ -192,8 +184,8 @@ void Statement_Detector::wait_for_workers(void) {
     job_queue_condition.notify_all();
   }
 
-  for (size_t i = 0; i < workers.size(); i++) {
-    workers[i].join();
+  for (auto& worker : workers) {
+    worker.join();
   }
   BOOST_LOG_TRIVIAL(debug) << "All threads are done";
 }

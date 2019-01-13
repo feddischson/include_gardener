@@ -55,27 +55,27 @@ class Solver_C : public Solver {
   Solver_C &operator=(Solver_C &&rhs) = delete;
 
   /// @brief Default dtor
-  virtual ~Solver_C() = default;
+  ~Solver_C() override = default;
 
   /// @brief Adds an edge to the graph.
   /// @param src_path Path the the source path (where the statement is detected.
   /// @param statement The detected statement
   /// @param idx The index of the regular expression, which matched.
   /// @param line_no The line number where the statement is detected.
-  virtual void add_edge(const std::string &src_path,
-                        const std::string &statement, unsigned int idx,
-                        unsigned int line_no);
+  void add_edge(const std::string &src_path, const std::string &statement,
+                unsigned int idx, unsigned int line_no) override;
 
   /// @brief Returns the regex which
   ///        detectes the statements.
-  virtual std::vector<std::string> get_statement_regex();
+  std::vector<std::string> get_statement_regex() const override;
 
   /// @brief Returns the regex which
   ///        detectes the files.
-  virtual std::string get_file_regex();
+  std::string get_file_regex() override;
 
   /// @brief Extracts solver-specific options (variables).
-  virtual void extract_options(const boost::program_options::variables_map &vm);
+  void extract_options(
+      const boost::program_options::variables_map &vm) override;
 
   /// @brief Adds solver-specific options.
   static void add_options(boost::program_options::options_description *options);

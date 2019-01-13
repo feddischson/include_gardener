@@ -24,19 +24,21 @@
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
 
-using namespace std;
+using std::regex;
+using std::string;
+using std::vector;
+using std::regex_constants::ECMAScript;
+using std::regex_constants::icase;
 
 namespace INCLUDE_GARDENER {
 
 File_Detector::File_Detector(const string& file_regex,
                              const vector<string>& exclude_regex,
-                             const vector<string>& process_paths,
-                             int recursive_limit)
-    : file_regex(file_regex,
-                 regex_constants::ECMAScript | regex_constants::icase),
+                             vector<string> process_paths, int recursive_limit)
+    : file_regex(file_regex, ECMAScript | icase),
       exclude_regex(init_regex_vector(exclude_regex)),
-      process_paths(process_paths),
-      use_exclude_regex(exclude_regex.size() > 0),
+      process_paths(move(process_paths)),
+      use_exclude_regex(!exclude_regex.empty()),
       recursive_limit(recursive_limit) {}
 
 vector<regex> File_Detector::get_exclude_regex() { return exclude_regex; }
@@ -47,21 +49,23 @@ vector<regex> File_Detector::get_exclude_regex() { return exclude_regex; }
 ///   true is returned. In all other cases, false is returned.
 ///
 bool File_Detector::use_file(const std::string& file) const {
-  if (true == use_exclude_regex && exclude_regex_search(file)) {
+  if (use_exclude_regex && exclude_regex_search(file)) {
     BOOST_LOG_TRIVIAL(trace) << "Excluding " << file;
     return false;
-  } else if (!regex_search(file, file_regex)) {
+  }
+
+  if (!regex_search(file, file_regex)) {
     BOOST_LOG_TRIVIAL(trace) << "Ignoring " << file;
     return false;
-  } else {
-    BOOST_LOG_TRIVIAL(trace) << "Considering " << file;
-    return true;
   }
+
+  BOOST_LOG_TRIVIAL(trace) << "Considering " << file;
+  return true;
 }
 
-bool File_Detector::exclude_regex_search(std::string path_string) const {
-  for (auto i = exclude_regex.begin(); i != exclude_regex.end(); i++) {
-    if (regex_search(path_string, *i)) {
+bool File_Detector::exclude_regex_search(const std::string& path_string) const {
+  for (const auto& r : exclude_regex) {
+    if (regex_search(path_string, r)) {
       return true;
     }
   }
@@ -69,7 +73,10 @@ bool File_Detector::exclude_regex_search(std::string path_string) const {
 }
 
 void File_Detector::get(Solver::Ptr solver) {
-  using namespace boost::filesystem;
+  using boost::filesystem::current_path;
+  using boost::filesystem::exists;
+  using boost::filesystem::path;
+  using boost::filesystem::operator/;
   for (auto p : process_paths) {
     BOOST_LOG_TRIVIAL(info) << "Processing sources from " << p;
     // Check if we got a relative path.
@@ -86,19 +93,26 @@ void File_Detector::get(Solver::Ptr solver) {
 /// @details
 ///   Runs through all entries. If an entry is a file,  it is processed.
 ///   In case of an directory, a recursive call is done.
-bool File_Detector::walk_tree(const string& base_path, Solver::Ptr solver,
-                              const string& sub_path, int recursive_cnt) {
-  using namespace boost::filesystem;
+bool File_Detector::walk_tree(const string& base_path,
+                              const Solver::Ptr& solver, const string& sub_path,
+                              int recursive_cnt) {
+  using boost::filesystem::path;
+  using boost::filesystem::operator/;
+  using boost::filesystem::directory_iterator;
+  using boost::filesystem::exists;
+  using boost::filesystem::is_directory;
+  using boost::filesystem::is_regular_file;
 
   path p(base_path);
   p /= sub_path;
 
   // return false if the root-path doesn't exist
-  if (exists(p) == false) {
+  if (!exists(p)) {
     return false;
   }
+
   // return false if it is not a directory
-  else if (is_directory(p) == false) {
+  if (!is_directory(p)) {
     return false;
   }
 
@@ -117,7 +131,7 @@ bool File_Detector::walk_tree(const string& base_path, Solver::Ptr solver,
         walk_tree(base_path, solver, sub_entry.string(), recursive_cnt + 1);
       }
     } else if (is_regular_file(itr->status())) {
-      if (false == use_file(itr_path)) {
+      if (!use_file(itr_path)) {
         continue;
       }
 

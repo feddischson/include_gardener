@@ -20,24 +20,35 @@
 //
 #include "statement_detector.h"
 
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 #include <sstream>
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 
-using namespace INCLUDE_GARDENER;
-using namespace std;
+using INCLUDE_GARDENER::Solver;
+using INCLUDE_GARDENER::Statement_Detector;
+
+using std::endl;
+using std::istream;
+using std::make_shared;
+using std::optional;
+using std::pair;
+using std::string;
+using std::stringstream;
+using std::vector;
+
 namespace po = boost::program_options;
 
 class Statement_Detector_Test : public ::testing::Test {};
 
+// NOLINTNEXTLINE
 class Mock_Solver : public Solver {
  public:
   Mock_Solver() : Solver(nullptr) {}
   MOCK_METHOD4(add_edge, void(const string &, const string &, unsigned int,
                               unsigned int));
-  virtual vector<string> get_statement_regex() {
-    return {"\\s*#\\s*(include|import)\\s+\"(\\S+)\"",
-            "\\s*#\\s*(include|import)\\s+<(\\S+)>"};
+  vector<string> get_statement_regex() const override {
+    return {R"(\s*#\s*(include|import)\s+\"(\S+)\")",
+            R"(\s*#\s*(include|import)\s+<(\S+)>)"};
   }
   MOCK_METHOD0(get_file_regex, string());
   MOCK_CONST_METHOD0(name, string());
@@ -47,7 +58,8 @@ class Mock_Solver : public Solver {
 
 class Mock_Statement_Detector : public Statement_Detector {
  public:
-  Mock_Statement_Detector(Solver::Ptr solver) : Statement_Detector(solver, 0) {}
+  explicit Mock_Statement_Detector(const Solver::Ptr &solver)
+      : Statement_Detector(solver, 0) {}
   optional<pair<string, unsigned int>> call_detect(
       const std::string &line) const {
     return detect(line);
@@ -58,16 +70,18 @@ class Mock_Statement_Detector : public Statement_Detector {
   }
 };
 
+// NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, empty_initialization) {
-  auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Statement_Detector>(s);
+  auto s = make_shared<Mock_Solver>();
+  auto d = make_shared<Statement_Detector>(s);
   EXPECT_EQ(d->get_statements().size(), 2);
   d->wait_for_workers();
 }
 
+// NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, simple_detection) {
-  auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(s);
+  auto s = make_shared<Mock_Solver>();
+  auto d = make_shared<Mock_Statement_Detector>(s);
   EXPECT_EQ(d->get_statements().size(), 2);
   auto res = d->call_detect("  #include \"abc.h\"");
   EXPECT_EQ(static_cast<bool>(res), true);
@@ -76,10 +90,11 @@ TEST_F(Statement_Detector_Test, simple_detection) {
   d->wait_for_workers();
 }
 
+// NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, no_detection) {
   using ::testing::_;
-  auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(s);
+  auto s = make_shared<Mock_Solver>();
+  auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;
@@ -93,9 +108,10 @@ TEST_F(Statement_Detector_Test, no_detection) {
   d->wait_for_workers();
 }
 
+// NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, detection_from_stream) {
-  auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(s);
+  auto s = make_shared<Mock_Solver>();
+  auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;
@@ -112,9 +128,10 @@ TEST_F(Statement_Detector_Test, detection_from_stream) {
 //
 // Multi-line statement in the middle of the stream
 //
+// NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_1) {
-  auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(s);
+  auto s = make_shared<Mock_Solver>();
+  auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;
@@ -134,9 +151,10 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_1) {
 //
 // Multi-line statement at the end of the stream
 //
+// NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_2) {
-  auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(s);
+  auto s = make_shared<Mock_Solver>();
+  auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;
@@ -156,16 +174,17 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_2) {
 // expecting a further line.
 // This should not happend in real-world, but we can handle it.
 //
+// NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_3) {
-  auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(s);
+  auto s = make_shared<Mock_Solver>();
+  auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;
   sstream << "#\\" << endl;
   sstream << "inc\\" << endl;
   sstream << "lude \\" << endl;
-  sstream << "\"abc.h\"\\";  // valid statement, should get
+  sstream << R"("abc.h"\)";  // valid statement, should get
                              // detected!
   EXPECT_EQ(d->get_statements().size(), 2);
   EXPECT_CALL(*s, add_edge("id", "abc.h", 0, 6)).Times(1);
@@ -177,11 +196,12 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_3) {
 // Different statements within the stream,
 // separated by one line
 //
+// NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_4) {
   using ::testing::_;
   using ::testing::Ge;
-  auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(s);
+  auto s = make_shared<Mock_Solver>();
+  auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;
@@ -204,11 +224,12 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_4) {
 // Different statements within the stream,
 // not separated (direct following)
 //
+// NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_5) {
   using ::testing::_;
   using ::testing::Ge;
-  auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(s);
+  auto s = make_shared<Mock_Solver>();
+  auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;
@@ -231,11 +252,12 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_5) {
 // not separated (direct following), single-line
 // statement first.
 //
+// NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_6) {
   using ::testing::_;
   using ::testing::Ge;
-  auto s = std::make_shared<Mock_Solver>();
-  auto d = std::make_shared<Mock_Statement_Detector>(s);
+  auto s = make_shared<Mock_Solver>();
+  auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
   sstream << "abc" << endl;

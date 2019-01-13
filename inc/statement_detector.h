@@ -56,19 +56,19 @@ class Statement_Detector {
   ///     A language-specific solver which is used to process a detected
   ///     statement.
   // @param n_workers Limits the number of threads. Must be >= 1.
-  explicit Statement_Detector(Solver::Ptr solver, int n_workers = 1);
+  explicit Statement_Detector(const Solver::Ptr &solver, int n_workers = 1);
 
   /// @brief Default copy ctor.
-  Statement_Detector(const Statement_Detector &other) = default;
+  Statement_Detector(const Statement_Detector &other) = delete;
 
   /// @brief Default assignment operator.
-  Statement_Detector &operator=(const Statement_Detector &rhs) = default;
+  Statement_Detector &operator=(const Statement_Detector &rhs) = delete;
 
   /// @brief Default move constructor.
-  Statement_Detector(Statement_Detector &&rhs) = default;
+  Statement_Detector(Statement_Detector &&rhs) = delete;
 
   /// @brief Default move assignment operator.
-  Statement_Detector &operator=(Statement_Detector &&rhs) = default;
+  Statement_Detector &operator=(Statement_Detector &&rhs) = delete;
 
   /// @brief Default dtor
   ~Statement_Detector() = default;
@@ -80,7 +80,7 @@ class Statement_Detector {
   std::vector<std::regex> get_statements();
 
   /// @brief Waits for all workers (blocking).
-  void wait_for_workers(void);
+  void wait_for_workers();
 
  protected:
   /// @brief Detects include / import statements.
@@ -88,7 +88,7 @@ class Statement_Detector {
       const std::string &line) const;
 
   /// @brief Walk through a stream and searches for include / import statements.
-  void process_stream(std::istream &input, const std::string &p);
+  void process_stream(std::istream &input, const std::string &input_path);
 
  private:
   /// @brief Threading method: takes an entry from job_queue to processes it.

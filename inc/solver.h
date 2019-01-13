@@ -72,7 +72,7 @@ class Solver {
 
   /// @brief Adds a vertex / entry.
   virtual void add_vertex(const std::string &name,
-                          const std::string &abs_path = "");
+                          const std::string &abs_path);
 
   /// @brief Shall add an edge and shall ensure exclusive access.
   virtual void add_edge(const std::string &src_path,
@@ -82,7 +82,7 @@ class Solver {
   /// @brief Shall return the regex for the statements which shall be
   //
   ///        detected.
-  virtual std::vector<std::string> get_statement_regex() = 0;
+  virtual std::vector<std::string> get_statement_regex() const = 0;
 
   /// @brief Shall return the regex for the files which shall be
   ///        detected.
