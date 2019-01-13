@@ -29,90 +29,82 @@
 
 #include "vertex.h"
 
-namespace INCLUDE_GARDENER
-{
-
+namespace INCLUDE_GARDENER {
 
 /// @brief Edge Properties.
 /// @author feddischson
-struct Edge
-{
+struct Edge {
    Edge() = default;
    Edge(int l) : line(l) {}
 
-   int line = -1; ///< The line number where the include statement is defined.
+   int line = -1;  ///< The line number where the include statement is defined.
 };
-
 
 /// @brief Graph definition.
 /// @author feddischson
-using Graph_ = boost::adjacency_list<
-         boost::listS, boost::vecS, boost::directedS,
-            Vertex::Ptr, Edge >;
+using Graph_ = boost::adjacency_list<boost::listS, boost::vecS,
+                                     boost::directedS, Vertex::Ptr, Edge>;
 
 /// @brief Labeled-graph definition
 /// @author feddischson
-using Graph = boost::labeled_graph< Graph_, std::string >;
+using Graph = boost::labeled_graph<Graph_, std::string>;
 
 /// @brief Aliases for handling vertices and edges of a graph
 /// @author feddischson
 //
 /// @{
 using Vertex_Descriptor = boost::graph_traits<Graph>::vertex_descriptor;
-using Edge_Descriptor   = boost::graph_traits<Graph>::edge_descriptor;
-using Edge_Iterator     = boost::graph_traits<Graph>::edge_iterator;
+using Edge_Descriptor = boost::graph_traits<Graph>::edge_descriptor;
+using Edge_Iterator = boost::graph_traits<Graph>::edge_iterator;
 /// @}
-
 
 /// @brief Graphviz writer class for vertices.
 /// @author feddischson
-template <class T> class Vertex_Writer
-{
-   public:
-         Vertex_Writer( T t ) : t(t){}
-         template< class T_v >
-         void operator()( std::ostream & out, const T_v & vertex ) const
-         {
-            out << "[label=\"" << t[vertex] << "\"]";
-         }
-   private:
-         T t;
+template <class T>
+class Vertex_Writer {
+  public:
+   Vertex_Writer(T t) : t(t) {}
+   template <class T_v>
+   void operator()(std::ostream& out, const T_v& vertex) const {
+      out << "[label=\"" << t[vertex] << "\"]";
+   }
+
+  private:
+   T t;
 };
 
 /// @brief Helper function for graphviz vertices writer class
 /// @author feddischson
-template <class T> inline Vertex_Writer<T>
-make_vertex_writer(T t) {
-  return Vertex_Writer<T>(t);
+template <class T>
+inline Vertex_Writer<T> make_vertex_writer(T t) {
+   return Vertex_Writer<T>(t);
 }
-
 
 /// @brief Graphviz writer class for edges.
 /// @author feddischson
-template <class T> class Edge_Writer {
-public:
-  Edge_Writer( T t ) : t( t ) {}
-  template < class T_Edge >
-  void operator()( std::ostream &out, const T_Edge& e ) const
-  {
-      out << "[label=\"" << "line " << t[e] << "\"]";
-  }
-private:
-  T t;
-};
+template <class T>
+class Edge_Writer {
+  public:
+   Edge_Writer(T t) : t(t) {}
+   template <class T_Edge>
+   void operator()(std::ostream& out, const T_Edge& e) const {
+      out << "[label=\""
+          << "line " << t[e] << "\"]";
+   }
 
+  private:
+   T t;
+};
 
 /// @brief Helper function for graphviz edge writer class.
 /// @author feddischson
-template <class T> inline Edge_Writer<T>
-make_edge_writer(T t) {
-  return Edge_Writer<T>(t);
+template <class T>
+inline Edge_Writer<T> make_edge_writer(T t) {
+   return Edge_Writer<T>(t);
 }
 
+}  // namespace INCLUDE_GARDENER
 
-} // namespace INCLUDE_GARDENER
-
-#endif // GRAPH_H
+#endif  // GRAPH_H
 
 // vim: filetype=cpp et ts=3 sw=3 sts=3
-
