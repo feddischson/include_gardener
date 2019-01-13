@@ -11,7 +11,7 @@ set ( CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(Boost REQUIRED COMPONENTS log system filesystem program_options )
 if(Boost_FOUND)
-  include_directories(${Boost_INCLUDE_DIRS})
+  include_directories( SYSTEM ${Boost_INCLUDE_DIRS})
 else()
   message( FATAL_ERROR "Boost not found." )
 endif()
