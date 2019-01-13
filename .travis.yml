@@ -1,10 +1,10 @@
 language: c++
-dist: trusty
+dist: xenial
 sudo: false
 os:
   - linux
 compiler:
-# - clang
+  - clang
   - gcc
 
 addons:
@@ -19,130 +19,46 @@ addons:
 matrix:
 
   exclude:
-#   - os: linux
-#     compiler: clang
+    - os: linux
+      compiler: clang
     - os: linux
       compiler: gcc
 
   include:
-    - os: linux
-      compiler: gcc-4.9
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - graphviz
-            - python3-dev
-            - libgraphviz-dev
-            - python3
-            - python3-pip
-            - g++-4.9
-            - libboost1.55-all-dev
-      env:
-         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9 && CTEST_OUTPUT_ON_FAILURE=1"
-
-    - os: linux
-      compiler: gcc-5
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - graphviz
-            - python3-dev
-            - libgraphviz-dev
-            - python3
-            - python3-pip
-            - g++-5
-            - libboost1.55-all-dev
-      env:
-         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5 && CTEST_OUTPUT_ON_FAILURE=1"
-
-    - os: linux
-      compiler: gcc-6
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - graphviz
-            - python3-dev
-            - libgraphviz-dev
-            - python3
-            - python3-pip
-            - g++-6
-            - libboost1.55-all-dev
-      env:
-         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6 && CTEST_OUTPUT_ON_FAILURE=1"
-
-    - os: linux
-      compiler: gcc-7
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - graphviz
-            - python3-dev
-            - libgraphviz-dev
-            - python3
-            - python3-pip
-            - g++-7
-            - libboost1.55-all-dev
-      env:
-         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && CTEST_OUTPUT_ON_FAILURE=1"
-
-#     - os: linux
-#       compiler: clang-3.9
-#       addons:
-#         apt:
-#           sources:
-#             - llvm-toolchain-trusty-3.9
-#           packages:
-#             - graphviz
-#             - python3-dev
-#             - libgraphviz-dev
-#             - python3
-#             - python3-pip
-#             - clang-3.9
-#             - libboost1.55-all-dev
-#       env:
-#          - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9 && CTEST_OUTPUT_ON_FAILURE=1"
-#
-#     - os: linux
-#       compiler: clang-4.0
-#       addons:
-#         apt:
-#           sources:
-#             - llvm-toolchain-trusty-4.0
-#           packages:
-#             - graphviz
-#             - python3-dev
-#             - libgraphviz-dev
-#             - python3
-#             - python3-pip
-#             - clang-4.0
-#             - libboost1.55-all-dev
-#       env:
-#          - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0 && CTEST_OUTPUT_ON_FAILURE=1"
-#
-#     - os: linux
-#       compiler: clang-5.0
-#       addons:
-#         apt:
-#           sources:
-#             - llvm-toolchain-trusty-5.0
-#           packages:
-#             - graphviz
-#             - python3-dev
-#             - libgraphviz-dev
-#             - python3
-#             - python3-pip
-#             - clang-5.0
-#             - libboost1.55-all-dev
-#       env:
-#          - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0 && CTEST_OUTPUT_ON_FAILURE=1"
+      - os: linux
+        compiler: gcc-7
+        addons:
+          apt:
+            sources:
+              - ubuntu-toolchain-r-test
+            packages:
+              - graphviz
+              - python3-dev
+              - libgraphviz-dev
+              - python3
+              - python3-pip
+              - python3-setuptools
+              - g++-7
+              - libboost1.58-all-dev
+        env:
+          - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && CTEST_OUTPUT_ON_FAILURE=1"
+      - os: linux
+        compiler: clang-6.0
+        addons:
+          apt:
+            sources:
+              - llvm-toolchain-xenial-6.0
+            packages:
+              - graphviz
+              - python3-dev
+              - libgraphviz-dev
+              - python3
+              - python3-pip
+              - python3-setuptools
+              - clang-6.0
+              - libboost1.58-all-dev
+        env:
+           - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0 && CTEST_OUTPUT_ON_FAILURE=1"
 
 before_install:
     - pkg-config --libs-only-L libcgraph
@@ -151,6 +67,7 @@ before_install:
     - python -V
     - pip3 -V
     - pip -V
+    - pip3 install --upgrade pip
     - eval "${MATRIX_EVAL}"
 
 install:
