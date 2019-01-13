@@ -7,6 +7,7 @@ set ( GARDENER_VERSION_PATCH 0 )
 set ( GARDENER_VERSION
   "${GARDENER_VERSION_MAJOR}.${GARDENER_VERSION_MINOR}.${GARDENER_VERSION_PATCH}" )
 
+set ( CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(Boost REQUIRED COMPONENTS log system filesystem program_options )
 if(Boost_FOUND)
@@ -48,15 +49,25 @@ add_definitions( -D_GARDENER_VERSION_MINOR=${GARDENER_VERSION_MINOR})
 add_definitions( -D_GARDENER_VERSION_PATCH=${GARDENER_VERSION_PATCH})
 add_definitions( -D_GARDENER_VERSION="${GARDENER_VERSION}")
 
-add_executable ( include_gardener
-                 src/main.cpp
-                 src/helper.cpp
-                 src/statement_detector.cpp
-                 src/file_detector.cpp
-                 src/input_files.cpp
-                 src/vertex.cpp
-                 src/solver.cpp
-                 src/solver_c.cpp )
+set (SOURCE_FILES
+  ${CMAKE_SOURCE_DIR}/src/helper.cpp
+  ${CMAKE_SOURCE_DIR}/src/statement_detector.cpp
+  ${CMAKE_SOURCE_DIR}/src/file_detector.cpp
+  ${CMAKE_SOURCE_DIR}/src/input_files.cpp
+  ${CMAKE_SOURCE_DIR}/src/vertex.cpp
+  ${CMAKE_SOURCE_DIR}/src/solver.cpp
+  ${CMAKE_SOURCE_DIR}/src/solver_c.cpp )
+
+set (EXEC_SOURCE_FILES
+  ${SOURCE_FILES}
+  ${CMAKE_SOURCE_DIR}/src/main.cpp )
+
+set (UNIT_TEST_SOURCE_FILES
+  ${CMAKE_SOURCE_DIR}/test/unit_test/main.cpp
+  ${CMAKE_SOURCE_DIR}/test/unit_test/test_file_detector.cpp
+  ${CMAKE_SOURCE_DIR}/test/unit_test/test_statement_detector.cpp )
+
+add_executable ( include_gardener ${EXEC_SOURCE_FILES})
 
 target_link_libraries( include_gardener ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries( include_gardener ${Boost_LIBRARIES} )
@@ -114,16 +125,9 @@ endif()
 ##
 
 add_executable( unit_test
-                src/helper.cpp
-                src/file_detector.cpp
-                src/statement_detector.cpp
-                src/input_files.cpp
-                src/vertex.cpp
-                src/solver.cpp
-                src/solver_c.cpp
-                test/unit_test/main.cpp
-                test/unit_test/test_file_detector.cpp
-                test/unit_test/test_statement_detector.cpp )
+  ${SOURCE_FILES}
+  ${UNIT_TEST_SOURCE_FILES}
+  )
 
 add_dependencies( unit_test gmock )
 add_dependencies( unit_test gtest )
@@ -173,10 +177,11 @@ add_custom_target(
         clang-tidy
         COMMAND clang-tidy
         -p=./
-        -checks=*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-type-vararg,-modernize-pass-by-value,-llvm-include-order,-readability-simplify-boolean-expr
+        -checks=*,-fuchsia-default-arguments,-llvm-header-guard
         -format-style=google
         -header-filter=.*
-        ${CORE_SOURCE_FILES} ${SOURCE_FILES}
+        ${EXEC_SOURCE_FILES}
+        ${UNIT_TEST_SOURCE_FILES}
         -extra-arg=-std=c++17 > clang-tidy.log
 )
 
