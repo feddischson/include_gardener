@@ -166,4 +166,6 @@ before_script:
 script: 
   - make VERBOSE=1
   - ctest -VV
+  - make clang-tidy
+  - cat clang-tidy.log
 
