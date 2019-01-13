@@ -32,31 +32,48 @@
 #include "solver_c.h"
 #include "statement_detector.h"
 
-using namespace INCLUDE_GARDENER;
-using namespace std;
+using std::cerr;
+using std::cout;
+using std::make_shared;
+using std::ofstream;
+using std::string;
+using std::vector;
+
+using INCLUDE_GARDENER::Edge;
+using INCLUDE_GARDENER::File_Detector;
+using INCLUDE_GARDENER::Graph;
+using INCLUDE_GARDENER::Solver;
+using INCLUDE_GARDENER::Statement_Detector;
+using INCLUDE_GARDENER::Vertex;
+
 namespace po = boost::program_options;
-
-static const string GARDENER_VERSION = _GARDENER_VERSION;
-
-Graph g;
-
-Solver::Ptr init_options(int argc, char* argv[]);
 
 // Note: use "dot -Tsvg graph.dot > graph.svg" to create svg.
 
-struct {
+struct Options {
    int n_threads;
    int recursive_limit;
    string language;
    string format;
+   string out_file;
    vector<string> process_paths;
    vector<string> exclude;
-   string out_file;
-} opts;
+   // default options
+   Options()
+       : n_threads{1}, recursive_limit{-1}, language("c"), format("dot") {}
+};
+
+Solver::Ptr init_options(int argc, char* argv[], Options* opts, Graph* graph);
 
 int main(int argc, char* argv[]) {
+   // global options
+   Options opts;
+
+   // global graph
+   Graph graph;
+
    // initialize and parse options
-   auto solver = init_options(argc, argv);
+   auto solver = init_options(argc, argv, &opts, &graph);
    if (solver == nullptr) {
       return -1;
    }
@@ -73,8 +90,8 @@ int main(int argc, char* argv[]) {
    Statement_Detector s_detector = Statement_Detector(solver, opts.n_threads);
 
    // iterate over all files in detector and add them to job queue
-   for (auto i = input_files->begin(); i != input_files->end(); ++i) {
-      s_detector.add_job(*i);
+   for (const auto& i : *input_files) {
+      s_detector.add_job(i);
    }
 
    // and wait until all jobs are done!
@@ -83,41 +100,34 @@ int main(int argc, char* argv[]) {
    // prepare the name-map for graphviz output generation
    auto name_map = boost::make_transform_value_property_map(
        [](Vertex::Ptr v) { return v->get_name(); },
-       get(boost::vertex_bundle, g));
+       get(boost::vertex_bundle, graph));
 
    if ("dot" == opts.format) {
       if (opts.out_file.length() > 0) {
          BOOST_LOG_TRIVIAL(info) << "Writing graph to " << opts.out_file;
          ofstream file_stream(opts.out_file);
-         write_graphviz(file_stream, g, make_vertex_writer(name_map),
-                        make_edge_writer(boost::get(&Edge::line, g)));
+         write_graphviz(file_stream, graph, make_vertex_writer(name_map),
+                        make_edge_writer(boost::get(&Edge::line, graph)));
       } else {
-         write_graphviz(cout, g, make_vertex_writer(name_map),
-                        make_edge_writer(boost::get(&Edge::line, g)));
+         write_graphviz(cout, graph, make_vertex_writer(name_map),
+                        make_edge_writer(boost::get(&Edge::line, graph)));
       }
    } else if ("xml" == opts.format || "graphml" == opts.format) {
       boost::dynamic_properties dp;
-      dp.property("line", boost::get(&Edge::line, g));
+      dp.property("line", boost::get(&Edge::line, graph));
       dp.property("name", name_map);
       if (opts.out_file.length() > 0) {
          BOOST_LOG_TRIVIAL(info) << "Writing graph to " << opts.out_file;
          ofstream file_stream(opts.out_file);
-         write_graphml(file_stream, g, dp);
+         write_graphml(file_stream, graph, dp);
       } else {
-         write_graphml(cout, g, dp);
+         write_graphml(cout, graph, dp);
       }
    }
    return 0;
 }
 
-Solver::Ptr init_options(int argc, char* argv[]) {
-   // default options
-   opts.n_threads = 1;
-   opts.recursive_limit = -1;
-   opts.language = "c";
-   opts.format = "dot";
-   opts.out_file = "";
-
+Solver::Ptr init_options(int argc, char* argv[], Options* opts, Graph* graph) {
    //
    // use boost's command line parser
    //
@@ -157,18 +167,18 @@ Solver::Ptr init_options(int argc, char* argv[]) {
    }
 
    // print help if required
-   if (true == vm.count("help")) {
+   if (vm.count("help") > 0) {
       cout << desc << "\n";
       exit(0);
    }
 
-   if (true == vm.count("version")) {
-      cout << "Include Gardener Version " << GARDENER_VERSION << "\n";
+   if (vm.count("version") > 0) {
+      cout << "Include Gardener Version " << _GARDENER_VERSION << "\n";
       exit(0);
    }
 
    // ensure, that at least one process path is provided
-   if (false == vm.count("process-path")) {
+   if (vm.count("process-path") == 0) {
       cerr << "No input provided!"
            << "\n"
            << "\n"
@@ -179,30 +189,30 @@ Solver::Ptr init_options(int argc, char* argv[]) {
    // Sets log level to warning if verbose is not set.
    // This must be done bevore useing any BOOST_LOG_TRIVIAL statement.
    //
-   if (false == vm.count("verbose")) {
+   if (vm.count("verbose") == 0) {
       boost::log::core::get()->set_filter(boost::log::trivial::severity >=
                                           boost::log::trivial::warning);
    }
 
-   if (true == vm.count("exclude")) {
-      opts.exclude = vm["exclude"].as<vector<string> >();
+   if (vm.count("exclude") > 0) {
+      opts->exclude = vm["exclude"].as<vector<string> >();
    }
 
-   if (true == vm.count("language")) {
-      opts.language = vm["language"].as<string>();
-      transform(opts.language.begin(), opts.language.end(),
-                opts.language.begin(), ::tolower);
+   if (vm.count("language") > 0) {
+      opts->language = vm["language"].as<string>();
+      transform(opts->language.begin(), opts->language.end(),
+                opts->language.begin(), ::tolower);
    }
 
    // extract the format
    // currently, only the dot format is supported
-   if (true == vm.count("format")) {
-      opts.format = vm["format"].as<string>();
+   if (vm.count("format") > 0) {
+      opts->format = vm["format"].as<string>();
    }
 
-   if (true == vm.count("threads")) {
-      opts.n_threads = vm["threads"].as<int>();
-      if (opts.n_threads == 0) {
+   if (vm.count("threads") > 0) {
+      opts->n_threads = vm["threads"].as<int>();
+      if (opts->n_threads == 0) {
          cerr << "Error: Number of threads is set to 0, which is not allowed."
               << "\n"
               << "Please use at least one worker thread."
@@ -211,42 +221,43 @@ Solver::Ptr init_options(int argc, char* argv[]) {
       }
    }
 
-   if (true == vm.count("recursive-limit")) {
-      opts.recursive_limit = vm["recursive-limit"].as<int>();
+   if (vm.count("recursive-limit") > 0) {
+      opts->recursive_limit = vm["recursive-limit"].as<int>();
    }
 
-   if (!("" == opts.format || "dot" == opts.format || "xml" == opts.format ||
-         "graphml" == opts.format)) {
-      cerr << "Unrecognized format: " << opts.format << "\n"
+   if (!(opts->format.empty() || "dot" == opts->format ||
+         "xml" == opts->format || "graphml" == opts->format)) {
+      cerr << "Unrecognized format: " << opts->format << "\n"
            << "\n"
            << desc << "\n";
       return nullptr;
    }
 
-   opts.process_paths = vm["process-path"].as<vector<string> >();
+   opts->process_paths = vm["process-path"].as<vector<string> >();
 
-   if (true == vm.count("out-file")) {
-      opts.out_file = vm["out-file"].as<string>();
+   if (vm.count("out-file") > 0) {
+      opts->out_file = vm["out-file"].as<string>();
    }
 
-   auto solver = Solver::get_solver(opts.language, &g);
+   auto solver = Solver::get_solver(opts->language, graph);
    if (nullptr == solver) {
-      cerr << "Error: Unsuported language \""<<opts.language << "\"" << "\n";
+      cerr << "Error: Unsuported language \"" << opts->language << "\""
+           << "\n";
       exit(-1);
    }
    solver->extract_options(vm);
 
-   BOOST_LOG_TRIVIAL(trace) << "n_threads:      " << opts.n_threads;
-   BOOST_LOG_TRIVIAL(trace) << "recursive_limit: " << opts.recursive_limit;
-   BOOST_LOG_TRIVIAL(trace) << "language:        " << opts.language;
-   BOOST_LOG_TRIVIAL(trace) << "format:          " << opts.format;
-   BOOST_LOG_TRIVIAL(trace) << "out_file:        " << opts.out_file;
+   BOOST_LOG_TRIVIAL(trace) << "n_threads:      " << opts->n_threads;
+   BOOST_LOG_TRIVIAL(trace) << "recursive_limit: " << opts->recursive_limit;
+   BOOST_LOG_TRIVIAL(trace) << "language:        " << opts->language;
+   BOOST_LOG_TRIVIAL(trace) << "format:          " << opts->format;
+   BOOST_LOG_TRIVIAL(trace) << "out_file:        " << opts->out_file;
    BOOST_LOG_TRIVIAL(trace) << "process_paths:   ";
-   for (auto p : opts.process_paths) {
+   for (auto p : opts->process_paths) {
       BOOST_LOG_TRIVIAL(trace) << "    " << p;
    }
    BOOST_LOG_TRIVIAL(trace) << "exclude:         ";
-   for (auto e : opts.exclude) {
+   for (auto e : opts->exclude) {
       BOOST_LOG_TRIVIAL(trace) << "    " << e;
    }
 
