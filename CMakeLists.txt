@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.11)
+cmake_minimum_required (VERSION 3.6)
 project (INCLUDE_GARDENER)
 
 set ( GARDENER_VERSION_MAJOR X )
@@ -25,6 +25,9 @@ endif()
 
 find_package (Threads REQUIRED )
 
+#
+# Doxygen Documentation Generation
+#
 
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
@@ -35,6 +38,9 @@ if(DOXYGEN_FOUND)
      COMMENT "Generating API documentation with Doxygen" VERBATIM )
 endif(DOXYGEN_FOUND)
 
+##
+## Main Target Generation
+##
 
 add_definitions( -DBOOST_LOG_DYN_LINK=1 )
 add_definitions( -D_GARDENER_VERSION_MAJOR=${GARDENER_VERSION_MAJOR})
@@ -102,6 +108,11 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
 endif()
 #
 ########
+
+##
+## Unit-Test Executable Generation
+##
+
 add_executable( unit_test
                 src/helper.cpp
                 src/file_detector.cpp
@@ -127,8 +138,45 @@ target_link_libraries( unit_test  gmock_main )
 
 set ( TEST_DIR ${CMAKE_SOURCE_DIR}/test )
 
-
+##
+## Unit-Test (gtest) execution
+##
 add_test( unit_test unit_test --gtest_output=xml:test-reports/unit_test_results.xml )
+
+##
+## cmdline test execution (via python)
+##
 add_test( c_cmdline_test python3 ${TEST_DIR}/cmd_line/test.py
   test-reports
   ${CMAKE_BINARY_DIR}/include_gardener ${TEST_DIR}/test_files/c )
+
+##
+## CPPCHECK
+##
+find_program(CPPCHECK "cppcheck")
+add_custom_target(
+        cppcheck
+        COMMAND cppcheck
+        --enable=warning,performance,portability,missingInclude,style
+        --std=c++11
+        --suppress=missingIncludeSystem
+        --template="[{severity}][{id}][{file}:{line}] {message} {callstack}"
+        --project=compile_commands.json
+        --output-file=cpp_check.log
+)
+
+##
+## CLANG-TIDY
+##
+find_program(CLANG_TIDY "clang-tidy")
+add_custom_target(
+        clang-tidy
+        COMMAND clang-tidy
+        -p=./
+        -checks=*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-type-vararg,-modernize-pass-by-value,-llvm-include-order,-readability-simplify-boolean-expr
+        -format-style=google
+        -header-filter=.*
+        ${CORE_SOURCE_FILES} ${SOURCE_FILES}
+        -extra-arg=-std=c++17 > clang-tidy.log
+)
+
