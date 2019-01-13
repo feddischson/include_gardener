@@ -38,6 +38,7 @@ using std::make_shared;
 using std::ofstream;
 using std::string;
 using std::vector;
+using std::exception;
 
 using INCLUDE_GARDENER::Edge;
 using INCLUDE_GARDENER::File_Detector;
@@ -66,64 +67,74 @@ struct Options {
 Solver::Ptr init_options(int argc, char* argv[], Options* opts, Graph* graph);
 
 int main(int argc, char* argv[]) {
-   // global options
-   Options opts;
+   try {
+      // global options
+      Options opts;
 
-   // global graph
-   Graph graph;
+      // global graph
+      Graph graph;
 
-   // initialize and parse options
-   auto solver = init_options(argc, argv, &opts, &graph);
-   if (solver == nullptr) {
-      return -1;
-   }
-
-   // Create a file detector ...
-   auto input_files =
-       make_shared<File_Detector>(solver->get_file_regex(), opts.exclude,
-                                  opts.process_paths, opts.recursive_limit);
-
-   // ... and get all files.
-   input_files->get(solver);
-
-   // Then, create a statement detector ...
-   Statement_Detector s_detector = Statement_Detector(solver, opts.n_threads);
-
-   // iterate over all files in detector and add them to job queue
-   for (const auto& i : *input_files) {
-      s_detector.add_job(i);
-   }
-
-   // and wait until all jobs are done!
-   s_detector.wait_for_workers();
-
-   // prepare the name-map for graphviz output generation
-   auto name_map = boost::make_transform_value_property_map(
-       [](Vertex::Ptr v) { return v->get_name(); },
-       get(boost::vertex_bundle, graph));
-
-   if ("dot" == opts.format) {
-      if (opts.out_file.length() > 0) {
-         BOOST_LOG_TRIVIAL(info) << "Writing graph to " << opts.out_file;
-         ofstream file_stream(opts.out_file);
-         write_graphviz(file_stream, graph, make_vertex_writer(name_map),
-                        make_edge_writer(boost::get(&Edge::line, graph)));
-      } else {
-         write_graphviz(cout, graph, make_vertex_writer(name_map),
-                        make_edge_writer(boost::get(&Edge::line, graph)));
+      // initialize and parse options
+      auto solver = init_options(argc, argv, &opts, &graph);
+      if (solver == nullptr) {
+         return -1;
       }
-   } else if ("xml" == opts.format || "graphml" == opts.format) {
-      boost::dynamic_properties dp;
-      dp.property("line", boost::get(&Edge::line, graph));
-      dp.property("name", name_map);
-      if (opts.out_file.length() > 0) {
-         BOOST_LOG_TRIVIAL(info) << "Writing graph to " << opts.out_file;
-         ofstream file_stream(opts.out_file);
-         write_graphml(file_stream, graph, dp);
-      } else {
-         write_graphml(cout, graph, dp);
+
+      // Create a file detector ...
+      auto input_files =
+          make_shared<File_Detector>(solver->get_file_regex(), opts.exclude,
+                                     opts.process_paths, opts.recursive_limit);
+
+      // ... and get all files.
+      input_files->get(solver);
+
+      // Then, create a statement detector ...
+      Statement_Detector s_detector =
+          Statement_Detector(solver, opts.n_threads);
+
+      // iterate over all files in detector and add them to job queue
+      for (const auto& i : *input_files) {
+         s_detector.add_job(i);
       }
+
+      // and wait until all jobs are done!
+      s_detector.wait_for_workers();
+
+      // prepare the name-map for graphviz output generation
+      auto name_map = boost::make_transform_value_property_map(
+          [](Vertex::Ptr v) { return v->get_name(); },
+          get(boost::vertex_bundle, graph));
+
+      if ("dot" == opts.format) {
+         if (opts.out_file.length() > 0) {
+            BOOST_LOG_TRIVIAL(info) << "Writing graph to " << opts.out_file;
+            ofstream file_stream(opts.out_file);
+            write_graphviz(file_stream, graph, make_vertex_writer(name_map),
+                           make_edge_writer(boost::get(&Edge::line, graph)));
+         } else {
+            write_graphviz(cout, graph, make_vertex_writer(name_map),
+                           make_edge_writer(boost::get(&Edge::line, graph)));
+         }
+      } else if ("xml" == opts.format || "graphml" == opts.format) {
+         boost::dynamic_properties dp;
+         dp.property("line", boost::get(&Edge::line, graph));
+         dp.property("name", name_map);
+         if (opts.out_file.length() > 0) {
+            BOOST_LOG_TRIVIAL(info) << "Writing graph to " << opts.out_file;
+            ofstream file_stream(opts.out_file);
+            write_graphml(file_stream, graph, dp);
+         } else {
+            write_graphml(cout, graph, dp);
+         }
+      }
+   } catch (const exception & e) {
+      cerr << e.what() << "\n";
+      exit(-1);
+   } catch (...) {
+      cerr << "Unecpected Error!" << "\n";
+      exit(-1);
    }
+
    return 0;
 }
 
@@ -253,11 +264,11 @@ Solver::Ptr init_options(int argc, char* argv[], Options* opts, Graph* graph) {
    BOOST_LOG_TRIVIAL(trace) << "format:          " << opts->format;
    BOOST_LOG_TRIVIAL(trace) << "out_file:        " << opts->out_file;
    BOOST_LOG_TRIVIAL(trace) << "process_paths:   ";
-   for (const auto & p : opts->process_paths) {
+   for (const auto& p : opts->process_paths) {
       BOOST_LOG_TRIVIAL(trace) << "    " << p;
    }
    BOOST_LOG_TRIVIAL(trace) << "exclude:         ";
-   for (const auto & e : opts->exclude) {
+   for (const auto& e : opts->exclude) {
       BOOST_LOG_TRIVIAL(trace) << "    " << e;
    }
 
