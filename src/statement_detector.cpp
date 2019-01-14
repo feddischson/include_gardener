@@ -66,9 +66,7 @@ optional<pair<string, unsigned int>> Statement_Detector::detect(
     auto s = statements[i];
     if (regex_search(line, match, s)) {
       if (!match.empty()) {
-        BOOST_LOG_TRIVIAL(trace) << "Statement matched:"
-                                 << "\n";
-        BOOST_LOG_TRIVIAL(trace) << "Size: " << match.size();
+        BOOST_LOG_TRIVIAL(trace) << "Statement matched: " << match[match.size() - 1];
         return pair<string, unsigned int>(match[match.size() - 1], i);
       }
     }
@@ -100,7 +98,6 @@ void Statement_Detector::process_stream(istream& input,
     } else if (line.back() == '\\') {
       line.pop_back();
       multi_line.append(line);
-      BOOST_LOG_TRIVIAL(trace) << "found multiline statement: " << line << "\n";
       found_multi_line = true;
     } else {
       if (found_multi_line) {
