@@ -25,10 +25,11 @@
 #include <iostream>
 #include <mutex>
 #include <optional>
-#include <regex>
 #include <string>
 #include <thread>
 #include <vector>
+
+#include <boost/regex.hpp>
 
 #include "solver.h"
 
@@ -77,7 +78,7 @@ class Statement_Detector {
   void add_job(const std::string &abs_path);
 
   /// @brief Returns list of statements (as regex)
-  std::vector<std::regex> get_statements();
+  std::vector<boost::regex> get_statements();
 
   /// @brief Waits for all workers (blocking).
   void wait_for_workers();
@@ -95,7 +96,7 @@ class Statement_Detector {
   void do_work(int id);
 
   /// @brief Internal vector of statements.
-  std::vector<std::regex> statements;
+  const std::vector<boost::regex> statements;
 
   /// @brief Vector of threads, each calling do_work.
   std::vector<std::thread> workers;

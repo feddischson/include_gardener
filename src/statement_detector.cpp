@@ -20,18 +20,20 @@
 //
 #include "statement_detector.h"
 
-#include <boost/log/trivial.hpp>
 #include <fstream>
 
+#include <boost/log/trivial.hpp>
+
 #include "helper.h"
+
+using boost::regex;
+using boost::smatch;
 
 using std::ifstream;
 using std::istream;
 using std::mutex;
 using std::optional;
 using std::pair;
-using std::regex;
-using std::smatch;
 using std::string;
 using std::thread;
 using std::unique_lock;

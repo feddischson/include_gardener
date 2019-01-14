@@ -26,11 +26,9 @@
 
 using INCLUDE_GARDENER::File_Detector;
 
-using std::regex;
+using boost::regex;
 using std::string;
 using std::vector;
-using std::regex_constants::ECMAScript;
-using std::regex_constants::icase;
 
 class File_Detector_Test : public ::testing::Test {};
 
@@ -55,8 +53,8 @@ TEST_F(File_Detector_Test, exclude_list) {
   File_Detector d = File_Detector(file_regex, exclude_regex, base_paths);
   auto l = d.get_exclude_regex();
 
-  regex r1 = regex("abc", ECMAScript | icase);
-  regex r2 = regex("def", ECMAScript | icase);
+  regex r1 = regex("abc");
+  regex r2 = regex("def");
 
   EXPECT_EQ(l.size(), 2);
   EXPECT_EQ(r1.flags(), l[0].flags());
@@ -71,13 +69,16 @@ TEST_F(File_Detector_Test, test_c_file_detection_without_exclude) {
   vector<string> base_paths;
   File_Detector d = File_Detector(file_regex, exclude_regex, base_paths);
 
+  EXPECT_EQ(d.use_file("abc.H"), true);
   EXPECT_EQ(d.use_file("abc.h"), true);
   EXPECT_EQ(d.use_file("def.hh"), true);
   EXPECT_EQ(d.use_file(".c"), true);
+  EXPECT_EQ(d.use_file(".C"), true);
   EXPECT_EQ(d.use_file("1234567890.cc"), true);
   EXPECT_EQ(d.use_file("x.hpp"), true);
   EXPECT_EQ(d.use_file(".c"), true);
   EXPECT_EQ(d.use_file("y z.cpp"), true);
+  EXPECT_EQ(d.use_file("y z.cPp"), true);
   EXPECT_EQ(d.use_file("y z.py"), false);
   EXPECT_EQ(d.use_file("x."), false);
 }

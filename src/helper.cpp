@@ -20,11 +20,9 @@
 //
 #include "helper.h"
 
-using std::regex;
+using boost::regex;
 using std::string;
 using std::vector;
-using std::regex_constants::ECMAScript;
-using std::regex_constants::icase;
 
 namespace INCLUDE_GARDENER {
 
@@ -35,7 +33,7 @@ vector<regex> init_regex_vector(const vector<string>& string_vector) {
 
   for (const auto& entry : string_vector) {
     if (!entry.empty()) {
-      regex_vector.emplace_back(regex(entry, ECMAScript | icase));
+      regex_vector.emplace_back(regex(entry));
     }
   }
   return regex_vector;

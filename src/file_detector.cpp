@@ -23,19 +23,18 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/regex.hpp>
 
-using std::regex;
+using boost::regex;
 using std::string;
 using std::vector;
-using std::regex_constants::ECMAScript;
-using std::regex_constants::icase;
 
 namespace INCLUDE_GARDENER {
 
 File_Detector::File_Detector(const string& file_regex,
                              const vector<string>& exclude_regex,
                              vector<string> process_paths, int recursive_limit)
-    : file_regex(file_regex, ECMAScript | icase),
+    : file_regex(file_regex, boost::regex::icase),
       exclude_regex(init_regex_vector(exclude_regex)),
       process_paths(move(process_paths)),
       use_exclude_regex(!exclude_regex.empty()),

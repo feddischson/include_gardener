@@ -21,13 +21,15 @@
 #ifndef HELPER_H
 #define HELPER_H
 
-#include <regex>
+//#include <regex>
 #include <vector>
+
+#include <boost/regex.hpp>
 
 namespace INCLUDE_GARDENER {
 
 /// @brief Helper function to initialize the exclude_regex vector.
-std::vector<std::regex> init_regex_vector(
+std::vector<boost::regex> init_regex_vector(
     const std::vector<std::string> &string_vector);
 
 }  // namespace INCLUDE_GARDENER

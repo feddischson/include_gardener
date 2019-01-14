@@ -21,9 +21,10 @@
 #ifndef FILE_DETECTOR_H
 #define FILE_DETECTOR_H
 
-#include <regex>
 #include <string>
 #include <vector>
+
+#include <boost/regex.hpp>
 
 #include "input_files.h"
 
@@ -63,7 +64,7 @@ class File_Detector : public Input_Files {
   ~File_Detector() override = default;
 
   /// @brief Returns exlcude regex list
-  std::vector<std::regex> get_exclude_regex();
+  std::vector<boost::regex> get_exclude_regex();
 
   /// @brief Returns true if the file shall be considered, otherwise false.
   bool use_file(const std::string &file) const;
@@ -78,15 +79,15 @@ class File_Detector : public Input_Files {
   /// @param solver Pointer to the solver instance
   /// @param sub_path The sub_path (within base_path) which is processed
   /// @param recusive_cnt The current recursive counter.
-  bool walk_tree(const std::string &base_path, const Solver::Ptr & solver,
+  bool walk_tree(const std::string &base_path, const Solver::Ptr &solver,
                  const std::string &sub_path = "", int recursive_cnt = 0);
 
   /// @brief Regular expression to check if a file shall be used.
-  const std::regex file_regex;
+  const boost::regex file_regex;
 
   /// @brief Vector of regular expressions to check if a file shall not
   ///        be used.
-  const std::vector<std::regex> exclude_regex;
+  const std::vector<boost::regex> exclude_regex;
 
   /// @brief Paths of the base directories.
   const std::vector<std::string> process_paths;
@@ -95,7 +96,7 @@ class File_Detector : public Input_Files {
   bool use_exclude_regex;
 
   /// @brief Helper function to check if a file should be excluded.
-  bool exclude_regex_search(const std::string & path_string) const;
+  bool exclude_regex_search(const std::string &path_string) const;
 
   /// @brief Limit for the recursive file search.
   const int recursive_limit;
