@@ -78,7 +78,7 @@ class Statement_Detector {
   void add_job(const std::string &abs_path);
 
   /// @brief Returns list of statements (as regex)
-  std::vector<boost::regex> get_statements();
+  std::vector<boost::regex> get_statements() const;
 
   /// @brief Waits for all workers (blocking).
   void wait_for_workers();

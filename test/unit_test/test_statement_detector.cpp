@@ -50,7 +50,7 @@ class Mock_Solver : public Solver {
     return {R"(\s*#\s*(include|import)\s+\"(\S+)\")",
             R"(\s*#\s*(include|import)\s+<(\S+)>)"};
   }
-  MOCK_METHOD0(get_file_regex, string());
+  MOCK_CONST_METHOD0(get_file_regex, string());
   MOCK_CONST_METHOD0(name, string());
   MOCK_CONST_METHOD1(add_options, void(po::options_description *));
   MOCK_METHOD1(extract_options, void(const po::variables_map &));

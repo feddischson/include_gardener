@@ -57,7 +57,7 @@ void Statement_Detector::add_job(const string& abs_path) {
   job_queue_condition.notify_all();
 }
 
-vector<regex> Statement_Detector::get_statements() { return statements; }
+vector<regex> Statement_Detector::get_statements() const { return statements; }
 
 optional<pair<string, unsigned int>> Statement_Detector::detect(
     const string& line) const {

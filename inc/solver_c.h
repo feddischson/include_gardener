@@ -71,7 +71,7 @@ class Solver_C : public Solver {
 
   /// @brief Returns the regex which
   ///        detectes the files.
-  std::string get_file_regex() override;
+  std::string get_file_regex() const override;
 
   /// @brief Extracts solver-specific options (variables).
   void extract_options(

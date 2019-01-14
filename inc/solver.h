@@ -86,7 +86,7 @@ class Solver {
 
   /// @brief Shall return the regex for the files which shall be
   ///        detected.
-  virtual std::string get_file_regex() = 0;
+  virtual std::string get_file_regex() const = 0;
 
   /// @brief Shall extract the solver-specific options (variables).
   virtual void extract_options(

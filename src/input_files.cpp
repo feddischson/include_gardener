@@ -22,9 +22,9 @@
 
 namespace INCLUDE_GARDENER {
 
-Input_Files::Itr Input_Files::begin() { return files.begin(); }
+Input_Files::Itr Input_Files::begin() const { return files.begin(); }
 
-Input_Files::Itr Input_Files::end() { return files.end(); }
+Input_Files::Itr Input_Files::end() const { return files.end(); }
 
 }  // namespace INCLUDE_GARDENER
 

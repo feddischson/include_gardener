@@ -60,7 +60,7 @@ class Vertex {
   ~Vertex() = default;
 
   /// @brief Returns the name of the vertex.
-  std::string get_name();
+  std::string get_name() const;
 
  private:
   /// @brief file name, including file ending

@@ -27,7 +27,7 @@ using std::string;
 Vertex::Vertex(string name, string abs_path)
     : name(move(name)), abs_path(move(abs_path)) {}
 
-string Vertex::get_name() { return name; }
+string Vertex::get_name() const { return name; }
 
 }  // namespace INCLUDE_GARDENER
 

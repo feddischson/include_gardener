@@ -93,7 +93,7 @@ class File_Detector : public Input_Files {
   const std::vector<std::string> process_paths;
 
   /// @brief Indicates if excludes are used.
-  bool use_exclude_regex;
+  const bool use_exclude_regex;
 
   /// @brief Helper function to check if a file should be excluded.
   bool exclude_regex_search(const std::string &path_string) const;

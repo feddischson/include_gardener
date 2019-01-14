@@ -60,10 +60,10 @@ class Input_Files {
   virtual void get(Solver::Ptr solver) = 0;
 
   /// @brief Returns the beginning of the files.
-  Itr begin();
+  Itr begin() const;
 
   /// @brief Returns the end of the files.
-  Itr end();
+  Itr end() const;
 
  protected:
   /// @brief List of detected files.
