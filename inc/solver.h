@@ -45,15 +45,13 @@ namespace INCLUDE_GARDENER {
 ///     add_options), and each solver instance can extract the options via
 ///     extract_options.
 ///
-/// @TODO The Graph g could be moved into this class.
 class Solver {
  public:
   /// @brief Smart pointer for Solver
   using Ptr = std::shared_ptr<Solver>;
 
-  /// @brief Initializes all members.
-  /// @param graph Pointer to the global graph instance.
-  explicit Solver(Graph *graph);
+  /// @brief Default ctor.
+  Solver() = default;
 
   /// @brief Copy ctor: not implemented!
   Solver(const Solver &other) = delete;
@@ -71,8 +69,7 @@ class Solver {
   virtual ~Solver() = default;
 
   /// @brief Adds a vertex / entry.
-  virtual void add_vertex(const std::string &name,
-                          const std::string &abs_path);
+  virtual void add_vertex(const std::string &name, const std::string &abs_path);
 
   /// @brief Shall add an edge and shall ensure exclusive access.
   virtual void add_edge(const std::string &src_path,
@@ -80,7 +77,6 @@ class Solver {
                         unsigned int line_no) = 0;
 
   /// @brief Shall return the regex for the statements which shall be
-  //
   ///        detected.
   virtual std::vector<std::string> get_statement_regex() const = 0;
 
@@ -92,16 +88,21 @@ class Solver {
   virtual void extract_options(
       const boost::program_options::variables_map &vm) = 0;
 
+  /// @brief Writes the graph to a file.
+  /// @param format Either "dot" or "xml"/"graphml".
+  virtual void write_graph(const std::string &format,
+                           const std::string &file_path);
+
   /// @brief Adds solver-specific options.
   static void add_options(boost::program_options::options_description *options);
 
   /// @brief Returns a specific solver.
   /// @param name Name of the solver.
-  static Ptr get_solver(const std::string &name, Graph *g);
+  static Ptr get_solver(const std::string &name);
 
  protected:
-  /// @brief Pointer to the global graph instance.
-  Graph *graph;
+  /// @brief Common graph instance.
+  Graph graph;
 
   /// @brief Storage of all added vertexes.
   Vertex::Map vertexes;

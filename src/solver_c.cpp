@@ -31,10 +31,8 @@ namespace INCLUDE_GARDENER {
 namespace po = boost::program_options;
 using std::mutex;
 using std::string;
-using std::vector;
 using std::unique_lock;
-
-Solver_C::Solver_C(Graph *graph) : Solver(graph) {}
+using std::vector;
 
 vector<string> Solver_C::get_statement_regex() const {
   vector<string> regex_str = {R"(\s*#\s*(?:include|import)\s+\"(\S+)\")",
@@ -51,11 +49,11 @@ void Solver_C::add_options(po::options_description *options) {
 }
 
 void Solver_C::extract_options(const po::variables_map &vm) {
-  if (vm.count("c-include-path")!= 0u) {
+  if (vm.count("c-include-path") != 0u) {
     include_paths = vm["c-include-path"].as<vector<string> >();
   }
   BOOST_LOG_TRIVIAL(trace) << "c-include-paths:   ";
-  for (const auto & p : include_paths) {
+  for (const auto &p : include_paths) {
     BOOST_LOG_TRIVIAL(trace) << "    " << p;
   }
 }
@@ -82,7 +80,7 @@ void Solver_C::add_edge(const string &src_path, const string &statement,
   }
 
   // search in preconfigured list of standard system directories
-  for (const auto & i_path : include_paths) {
+  for (const auto &i_path : include_paths) {
     path dst_path = i_path / statement;
     if (exists(dst_path)) {
       dst_path = canonical(dst_path);
@@ -112,17 +110,17 @@ void Solver_C::insert_edge(const std::string &src_path,
                              << "   src = " << src_path << "\n"
                              << "   dst = " << name << "\n"
                              << "   name = " << name;
-    boost::tie(edge, b) = boost::add_edge_by_label(src_path, name, *graph);
+    boost::tie(edge, b) = boost::add_edge_by_label(src_path, name, graph);
   } else {
     BOOST_LOG_TRIVIAL(trace) << "insert_edge: "
                              << "\n"
                              << "   src = " << src_path << "\n"
                              << "   dst = " << dst_path << "\n"
                              << "   name = " << name;
-    boost::tie(edge, b) = boost::add_edge_by_label(src_path, dst_path, *graph);
+    boost::tie(edge, b) = boost::add_edge_by_label(src_path, dst_path, graph);
   }
 
-  (*graph)[edge] = Edge{static_cast<int>(line_no)};
+  graph[edge] = Edge{static_cast<int>(line_no)};
 }
 
 }  // namespace INCLUDE_GARDENER

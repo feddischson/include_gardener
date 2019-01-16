@@ -39,8 +39,8 @@ class Solver_C : public Solver {
   /// @brief Smart pointer for Solver_C
   using Ptr = std::shared_ptr<Solver_C>;
 
-  /// @brief Ctor: only calls super ctor.
-  explicit Solver_C(Graph *graph);
+  /// @brief Default ctor.
+  Solver_C() = default;
 
   /// @brief Copy ctor: not implemented!
   Solver_C(const Solver_C &other) = delete;

@@ -20,13 +20,10 @@
 //
 #include <fstream>
 
-#include <boost/graph/graphml.hpp>
-#include <boost/graph/graphviz.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_map/transform_value_property_map.hpp>
 
 #include "file_detector.h"
 #include "solver_c.h"
@@ -34,18 +31,15 @@
 
 using std::cerr;
 using std::cout;
+using std::exception;
 using std::make_shared;
 using std::ofstream;
 using std::string;
 using std::vector;
-using std::exception;
 
-using INCLUDE_GARDENER::Edge;
 using INCLUDE_GARDENER::File_Detector;
-using INCLUDE_GARDENER::Graph;
 using INCLUDE_GARDENER::Solver;
 using INCLUDE_GARDENER::Statement_Detector;
-using INCLUDE_GARDENER::Vertex;
 
 namespace po = boost::program_options;
 
@@ -64,18 +58,15 @@ struct Options {
        : n_threads{1}, recursive_limit{-1}, language("c"), format("dot") {}
 };
 
-Solver::Ptr init_options(int argc, char* argv[], Options* opts, Graph* graph);
+Solver::Ptr init_options(int argc, char* argv[], Options* opts);
 
 int main(int argc, char* argv[]) {
    try {
       // global options
       Options opts;
 
-      // global graph
-      Graph graph;
-
       // initialize and parse options
-      auto solver = init_options(argc, argv, &opts, &graph);
+      auto solver = init_options(argc, argv, &opts);
       if (solver == nullptr) {
          return -1;
       }
@@ -100,45 +91,22 @@ int main(int argc, char* argv[]) {
       // and wait until all jobs are done!
       s_detector.wait_for_workers();
 
-      // prepare the name-map for graphviz output generation
-      auto name_map = boost::make_transform_value_property_map(
-          [](Vertex::Ptr v) { return v->get_name(); },
-          get(boost::vertex_bundle, graph));
+      // Finally, write the graph somewhere to a file or cout.
+      solver->write_graph(opts.format, opts.out_file);
 
-      if ("dot" == opts.format) {
-         if (opts.out_file.length() > 0) {
-            BOOST_LOG_TRIVIAL(info) << "Writing graph to " << opts.out_file;
-            ofstream file_stream(opts.out_file);
-            write_graphviz(file_stream, graph, make_vertex_writer(name_map),
-                           make_edge_writer(boost::get(&Edge::line, graph)));
-         } else {
-            write_graphviz(cout, graph, make_vertex_writer(name_map),
-                           make_edge_writer(boost::get(&Edge::line, graph)));
-         }
-      } else if ("xml" == opts.format || "graphml" == opts.format) {
-         boost::dynamic_properties dp;
-         dp.property("line", boost::get(&Edge::line, graph));
-         dp.property("name", name_map);
-         if (opts.out_file.length() > 0) {
-            BOOST_LOG_TRIVIAL(info) << "Writing graph to " << opts.out_file;
-            ofstream file_stream(opts.out_file);
-            write_graphml(file_stream, graph, dp);
-         } else {
-            write_graphml(cout, graph, dp);
-         }
-      }
-   } catch (const exception & e) {
+   } catch (const exception& e) {
       cerr << e.what() << "\n";
       exit(-1);
    } catch (...) {
-      cerr << "Unecpected Error!" << "\n";
+      cerr << "Unecpected Error!"
+           << "\n";
       exit(-1);
    }
 
    return 0;
 }
 
-Solver::Ptr init_options(int argc, char* argv[], Options* opts, Graph* graph) {
+Solver::Ptr init_options(int argc, char* argv[], Options* opts) {
    //
    // use boost's command line parser
    //
@@ -250,7 +218,7 @@ Solver::Ptr init_options(int argc, char* argv[], Options* opts, Graph* graph) {
       opts->out_file = vm["out-file"].as<string>();
    }
 
-   auto solver = Solver::get_solver(opts->language, graph);
+   auto solver = Solver::get_solver(opts->language);
    if (nullptr == solver) {
       cerr << "Error: Unsuported language \"" << opts->language << "\""
            << "\n";

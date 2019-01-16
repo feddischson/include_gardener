@@ -20,19 +20,26 @@
 //
 #include "solver.h"
 
+#include <iostream>
+#include <memory>
+#include <string>
+
+#include <boost/graph/graphml.hpp>
+#include <boost/graph/graphviz.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/property_map/transform_value_property_map.hpp>
+
 #include "solver_c.h"
 
-#include <memory>
-
-#include <boost/log/trivial.hpp>
+using std::cout;
+using std::ofstream;
+using std::string;
 
 namespace INCLUDE_GARDENER {
 
-Solver::Solver(Graph* graph) : graph(graph) {}
-
 void Solver::add_vertex(const std::string& name, const std::string& abs_path) {
-  using std::string;
   using std::pair;
+  using std::string;
   // if abs_path is empty, take the name as key!
   const string& key = abs_path.length() == 0 ? name : abs_path;
 
@@ -48,8 +55,8 @@ void Solver::add_vertex(const std::string& name, const std::string& abs_path) {
   } else {
     Vertex::Ptr v(new Vertex(name, abs_path));
     vertexes.insert(pair<string, Vertex::Ptr>(key, v));
-    boost::add_vertex(key, *graph);
-    (*graph)[key] = v;
+    boost::add_vertex(key, graph);
+    graph[key] = v;
   }
 }
 
@@ -57,11 +64,41 @@ void Solver::add_options(boost::program_options::options_description* options) {
   Solver_C::add_options(options);
 }
 
-Solver::Ptr Solver::get_solver(const std::string& name, Graph* g) {
+Solver::Ptr Solver::get_solver(const std::string& name) {
   if (name == "c") {
-    return std::dynamic_pointer_cast<Solver>(std::make_shared<Solver_C>(g));
+    return std::dynamic_pointer_cast<Solver>(std::make_shared<Solver_C>());
   }
   return nullptr;
+}
+
+void Solver::write_graph(const string& format, const string& file_path) {
+  // prepare the name-map for graphviz output generation
+  auto name_map = boost::make_transform_value_property_map(
+      [](Vertex::Ptr v) { return v->get_name(); },
+      get(boost::vertex_bundle, graph));
+
+  if ("dot" == format) {
+    if (file_path.length() > 0) {
+      BOOST_LOG_TRIVIAL(info) << "Writing graph to " << file_path;
+      ofstream file_stream(file_path);
+      write_graphviz(file_stream, graph, make_vertex_writer(name_map),
+                     make_edge_writer(boost::get(&Edge::line, graph)));
+    } else {
+      write_graphviz(cout, graph, make_vertex_writer(name_map),
+                     make_edge_writer(boost::get(&Edge::line, graph)));
+    }
+  } else if ("xml" == format || "graphml" == format) {
+    boost::dynamic_properties dp;
+    dp.property("line", boost::get(&Edge::line, graph));
+    dp.property("name", name_map);
+    if (file_path.length() > 0) {
+      BOOST_LOG_TRIVIAL(info) << "Writing graph to " << file_path;
+      ofstream file_stream(file_path);
+      write_graphml(file_stream, graph, dp);
+    } else {
+      write_graphml(cout, graph, dp);
+    }
+  }
 }
 
 }  // namespace INCLUDE_GARDENER
