@@ -82,6 +82,9 @@ class File_Detector : public Input_Files {
   bool walk_tree(const std::string &base_path, const Solver::Ptr &solver,
                  const std::string &sub_path = "", int recursive_cnt = 0);
 
+  /// @brief Helper function to check if a file should be excluded.
+  bool exclude_check(const std::string &path_string) const;
+
   /// @brief Regular expression to check if a file shall be used.
   const boost::regex file_regex;
 
@@ -94,9 +97,6 @@ class File_Detector : public Input_Files {
 
   /// @brief Indicates if excludes are used.
   const bool use_exclude_regex;
-
-  /// @brief Helper function to check if a file should be excluded.
-  bool exclude_regex_search(const std::string &path_string) const;
 
   /// @brief Limit for the recursive file search.
   const int recursive_limit;

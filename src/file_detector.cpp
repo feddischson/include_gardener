@@ -48,7 +48,7 @@ vector<regex> File_Detector::get_exclude_regex() { return exclude_regex; }
 ///   true is returned. In all other cases, false is returned.
 ///
 bool File_Detector::use_file(const std::string& file) const {
-  if (use_exclude_regex && exclude_regex_search(file)) {
+  if (use_exclude_regex && exclude_check(file)) {
     BOOST_LOG_TRIVIAL(trace) << "Excluding " << file;
     return false;
   }
@@ -62,7 +62,7 @@ bool File_Detector::use_file(const std::string& file) const {
   return true;
 }
 
-bool File_Detector::exclude_regex_search(const std::string& path_string) const {
+bool File_Detector::exclude_check(const std::string& path_string) const {
   for (const auto& r : exclude_regex) {
     if (regex_search(path_string, r)) {
       return true;
