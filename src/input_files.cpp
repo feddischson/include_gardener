@@ -25,7 +25,7 @@ using std::string;
 
 namespace INCLUDE_GARDENER {
 
-Input_Files::Input_Files(list<string> files) : files(files) {}
+Input_Files::Input_Files(list<string> files) : files(std::move(files)) {}
 
 Input_Files::Itr Input_Files::begin() const { return files.begin(); }
 

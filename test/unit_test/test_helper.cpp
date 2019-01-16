@@ -34,6 +34,7 @@ using std::vector;
 
 class Helper_Test : public ::testing::Test {};
 
+// NOLINTNEXTLINE
 TEST(Helper_Test, test_init_regex_vector) {
   vector<string> arg = {"abc", "def"};
   vector<boost::regex> expected = {regex("abc"), regex("def")};

@@ -43,7 +43,7 @@ class Statement_Detector_Test : public ::testing::Test {};
 // NOLINTNEXTLINE
 class Mock_Solver : public Solver {
  public:
-  Mock_Solver() : Solver() {}
+  Mock_Solver() = default;
   MOCK_METHOD4(add_edge, void(const string &, const string &, unsigned int,
                               unsigned int));
   vector<string> get_statement_regex() const override {

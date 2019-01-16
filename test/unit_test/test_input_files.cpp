@@ -35,10 +35,12 @@ class Input_Files_Test : public ::testing::Test {};
 
 class Mock_Input_Files : public Input_Files {
  public:
-  Mock_Input_Files(list<string> val) : Input_Files(val) {}
-  virtual void get(Solver::Ptr) {}
+  explicit Mock_Input_Files(list<string> val) : Input_Files(std::move(val)) {}
+  // NOLINTNEXTLINE
+  void get(Solver::Ptr) override {}
 };
 
+// NOLINTNEXTLINE
 TEST(Input_Files_Test, test_looping) {
   list<string> val = {"abc", "def", "xyz", "123", "4", "5"};
   list<string> res;
