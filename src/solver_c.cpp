@@ -37,8 +37,8 @@ using std::unique_lock;
 Solver_C::Solver_C(Graph *graph) : Solver(graph) {}
 
 vector<string> Solver_C::get_statement_regex() const {
-  vector<string> regex_str = {R"(\s*#\s*(include|import)\s+\"(\S+)\")",
-                              R"(\s*#\s*(include|import)\s+<(\S+)>)"};
+  vector<string> regex_str = {R"(\s*#\s*(?:include|import)\s+\"(\S+)\")",
+                              R"(\s*#\s*(?:include|import)\s+<(\S+)>)"};
   return regex_str;
 }
 
