@@ -31,6 +31,8 @@
 
 namespace INCLUDE_GARDENER {
 
+using std::ostream;
+
 /// @brief Solvers are used to solve an include relation ship between to files.
 /// @details
 ///     Different solvers exist, depending on the language.
@@ -90,8 +92,8 @@ class Solver {
 
   /// @brief Writes the graph to a file.
   /// @param format Either "dot" or "xml"/"graphml".
-  virtual void write_graph(const std::string &format,
-                           const std::string &file_path);
+  /// @param os Output stream
+  virtual void write_graph(const std::string &format, ostream &os);
 
   /// @brief Adds solver-specific options.
   static void add_options(boost::program_options::options_description *options);

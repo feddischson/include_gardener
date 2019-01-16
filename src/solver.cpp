@@ -31,8 +31,7 @@
 
 #include "solver_c.h"
 
-using std::cout;
-using std::ofstream;
+using std::make_shared;
 using std::string;
 
 namespace INCLUDE_GARDENER {
@@ -53,7 +52,7 @@ void Solver::add_vertex(const std::string& name, const std::string& abs_path) {
                              << "    name = " << name;
 
   } else {
-    Vertex::Ptr v(new Vertex(name, abs_path));
+    auto v = make_shared<Vertex>(name, abs_path);
     vertexes.insert(pair<string, Vertex::Ptr>(key, v));
     boost::add_vertex(key, graph);
     graph[key] = v;
@@ -71,33 +70,20 @@ Solver::Ptr Solver::get_solver(const std::string& name) {
   return nullptr;
 }
 
-void Solver::write_graph(const string& format, const string& file_path) {
+void Solver::write_graph(const string& format, ostream& os) {
   // prepare the name-map for graphviz output generation
   auto name_map = boost::make_transform_value_property_map(
       [](Vertex::Ptr v) { return v->get_name(); },
       get(boost::vertex_bundle, graph));
 
   if ("dot" == format) {
-    if (file_path.length() > 0) {
-      BOOST_LOG_TRIVIAL(info) << "Writing graph to " << file_path;
-      ofstream file_stream(file_path);
-      write_graphviz(file_stream, graph, make_vertex_writer(name_map),
-                     make_edge_writer(boost::get(&Edge::line, graph)));
-    } else {
-      write_graphviz(cout, graph, make_vertex_writer(name_map),
-                     make_edge_writer(boost::get(&Edge::line, graph)));
-    }
+    write_graphviz(os, graph, make_vertex_writer(name_map),
+                   make_edge_writer(boost::get(&Edge::line, graph)));
   } else if ("xml" == format || "graphml" == format) {
     boost::dynamic_properties dp;
     dp.property("line", boost::get(&Edge::line, graph));
     dp.property("name", name_map);
-    if (file_path.length() > 0) {
-      BOOST_LOG_TRIVIAL(info) << "Writing graph to " << file_path;
-      ofstream file_stream(file_path);
-      write_graphml(file_stream, graph, dp);
-    } else {
-      write_graphml(cout, graph, dp);
-    }
+    write_graphml(os, graph, dp);
   }
 }
 

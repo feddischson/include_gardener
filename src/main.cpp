@@ -92,7 +92,14 @@ int main(int argc, char* argv[]) {
       s_detector.wait_for_workers();
 
       // Finally, write the graph somewhere to a file or cout.
-      solver->write_graph(opts.format, opts.out_file);
+      if (opts.out_file.length() > 0) {
+         BOOST_LOG_TRIVIAL(info) << "Writing graph to " << opts.out_file;
+         auto of = ofstream(opts.out_file);
+         solver->write_graph(opts.format, of);
+      } else {
+         BOOST_LOG_TRIVIAL(info) << "Writing graph to stdout";
+         solver->write_graph(opts.format, cout);
+      }
 
    } catch (const exception& e) {
       cerr << e.what() << "\n";
