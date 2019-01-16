@@ -18,19 +18,36 @@
 // Public License along with this program; if not, see
 // <http://www.gnu.org/licenses/>.
 //
-#include "input_files.h"
+#include <gtest/gtest.h>
 
+#include <string>
+#include <vector>
+
+#include "input_files.h"
+#include "solver.h"
+
+using INCLUDE_GARDENER::Input_Files;
+using INCLUDE_GARDENER::Solver;
 using std::list;
 using std::string;
 
-namespace INCLUDE_GARDENER {
+class Input_Files_Test : public ::testing::Test {};
 
-Input_Files::Input_Files(list<string> files) : files(files) {}
+class Mock_Input_Files : public Input_Files {
+ public:
+  Mock_Input_Files(list<string> val) : Input_Files(val) {}
+  virtual void get(Solver::Ptr) {}
+};
 
-Input_Files::Itr Input_Files::begin() const { return files.begin(); }
+TEST(Input_Files_Test, test_looping) {
+  list<string> val = {"abc", "def", "xyz", "123", "4", "5"};
+  list<string> res;
+  Mock_Input_Files input_files(val);
 
-Input_Files::Itr Input_Files::end() const { return files.end(); }
-
-}  // namespace INCLUDE_GARDENER
+  for (const auto& x : input_files) {
+    res.emplace_back(x);
+  }
+  EXPECT_EQ(val, res);
+}
 
 // vim: filetype=cpp et ts=2 sw=2 sts=2

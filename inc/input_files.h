@@ -38,8 +38,8 @@ class Input_Files {
   /// @brief String-list iterator alias.
   using Itr = std::list<std::string>::const_iterator;
 
-  /// @brief Ctor: not implemented!
-  Input_Files() = default;
+  /// @brief Initializes the files member only.
+  explicit Input_Files(std::list<std::string> files = {});
 
   /// @brief Copy ctor: not implemented!
   Input_Files(const Input_Files &other) = default;
