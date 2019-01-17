@@ -71,8 +71,22 @@ Usage
 dot -Tsvg graph.dot > graph.svg
 ```
 
+Limitations
+============
+
+C/C++/Obj-C
+------------
+This tool does not respect any `#if #else #endif` or other pre-processor statements than `#include`.
+
+
 Versions
 ============
+
+1.0.0
+------
+ - Drops configuration file
+ - Re-organizes architecture to allow further languages in fugure
+ - Improves C/C++/Obj-C include statement detection
 
 0.2.0
 ------
