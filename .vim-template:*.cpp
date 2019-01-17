@@ -1,6 +1,6 @@
 // Include-Gardener
 //
-// Copyright (C) 2017  Christian Haettich [feddischson]
+// Copyright (C) 2019  Christian Haettich [feddischson]
 //
 // This program is free software; you can redistribute it
 // and/or modify it under the terms of the GNU General Public
@@ -18,22 +18,8 @@
 // Public License along with this program; if not, see
 // <http://www.gnu.org/licenses/>.
 //
-#include "_template_.h"
+#include "%FILE%.h"
 
-namespace INCLUDE_GARDENER
-{
+namespace INCLUDE_GARDENER {}  // namespace INCLUDE_GARDENER
 
-
-std::ostream& operator<<( std::ostream& os, const _Template_& tpl )
-{
-   os  << "_Template_ ("  << reinterpret_cast< const void* >( &tpl ) << "): "
-       << "TODO=" << "Add more content of this instance here @ "
-       << __FILE__ << ":" << __LINE__;
-   return os;
-}
-
-
-} // namespace INCLUDE_GARDENER
-
-// vim: filetype=cpp et ts=3 sw=3 sts=3
-
+// vim: filetype=cpp et ts=2 sw=2 sts=2

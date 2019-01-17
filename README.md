@@ -1,7 +1,12 @@
 Include Gardener
 =================
+[TOC]
+
+Include Gardener
+=================
 
 [![Build Status](https://travis-ci.org/feddischson/include_gardener.svg?branch=master)](https://travis-ci.org/feddischson/include_gardener)
+
 
 Introduction
 -------------
@@ -19,6 +24,7 @@ This tool
  - is able to process the files via multiple threads
  - written in C++
  - tested on Linux (GCC, clang)
+
 
 
 Build Description
@@ -63,7 +69,6 @@ Usage
 
 # the result can then be further converted to a scalable vector graphics file.
 dot -Tsvg graph.dot > graph.svg
-
 ```
 
 Versions
@@ -78,14 +83,6 @@ Versions
 ------
  - Initial Version
 
-Contributors
-============
-
- - Vishwas Jain (https://github.com/vjvishjn)
- - Jonas Karlsson (https://github.com/karjonas)
- - Kunal Muley (https://github.com/KunalMuley)
- - Timmy (https://github.com/ralismark)
- - Shantanu Mishra (https://github.com/thedarksage)
 
 Contribution
 ============

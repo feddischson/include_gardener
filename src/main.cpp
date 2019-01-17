@@ -1,6 +1,6 @@
 // Include-Gardener
 //
-// Copyright (C) 2017  Christian Haettich [feddischson]
+// Copyright (C) 2019  Christian Haettich [feddischson]
 //
 // This program is free software; you can redistribute it
 // and/or modify it under the terms of the GNU General Public
@@ -20,313 +20,234 @@
 //
 #include <fstream>
 
-#include <boost/graph/graphviz.hpp>
-#include <boost/property_map/transform_value_property_map.hpp>
-#include <boost/program_options.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
-#include <boost/graph/graphml.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/program_options.hpp>
 
-#include "detector.h"
-#include "parser.h"
-#include "config.h"
+#include "file_detector.h"
+#include "solver_c.h"
+#include "statement_detector.h"
 
-using namespace INCLUDE_GARDENER;
-using namespace std;
+using std::cerr;
+using std::cout;
+using std::exception;
+using std::make_shared;
+using std::ofstream;
+using std::string;
+using std::vector;
+
+using INCLUDE_GARDENER::File_Detector;
+using INCLUDE_GARDENER::Solver;
+using INCLUDE_GARDENER::Statement_Detector;
+
 namespace po = boost::program_options;
-
-static const std::string GARDENER_VERSION = _GARDENER_VERSION;
-
-int init_options( int argc, char* argv[] );
-void print_options( void );
 
 // Note: use "dot -Tsvg graph.dot > graph.svg" to create svg.
 
+struct Options {
+   int n_threads;
+   int recursive_limit;
+   string language;
+   string format;
+   string out_file;
+   vector<string> process_paths;
+   vector<string> exclude;
+   // default options
+   Options()
+       : n_threads{1}, recursive_limit{-1}, language("c"), format("dot") {}
+};
 
-struct
-{
-   int                  no_threads;
-   int                  recursive_limit;
-   string               language;
-   string               config_path;
-   std::string          format;
-   vector<string>       include_paths;
-   vector<string>       process_paths;
-   std::vector<string>  exclude;
-   std::string          out_file;
-} opts;
+Solver::Ptr init_options(int argc, char* argv[], Options* opts);
 
+int main(int argc, char* argv[]) {
+   try {
+      // global options
+      Options opts;
 
-int main( int argc, char* argv[] )
-{
+      // initialize and parse options
+      auto solver = init_options(argc, argv, &opts);
+      if (solver == nullptr) {
+         return -1;
+      }
 
-   Graph g;
-   Config::Ptr    config   = nullptr;
-   Detector::Ptr  detector = nullptr;
+      // Create a file detector ...
+      auto input_files =
+          make_shared<File_Detector>(solver->get_file_regex(), opts.exclude,
+                                     opts.process_paths, opts.recursive_limit);
 
-   int ret_val = init_options( argc, argv );
-   if( ret_val != 0 )
-   {
-      return ret_val;
-   }
-   print_options( );
+      // ... and get all files.
+      input_files->get(solver);
 
-   config = Config::get_cfg( opts.config_path );
+      // Then, create a statement detector ...
+      Statement_Detector s_detector =
+          Statement_Detector(solver, opts.n_threads);
 
-   if( false == config->supports_language( opts.language ) )
-   {
-      cerr << "Error: Language " << opts.language << " not supported.\n";
-      return -1;
-   }
-   BOOST_LOG_TRIVIAL( trace ) << *config;
+      // iterate over all files in detector and add them to job queue
+      for (const auto& i : *input_files) {
+         s_detector.add_job(i);
+      }
 
-   detector = Detector::get_detector(
-         config->get_include_detection( opts.language ),
-         config->get_file_detection( opts.language ),
-         opts.exclude,
-         config->get_include_group_select( opts.language )
-         );
+      // and wait until all jobs are done!
+      s_detector.wait_for_workers();
 
-   Include_Path::Ptr i_path( new Include_Path( opts.include_paths ) );
-   Parser parser( opts.no_threads, opts.recursive_limit, detector, i_path, &g );
-
-   // proceed all input paths
-   for( auto p : opts.process_paths )
-   {
-      BOOST_LOG_TRIVIAL(info) << "Processing sources from " << p;
-      parser.walk_tree( p );
-   }
-   parser.wait_for_workers();
-
-
-   // prepare the name-map for graphviz output generation
-   auto name_map = boost::make_transform_value_property_map(
-         []( Include_Entry::Ptr e){ return e->get_name(); },
-         get(boost::vertex_bundle, g) );
-
-   if( "dot" == opts.format )
-   {
-      if( opts.out_file.length() > 0 )
-      {
+      // Finally, write the graph somewhere to a file or cout.
+      if (opts.out_file.length() > 0) {
          BOOST_LOG_TRIVIAL(info) << "Writing graph to " << opts.out_file;
-         ofstream file_stream( opts.out_file );
-         write_graphviz( file_stream, g,
-               make_vertex_writer( name_map ),
-               make_edge_writer( boost::get(&Edge::line, g) ) );
+         auto of = ofstream(opts.out_file);
+         solver->write_graph(opts.format, of);
+      } else {
+         BOOST_LOG_TRIVIAL(info) << "Writing graph to stdout";
+         solver->write_graph(opts.format, cout);
       }
-      else
-      {
-         write_graphviz( cout, g,
-               make_vertex_writer( name_map ),
-               make_edge_writer( boost::get(&Edge::line, g) ) );
-      }
-   }
-   else if( "xml" == opts.format || "graphml" == opts.format )
-   {
-      boost::dynamic_properties dp;
-      dp.property( "line", boost::get(&Edge::line, g) );
-      dp.property( "name", name_map );
-      if( opts.out_file.length() > 0 )
-      {
-         BOOST_LOG_TRIVIAL(info) << "Writing graph to " << opts.out_file;
-         ofstream file_stream( opts.out_file );
-         write_graphml( file_stream, g, dp );
-      }
-      else
-      {
-         write_graphml( cout, g, dp );
-      }
+
+   } catch (const exception& e) {
+      cerr << e.what() << "\n";
+      exit(-1);
+   } catch (...) {
+      cerr << "Unecpected Error!"
+           << "\n";
+      exit(-1);
    }
 
    return 0;
 }
 
-
-int init_options( int argc, char* argv[] )
-{
-   opts.no_threads      =  2;
-   opts.recursive_limit = -1;
-   opts.language        = "c";
-   opts.config_path     = _GARDENER_CONFIG_PATH;
-   opts.format          = "dot";
-   opts.out_file        = "";
-
+Solver::Ptr init_options(int argc, char* argv[], Options* opts) {
    //
    // use boost's command line parser
    //
    po::options_description desc("Options");
-   desc.add_options()
-    ("help,h", "displays this help message and exit")
-    ("version,v", "displays version information" )
-    ("verbose,V", "sets verbosity")
-    ("include-path,I",     po::value< vector< string> >()->composing(),
-         "include path")
-    ("out-file,o",         po::value< string >(),
-         "output file" )
-    ("format,f",           po::value< string >(),
-         "output format (suported formats: dot, xml/graphml)")
-    ("process-path,P",     po::value< vector< string> >()->composing(),
-         "path which is processed")
-    ("exclude,e",          po::value< vector< string> >()->composing(),
-         "regular expressions to exclude specific files" )
-    ("recursive-limit,L",  po::value<int>(),
-         "limits recursive processing (default=-1 = unlimited)")
-    ("threads,j",          po::value<int>(),
-         "defines number of worker threads (default=2)")
-    ("language,l",         po::value<string>(),
-         "selects the language (default=c)")
-    ("config,c",           po::value<string>(),
-         "path to the config file (default=gardener.conf)" );
+   desc.add_options()("help,h", "displays this help message and exit")(
+       "version,v", "displays version information")(
+       "verbose,V", "sets verbosity")("out-file,o", po::value<string>(),
+                                      "output file")(
+       "format,f", po::value<string>(),
+       "output format (suported formats: dot, xml/graphml)")(
+       "process-path,P", po::value<vector<string> >()->composing(),
+       "path which is processed")(
+       "exclude,e", po::value<vector<string> >()->composing(),
+       "regular expressions to exclude specific files")(
+       "recursive-limit,L", po::value<int>(),
+       "limits recursive processing (default=-1 = unlimited)")(
+       "threads,j", po::value<int>(),
+       "defines number of worker threads (default=2)")(
+       "language,l", po::value<string>(), "selects the language (default=c)");
+   Solver::add_options(&desc);
+
    po::positional_options_description pos;
    pos.add("process-path", -1);
 
    // the process-path arguments can also be provided als post-arguments
    po::variables_map vm;
-   try{
-      po::store( po::command_line_parser( argc, argv ).
-             options( desc ).positional( pos ).run(), vm );
-      po::notify( vm );
-   }
-   catch( boost::program_options::unknown_option & e )
-   {
-      cerr << e.what() << '\n';
-      return -1;
+   try {
+      po::store(po::command_line_parser(argc, argv)
+                    .options(desc)
+                    .positional(pos)
+                    .run(),
+                vm);
+      po::notify(vm);
+   } catch (boost::program_options::unknown_option& e) {
+      cerr << e.what() << "\n";
+      return nullptr;
    }
 
    // print help if required
-   if( true == vm.count( "help" ) )
-   {
-      cout << desc << '\n';
-      return 1;
+   if (vm.count("help") > 0) {
+      cout << desc << "\n";
+      exit(0);
    }
 
-   if( true == vm.count( "version" ) )
-   {
-      cout << "Include Gardener Version " << GARDENER_VERSION << '\n';
-      return -1;
+   if (vm.count("version") > 0) {
+      cout << "Include Gardener Version " << _GARDENER_VERSION << "\n";
+      exit(0);
    }
 
    // ensure, that at least one process path is provided
-   if ( false == vm.count("process-path") )
-   {
-      cerr << "No input provided!\n\n" << desc << '\n';
-      return -1;
+   if (vm.count("process-path") == 0) {
+      cerr << "No input provided!"
+           << "\n"
+           << "\n"
+           << desc << "\n";
+      return nullptr;
    }
 
    // Sets log level to warning if verbose is not set.
    // This must be done bevore useing any BOOST_LOG_TRIVIAL statement.
    //
-   if( false == vm.count( "verbose" ) )
-   {
-      boost::log::core::get()->set_filter
-      (
-           boost::log::trivial::severity >= boost::log::trivial::warning
-      );
+   if (vm.count("verbose") == 0) {
+      boost::log::core::get()->set_filter(boost::log::trivial::severity >=
+                                          boost::log::trivial::warning);
    }
 
-   if( true == vm.count( "exclude" ) )
-   {
-      opts.exclude = vm["exclude"].as< vector<string> >();
+   if (vm.count("exclude") > 0) {
+      opts->exclude = vm["exclude"].as<vector<string> >();
    }
 
-   if( true == vm.count( "config" ) )
-   {
-      opts.config_path = vm["config"].as< string >();
-   }
-
-   if( false == boost::filesystem::exists( opts.config_path ) )
-   {
-      cerr << "Error: config file "
-           << opts.config_path
-           << " not found.\n";
-      return -1;
-   }
-
-
-   if( true == vm.count( "language" ) )
-   {
-      opts.language = vm["language"].as< string >();
-      std::transform(
-            opts.language.begin(),
-            opts.language.end(),
-            opts.language.begin(),
-            ::tolower );
+   if (vm.count("language") > 0) {
+      opts->language = vm["language"].as<string>();
+      transform(opts->language.begin(), opts->language.end(),
+                opts->language.begin(), ::tolower);
    }
 
    // extract the format
    // currently, only the dot format is supported
-   if( true == vm.count( "format" ) )
-   {
-      opts.format = vm["format"].as< string >();
+   if (vm.count("format") > 0) {
+      opts->format = vm["format"].as<string>();
    }
 
-   if( true == vm.count( "threads" ) )
-   {
-      opts.no_threads = vm["threads"].as< int >();
-      if( opts.no_threads == 0 )
-      {
-         cerr << "Error: Number of threads is set to 0, which is not allowed.\n"
-              << "Please use at least one worker thread.\n";
-         return -1;
+   if (vm.count("threads") > 0) {
+      opts->n_threads = vm["threads"].as<int>();
+      if (opts->n_threads == 0) {
+         cerr << "Error: Number of threads is set to 0, which is not allowed."
+              << "\n"
+              << "Please use at least one worker thread."
+              << "\n";
+         return nullptr;
       }
    }
 
-   if( true == vm.count( "recursive-limit" ) )
-   {
-      opts.recursive_limit = vm["recursive-limit"].as<int>();
+   if (vm.count("recursive-limit") > 0) {
+      opts->recursive_limit = vm["recursive-limit"].as<int>();
    }
 
-   if( false == ( ""    == opts.format || "dot"     == opts.format ||
-                  "xml" == opts.format || "graphml" == opts.format ) )
-   {
-      cerr << "Unrecognized format: "
-           << opts.format
-           << "\n\n"
-           << desc
-           << '\n';
-      return -1;
+   if (!(opts->format.empty() || "dot" == opts->format ||
+         "xml" == opts->format || "graphml" == opts->format)) {
+      cerr << "Unrecognized format: " << opts->format << "\n"
+           << "\n"
+           << desc << "\n";
+      return nullptr;
    }
 
-   if( true == vm.count( "include-path" ) )
-   {
-      opts.include_paths = vm["include-path"].as< vector<string> >();
-   }
-   opts.process_paths = vm["process-path"].as< vector<string> >();
+   opts->process_paths = vm["process-path"].as<vector<string> >();
 
-   if( true == vm.count( "out-file" ) )
-   {
-      opts.out_file = vm["out-file"].as< string >();
+   if (vm.count("out-file") > 0) {
+      opts->out_file = vm["out-file"].as<string>();
    }
 
-   return 0;
-}
+   auto solver = Solver::get_solver(opts->language);
+   if (nullptr == solver) {
+      cerr << "Error: Unsuported language \"" << opts->language << "\""
+           << "\n";
+      exit(-1);
+   }
+   solver->extract_options(vm);
 
+   BOOST_LOG_TRIVIAL(trace) << "n_threads:      " << opts->n_threads;
+   BOOST_LOG_TRIVIAL(trace) << "recursive_limit: " << opts->recursive_limit;
+   BOOST_LOG_TRIVIAL(trace) << "language:        " << opts->language;
+   BOOST_LOG_TRIVIAL(trace) << "format:          " << opts->format;
+   BOOST_LOG_TRIVIAL(trace) << "out_file:        " << opts->out_file;
+   BOOST_LOG_TRIVIAL(trace) << "process_paths:   ";
+   for (const auto& p : opts->process_paths) {
+      BOOST_LOG_TRIVIAL(trace) << "    " << p;
+   }
+   BOOST_LOG_TRIVIAL(trace) << "exclude:         ";
+   for (const auto& e : opts->exclude) {
+      BOOST_LOG_TRIVIAL(trace) << "    " << e;
+   }
 
-void print_options( void )
-{
-   BOOST_LOG_TRIVIAL( trace ) << "no_threads:      "  << opts.no_threads;
-   BOOST_LOG_TRIVIAL( trace ) << "recursive_limit: "  << opts.recursive_limit;
-   BOOST_LOG_TRIVIAL( trace ) << "language:        "  << opts.language;
-   BOOST_LOG_TRIVIAL( trace ) << "config_path:     "  << opts.config_path;
-   BOOST_LOG_TRIVIAL( trace ) << "format:          "  << opts.format;
-   BOOST_LOG_TRIVIAL( trace ) << "out_file:        "  << opts.out_file;
-   BOOST_LOG_TRIVIAL( trace ) << "include_paths:   ";
-   for( auto p : opts.include_paths )
-   {
-      BOOST_LOG_TRIVIAL( trace ) << "    " << p;
-   }
-   BOOST_LOG_TRIVIAL( trace ) << "process_paths:   ";
-   for( auto p : opts.process_paths )
-   {
-      BOOST_LOG_TRIVIAL( trace ) << "    " << p;
-   }
-   BOOST_LOG_TRIVIAL( trace ) << "exclude:         ";
-   for( auto e : opts.exclude )
-   {
-      BOOST_LOG_TRIVIAL( trace ) << "    " << e;
-   }
+   return solver;
 }
 
 // vim: filetype=cpp et ts=3 sw=3 sts=3
-
