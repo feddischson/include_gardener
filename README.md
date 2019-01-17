@@ -66,8 +66,20 @@ dot -Tsvg graph.dot > graph.svg
 
 ```
 
+Versions
+============
+
+0.2.0
+------
+ - Adds configuration file
+ - Small stability and performance improvements
+
+0.1.0
+------
+ - Initial Version
+
 Contributors
-------------
+============
 
  - Vishwas Jain (https://github.com/vjvishjn)
  - Jonas Karlsson (https://github.com/karjonas)
@@ -76,14 +88,16 @@ Contributors
  - Shantanu Mishra (https://github.com/thedarksage)
 
 Contribution
-------------
+============
+
 If you find a bug, unexpected behaviour or if you have a interesting feature
 in your mind which fits to this tool, please add an issue / feature request.
 
 Pull requests are always welcome.
 
 License
-----------
+============
+
 
 This program is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public
