@@ -27,6 +27,7 @@
 
 #include "file_detector.h"
 #include "solver_c.h"
+#include "solver_py.h"
 #include "statement_detector.h"
 
 using std::cerr;

@@ -39,7 +39,7 @@ vector<string> Solver_Py::get_statement_regex() const {
   return regex_str;
 }
 
-string Solver_Py::get_file_regex() const { return string(""); }
+string Solver_Py::get_file_regex() const { return string("^[^\\d\\W]\\w*\\.(?i)py[3w]?$"); }
 
 void Solver_Py::add_options(po::options_description *options __attribute__((unused))) {
 
