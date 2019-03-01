@@ -56,7 +56,8 @@ set (SOURCE_FILES
   ${CMAKE_SOURCE_DIR}/src/input_files.cpp
   ${CMAKE_SOURCE_DIR}/src/vertex.cpp
   ${CMAKE_SOURCE_DIR}/src/solver.cpp
-  ${CMAKE_SOURCE_DIR}/src/solver_c.cpp )
+  ${CMAKE_SOURCE_DIR}/src/solver_c.cpp
+  ${CMAKE_SOURCE_DIR}/src/solver_py.cpp )
 
 set (EXEC_SOURCE_FILES
   ${SOURCE_FILES}

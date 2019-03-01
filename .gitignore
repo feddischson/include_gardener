@@ -30,3 +30,6 @@ build*
 *.out
 *.app
 include_gardener
+
+# VSCode
+.vscode
