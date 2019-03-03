@@ -43,6 +43,9 @@ Test Dependencies:
  - PyGraphml
  - XMLRunner
 
+Note: `pip` requires GraphViz development files to install PyGraphViz and PyGraphML.
+To install these libraries using `apt-get`, run `sudo apt-get libgraphviz-dev`
+
 ```
 mkdir build
 cd build
