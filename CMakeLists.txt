@@ -69,7 +69,8 @@ set (UNIT_TEST_SOURCE_FILES
   ${CMAKE_SOURCE_DIR}/test/unit_test/test_statement_detector.cpp 
   ${CMAKE_SOURCE_DIR}/test/unit_test/test_helper.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_test/test_input_files.cpp
-  ${CMAKE_SOURCE_DIR}/test/unit_test/test_solver.cpp)
+  ${CMAKE_SOURCE_DIR}/test/unit_test/test_solver.cpp
+  ${CMAKE_SOURCE_DIR}/test/unit_test/test_solver_rb.cpp)
 
 add_executable ( include_gardener ${EXEC_SOURCE_FILES})
 
