@@ -41,6 +41,7 @@ Test Dependencies:
  - PyUnit
  - PyGraphviz
  - PyGraphml
+ - XMLRunner
 
 ```
 mkdir build
