@@ -59,7 +59,7 @@ class Solver_Rb : public Solver {
   /// @param idx The index of the regular expression, which matched.
   /// @param line_no The line number where the statement is detected.
   void add_edge(const std::string &src_path, const std::string &statement,
-                unsigned int idx, unsigned int line_no) override = 0;
+                unsigned int idx, unsigned int line_no) override;
 
   /// @brief Returns the regex which
   ///        detectes the statements.
@@ -72,11 +72,11 @@ class Solver_Rb : public Solver {
   /// @brief Extracts solver-specific options (variables)
   /// not implemented! (may not have to be)
   void extract_options(
-      const boost::program_options::variables_map &vm) override = delete;
+      const boost::program_options::variables_map &vm) override;
 
   /// @brief Adds solver-specific options
   /// not implemented! (may not have to be)
-  static void add_options(boost::program_options::options_description *options) = delete;
+  static void add_options(boost::program_options::options_description *options);
 
  protected:
   /// @brief Adds an edge
@@ -86,7 +86,7 @@ class Solver_Rb : public Solver {
   /// @param line_no The line number where the statement is detected.
   virtual void insert_edge(const std::string &src_path,
                            const std::string &dst_path, const std::string &name,
-                           unsigned int line_no) = 0;
+                           unsigned int line_no);
 
  private:
   /// @brief Search path for include statements.

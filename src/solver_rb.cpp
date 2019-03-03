@@ -22,6 +22,9 @@
 #include <vector>
 #include <string>
 
+#include <boost/filesystem.hpp>
+#include <boost/log/trivial.hpp>
+
 namespace INCLUDE_GARDENER {
 
 namespace po = boost::program_options;
@@ -31,12 +34,29 @@ using std::unique_lock;
 using std::vector;
 
 vector<string> Solver_Rb::get_statement_regex() const {
-  vector<string> regex_str = {R"(\s*require_relative\s+'([^']+)')"};
+  // TODO: Maybe should use [^'] rather than \S.
+  vector<string> regex_str = {R"(\s*(?:require|require_relative)\s+'(\S+)')"};
   return regex_str;
 }
 
 string Solver_Rb::get_file_regex() const {
-    return string("(.*)\\.rb$");
+    return string(".*\\.rb$");
+}
+
+void Solver_Rb::add_options(po::options_description *options) {
+  options->add_options()("ruby-include-path,I",
+                         po::value<vector<string> >()->composing(),
+                         "ruby-include path");
+}
+
+void Solver_Rb::extract_options(const po::variables_map &vm) {
+  if (vm.count("ruby-include-path") != 0u) {
+    include_paths = vm["ruby-include-path"].as<vector<string> >();
+  }
+  BOOST_LOG_TRIVIAL(trace) << "ruby-include-paths:   ";
+  for (const auto &p : include_paths) {
+    BOOST_LOG_TRIVIAL(trace) << "    " << p;
+  }
 }
 
 void Solver_Rb::add_edge(const std::string &src_path, const std::string &statement,
@@ -52,7 +72,7 @@ void Solver_Rb::add_edge(const std::string &src_path, const std::string &stateme
 
   if (0 == idx) {
     // construct relative path from the same directory as
-    // the file that contains the #include statement.
+    // the file that contains the require statement.
     path base = path(src_path).parent_path();
     path dst_path = base / statement;
     dst_path.replace_extension(RB_EXT);
@@ -67,7 +87,8 @@ void Solver_Rb::add_edge(const std::string &src_path, const std::string &stateme
 
 void Solver_Rb::insert_edge(const std::string &src_path,
                            const std::string &dst_path, const std::string &name,
-                           unsigned int line_no) {
+                           unsigned int line_no)
+{
   add_vertex(name, dst_path);
   string key;
 
