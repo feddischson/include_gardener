@@ -59,15 +59,22 @@ void Statement_Detector::add_job(const string& abs_path) {
 
 vector<regex> Statement_Detector::get_statements() const { return statements; }
 
-optional<pair<string, unsigned int>> Statement_Detector::detect(
+optional<pair<vector<string>, unsigned int>> Statement_Detector::detect(
     const string& line) const {
   smatch match;
   for (unsigned int i = 0; i < statements.size(); i++) {
     auto s = statements[i];
     if (regex_search(line, match, s)) {
       if (!match.empty()) {
-        BOOST_LOG_TRIVIAL(trace) << "Statement matched: " << match[match.size() - 1];
-        return pair<string, unsigned int>(match[match.size() - 1], i);
+        vector<string> matchVec;
+
+        BOOST_LOG_TRIVIAL(trace) << "Statements matched:";
+        for (const auto i: match){
+            BOOST_LOG_TRIVIAL(trace) << ' ' << i;
+            matchVec.push_back(i);
+        }
+
+        return pair<vector<string>, unsigned int>(matchVec, i);
       }
     }
   }
@@ -80,14 +87,14 @@ void Statement_Detector::process_stream(istream& input,
   string line;
   bool found_multi_line = false;
   unsigned int line_cnt = 1;
-  optional<pair<string, int>> statement;
+  optional<pair<vector<string>, int>> statement;
   while (getline(input, line)) {
     // handle empty lines
     if (line.empty()) {
       // if we previously got a multi-line statement: process it!
       if (found_multi_line) {
         if (detect(multi_line)) {
-          solver->add_edge(input_path, statement->first, statement->second,
+          solver->add_edges(input_path, statement->first, statement->second,
                            line_cnt);
         }
         found_multi_line = false;
@@ -104,14 +111,14 @@ void Statement_Detector::process_stream(istream& input,
         multi_line.append(line);
         statement = detect(multi_line);
         if (statement) {
-          solver->add_edge(input_path, statement->first, statement->second,
+          solver->add_edges(input_path, statement->first, statement->second,
                            line_cnt);
         }
         found_multi_line = false;
       } else {
         statement = detect(line);
         if (statement) {
-          solver->add_edge(input_path, statement->first, statement->second,
+          solver->add_edges(input_path, statement->first, statement->second,
                            line_cnt);
         }
       }
@@ -132,7 +139,7 @@ void Statement_Detector::process_stream(istream& input,
                                << "\n";
     statement = detect(multi_line);
     if (statement) {
-      solver->add_edge(input_path, statement->first, statement->second,
+      solver->add_edges(input_path, statement->first, statement->second,
                        line_cnt);
     }
   }

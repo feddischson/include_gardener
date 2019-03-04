@@ -95,6 +95,15 @@ void Solver_C::add_edge(const string &src_path, const string &statement,
   insert_edge(src_path, "", statement, line_no);
 }
 
+void Solver_C::add_edges(const std::string &src_path,
+                         const std::vector<std::string> &statements,
+                         unsigned int idx,
+                         unsigned int line_no){
+  for (const auto &statement : statements){
+    add_edge(src_path, statement, idx, line_no);
+  }
+}
+
 void Solver_C::insert_edge(const std::string &src_path,
                            const std::string &dst_path, const std::string &name,
                            unsigned int line_no) {

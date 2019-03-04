@@ -85,7 +85,7 @@ class Statement_Detector {
 
  protected:
   /// @brief Detects include / import statements.
-  std::optional<std::pair<std::string, unsigned int>> detect(
+  std::optional<std::pair<std::vector<std::string>, unsigned int>> detect(
       const std::string &line) const;
 
   /// @brief Walk through a stream and searches for include / import statements.

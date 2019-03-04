@@ -63,6 +63,15 @@ class Solver_Py : public Solver {
   void add_edge(const std::string &src_path, const std::string &statement,
                 unsigned int idx, unsigned int line_no) override;
 
+  /// @brief Adds multiple edges to the graph.
+  /// @param src_path The source path (where the statement is detected).
+  /// @param statements The detected statements.
+  /// @param idx The index of the regular expression, which matched.
+  /// @param line_no The line number where the statement is detected.
+  void add_edges(const std::string &src_path,
+                 const std::vector<std::string> &statements,
+                 unsigned int idx, unsigned int line_no) override;
+
   /// @brief Returns the regex which
   ///        detects the statements.
   std::vector<std::string> get_statement_regex() const override;
