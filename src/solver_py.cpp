@@ -55,12 +55,14 @@ void Solver_Py::add_edge(const string &src_path __attribute__((unused)),
                          unsigned int line_no __attribute__((unused))) {
 }
 
-void Solver_Py::add_edges(const std::string &src_path __attribute__((unused)),
-                          const std::vector<std::string> &statements __attribute__((unused)),
-                          unsigned int idx __attribute__((unused)),
-                          unsigned int line_no __attribute__((unused)))
-{
-
+void Solver_Py::add_edges(const std::string &src_path,
+                          const std::vector<std::string> &statements,
+                          unsigned int idx,
+                          unsigned int line_no)
+{  
+  for (auto statement: statements){
+    add_edge(src_path, statement, idx, line_no);
+  }
 }
 
 void Solver_Py::insert_edge(const std::string &src_path __attribute__((unused)),
