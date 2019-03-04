@@ -35,7 +35,7 @@ using std::unique_lock;
 using std::vector;
 
 vector<string> Solver_Py::get_statement_regex() const {
-  vector<string> regex_str = {R"([ \t]*import[ \t]+([^\d\W][\w.]*)[ \t]*)"};
+  vector<string> regex_str = {R"(^[ \t]*(?:from[ \t]+([^\d\W][\w.]*)[ \t]+)?import[ \t]+((?:[*])|[^\d\W][\w.]*)(?:[ \t]+as[ \t]+[^\d\W]\w*)*(?:(?:[ \t]*,[ \t]+([^\d\W][\w.]*))*(?:[ \t]+as[ \t]+[^\d\W]\w*)*)*[ \t]*$)"};
   return regex_str;
 }
 
@@ -49,10 +49,10 @@ void Solver_Py::extract_options(const po::variables_map &vm __attribute__((unuse
 
 }
 
-void Solver_Py::add_edge(const string &src_path __attribute__((unused)),
-                         const string &statement __attribute__((unused)),
-                         unsigned int idx __attribute__((unused)),
-                         unsigned int line_no __attribute__((unused))) {
+void Solver_Py::add_edge(const string &src_path,
+                         const string &statement,
+                         unsigned int idx,
+                         unsigned int line_no) {
     using boost::filesystem::path;
     using boost::filesystem::operator/;
     unique_lock<mutex> glck(graph_mutex);
@@ -98,10 +98,10 @@ void Solver_Py::add_edges(const std::string &src_path,
   }
 }
 
-void Solver_Py::insert_edge(const std::string &src_path __attribute__((unused)),
-                            const std::string &dst_path __attribute__((unused)),
-                            const std::string &name __attribute__((unused)),
-                            unsigned int line_no __attribute__((unused))) {
+void Solver_Py::insert_edge(const std::string &src_path,
+                            const std::string &dst_path,
+                            const std::string &name,
+                            unsigned int line_no) {
     add_vertex(name, dst_path);
     string key;
 

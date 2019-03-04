@@ -69,13 +69,15 @@ optional<pair<vector<string>, unsigned int>> Statement_Detector::detect(
         vector<string> matchVec;
         bool first = true;  // For skipping the first full regex match in vector
         BOOST_LOG_TRIVIAL(trace) << "Statements matched:";
-        for (const auto i: match){
-            BOOST_LOG_TRIVIAL(trace) << ' ' << i;
-            if (first){
-              first = false;
-              continue;
+        for (const string i: match){
+            if (!i.empty()){
+                BOOST_LOG_TRIVIAL(trace) << ' ' << i;
+                if (first){
+                  first = false;
+                  continue;
+                }
+                matchVec.push_back(i);
             }
-            matchVec.push_back(i);
         }
 
         return pair<vector<string>, unsigned int>(matchVec, i);
