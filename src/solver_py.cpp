@@ -35,7 +35,8 @@ using std::unique_lock;
 using std::vector;
 
 vector<string> Solver_Py::get_statement_regex() const {
-  vector<string> regex_str = {R"(^[ \t]*(?:from[ \t]+([^\d\W][\w.]*)[ \t]+)?import[ \t]+((?:[*])|[^\d\W][\w.]*)(?:[ \t]+as[ \t]+[^\d\W]\w*)*(?:(?:[ \t]*,[ \t]+([^\d\W][\w.]*))*(?:[ \t]+as[ \t]+[^\d\W]\w*)*)*[ \t]*$)"};
+  vector<string> regex_str = {R"(^[ \t]*import[ \t]+([^\d\W]\w.*)[ \t]*$)",
+                             R"(^[ \t]*from[ \t]+([^\d\W]\w.*)[ \t]+import[ \t]+([^\d\W]\w.*|\*)[ \t]*$)"};
   return regex_str;
 }
 
@@ -55,21 +56,46 @@ void Solver_Py::add_edge(const string &src_path,
                          unsigned int line_no) {
     using boost::filesystem::path;
     using boost::filesystem::operator/;
-    unique_lock<mutex> glck(graph_mutex);
+
     BOOST_LOG_TRIVIAL(trace) << "add_edge: " << src_path << " -> " << statement
                              << ", idx = " << idx << ", line_no = " << line_no;
 
-    if (0 == idx) {
-      // construct relative path from the same directory as
-      // the file that contains the #include statement.
-      path base = path(src_path).parent_path();
-      path dst_path = base / statement;
-      if (exists(dst_path)) {
-        dst_path = canonical(dst_path);
-        BOOST_LOG_TRIVIAL(trace) << "   |>> Relative Edge";
-        insert_edge(src_path, dst_path.string(), statement, line_no);
+    if (statement == "*") return;
+    if (statement.empty()) return;
+
+    // Handle each comma-separated part separately
+    if (contains_string(statement, ",")) {
+        vector<string> comma_separated_statements = separate_string(statement, ',');
+        add_edges(src_path, comma_separated_statements, idx, line_no);
         return;
-      }
+    }
+
+    string module_name = statement;
+
+    if (contains_string(statement, ".")) {
+        module_name = get_final_substring(statement, ".");
+    }
+
+    if (contains_string(statement, " as ")){
+        module_name = get_first_substring(statement, " as ");
+    }
+
+    module_name = remove_whitespaces(module_name);
+
+    unique_lock<mutex> glck(graph_mutex);
+
+    // Does the path contain a module with that name with a legal
+    // Python script file extension? Add the edge to that node.
+    path base = path(src_path).parent_path();
+    for (const string &file_extension : file_extensions){
+        string module_with_file_extension = module_name + '.' + file_extension;
+        path dst_path = base / module_with_file_extension;
+        if (exists(dst_path)) {
+          dst_path = canonical(dst_path);
+          BOOST_LOG_TRIVIAL(trace) << "   |>> Relative Edge";
+          insert_edge(src_path, dst_path.string(), module_name, line_no);
+          return;
+        }
     }
 
     // search in preconfigured list of standard system directories
@@ -85,7 +111,7 @@ void Solver_Py::add_edge(const string &src_path,
 
     // if non of the cases above found a file:
     // -> add an dummy entry
-    insert_edge(src_path, "", statement, line_no);
+    insert_edge(src_path, "", module_name, line_no);
 }
 
 void Solver_Py::add_edges(const std::string &src_path,
@@ -126,6 +152,48 @@ void Solver_Py::insert_edge(const std::string &src_path,
 
     graph[edge] = Edge{static_cast<int>(line_no)};
 }
+
+bool Solver_Py::contains_string(const std::string &statement,
+                                const std::string &string_to_test){
+  std::size_t find_result = statement.find(string_to_test);
+  return find_result != std::string::npos;
+}
+
+std::string Solver_Py::get_final_substring(const std::string &statement,
+                                           const std::string &delimiter){
+  size_t pos_of_last_delim = statement.find_last_of(delimiter);
+  return statement.substr(pos_of_last_delim+1);
+}
+
+std::vector<std::string> Solver_Py::separate_string(
+        const std::string &statement, const char &delimiter){
+    std::vector<std::string> separated_strings;
+    std::stringstream ss(statement);
+    std::string split_string;
+
+    while (getline(ss, split_string, delimiter)) {
+        separated_strings.push_back(split_string);
+    }
+
+    return separated_strings;
+}
+
+std::string Solver_Py::remove_whitespaces(const std::string &statement){
+  std::string copied_string = statement;
+  boost::erase_all(copied_string, " ");
+  return copied_string;
+}
+
+std::string Solver_Py::get_first_substring(const std::string &statement, const std::string &delimiter)
+{
+  std::string::size_type pos = statement.find(delimiter);
+  if (pos != std::string::npos) {
+      std::string copy = statement.substr(0, pos);
+      return copy;
+  }
+  return statement;
+}
+
 
 }  // namespace INCLUDE_GARDENER
 

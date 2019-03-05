@@ -66,7 +66,9 @@ optional<pair<vector<string>, unsigned int>> Statement_Detector::detect(
     auto s = statements[i];
     if (regex_search(line, match, s)) {
       if (!match.empty()) {
+
         vector<string> matchVec;
+
         bool first = true;  // For skipping the first full regex match in vector
         BOOST_LOG_TRIVIAL(trace) << "Statements matched:";
         for (const string i: match){

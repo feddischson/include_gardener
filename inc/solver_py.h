@@ -24,6 +24,7 @@
 #include "solver.h"
 
 #include <memory>
+#include <boost/algorithm/string.hpp>
 
 namespace INCLUDE_GARDENER {
 
@@ -100,6 +101,41 @@ class Solver_Py : public Solver {
  private:
   /// @brief Search path for include statements.
   std::vector<std::string> include_paths;
+
+  /// @brief Legal file extensions for Python script files.
+  std::vector<std::string> file_extensions{"py", "pyw", "py3"};
+
+  /// @brief Checks if a string contains some other string
+  /// @param statement The string to examine.
+  /// @param string_to_test The string to find in the statement.
+  /// @return If statement contains string_to_test.
+  bool contains_string(const std::string &statement, const std::string &string_to_test);
+
+  /// @brief Returns the final substring separated by a delimiter.
+  /// @param statement The statement to extract substring from.
+  /// @param delimiter The final delimiter from which to splitting.
+  /// @return The substring between the final delimiter and end of string.
+  /// @pre String contains delimiter.
+  std::string get_final_substring(const std::string &statement, const std::string &delimiter);
+
+  /// @brief Separates the contents of a string to a vector by delimiter.
+  /// @param statement The string to split.
+  /// @param delimiter The delimiter to split string by.
+  /// @return Vector containing sub-parts of statement as separate strings.
+  /// @pre Statement contains delimiter.
+  std::vector<std::string> separate_string(const std::string &statement, const char &delimiter);
+
+  /// @brief Removes whitespaces from a string and returns result.
+  /// @param statement String to remove whitespaces from.
+  std::string remove_whitespaces(const std::string &statement);
+
+  /// @brief Gets the first substring before the first occurrence of a delimiter.
+  /// @param statement The string to substring.
+  /// @param delimiter The delimiter to split string by.
+  /// @return String with everything before delimiter in statement.
+  /// @pre statement is not an empty string.
+  std::string get_first_substring(const std::string &statement, const std::string &delimiter);
+
 };  // class Solver_Py
 
 }  // namespace INCLUDE_GARDENER
