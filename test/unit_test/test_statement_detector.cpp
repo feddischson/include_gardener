@@ -88,8 +88,9 @@ TEST_F(Statement_Detector_Test, simple_detection) {
   EXPECT_EQ(d->get_statements().size(), 2);
   auto res = d->call_detect("  #include \"abc.h\"");
   EXPECT_EQ(static_cast<bool>(res), true);
-  //EXPECT_EQ(res->first, "abc.h"); // TODO: detect returns a vector now
   EXPECT_EQ(res->second, 0);
+  pair<vector<string>, unsigned int> type_res = d->call_detect("  #include \"abc.h\"").value();
+  EXPECT_EQ(type_res.first.back(), "abc.h");
   d->wait_for_workers();
 }
 
