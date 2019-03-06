@@ -33,3 +33,9 @@ include_gardener
 
 # VSCode
 .vscode
+
+# Mac bloat
+.DS_Store
+
+# Test results
+test/cmd_line/test-reports

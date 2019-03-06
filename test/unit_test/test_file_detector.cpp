@@ -21,10 +21,12 @@
 #include <regex>
 
 #include "file_detector.h"
+#include "solver_py.h"
 
 #include <gtest/gtest.h>
 
 using INCLUDE_GARDENER::File_Detector;
+using INCLUDE_GARDENER::Solver_Py;
 
 using boost::regex;
 using std::string;
@@ -122,6 +124,128 @@ TEST_F(File_Detector_Test, test_c_file_detection_with_exclude) {
   EXPECT_EQ(d.use_file("x-k.hpp"), false);
   EXPECT_EQ(d.use_file("t-k.c"), false);
   EXPECT_EQ(d.use_file("y z-k.cpp"), false);
+}
+
+// Python
+// NOLINTNEXTLINE
+TEST_F(File_Detector_Test, test_py_file_detection_without_exclude) {
+  // Use the Python solver to import the file regex
+  Solver_Py solver = Solver_Py();
+  string file_regex = solver.get_file_regex();
+  vector<string> exclude_regex;
+  vector<string> base_paths;
+  File_Detector d = File_Detector(file_regex, exclude_regex, base_paths);
+
+  EXPECT_EQ(d.use_file("abc.py"), true);
+  EXPECT_EQ(d.use_file("abc.Py"), true);
+  EXPECT_EQ(d.use_file("def.pY"), true);
+  EXPECT_EQ(d.use_file("ghi.PY"), true);
+  EXPECT_EQ(d.use_file("jkl.py3"), true);
+  EXPECT_EQ(d.use_file("mno.pY3"), true);
+  EXPECT_EQ(d.use_file("pqr.PY3"), true);
+  EXPECT_EQ(d.use_file("stu.Py3"), true);
+  EXPECT_EQ(d.use_file("jkl.pyw"), true);
+  EXPECT_EQ(d.use_file("mno.pYw"), true);
+  EXPECT_EQ(d.use_file("pqr.PYw"), true);
+  EXPECT_EQ(d.use_file("stu.Pyw"), true);
+  EXPECT_EQ(d.use_file("vwx.pyW"), true);
+  EXPECT_EQ(d.use_file("yza.pYW"), true);
+  EXPECT_EQ(d.use_file("bcd.PYW"), true);
+  EXPECT_EQ(d.use_file("efg.PyW"), true);
+  EXPECT_EQ(d.use_file(".py"), false);
+  EXPECT_EQ(d.use_file(".Py"), false);
+  EXPECT_EQ(d.use_file(".pY"), false);
+  EXPECT_EQ(d.use_file(".PY"), false);
+  EXPECT_EQ(d.use_file(".Py3"), false);
+  EXPECT_EQ(d.use_file(".pY3"), false);
+  EXPECT_EQ(d.use_file(".PY3"), false);
+  EXPECT_EQ(d.use_file(".pYw"), false);
+  EXPECT_EQ(d.use_file(".PYw"), false);
+  EXPECT_EQ(d.use_file(".Pyw"), false);
+  EXPECT_EQ(d.use_file(".pyW"), false);
+  EXPECT_EQ(d.use_file(".pYW"), false);
+  EXPECT_EQ(d.use_file(".PYW"), false);
+  EXPECT_EQ(d.use_file(".PyW"), false);
+  EXPECT_EQ(d.use_file("1234567890.py"), false);
+  EXPECT_EQ(d.use_file("_1.py"), true);
+  EXPECT_EQ(d.use_file("_.py"), true);
+  EXPECT_EQ(d.use_file("abc.pyc"), false);
+  EXPECT_EQ(d.use_file("y z.py"), false);
+  EXPECT_EQ(d.use_file("y z.pyw"), false);
+  EXPECT_EQ(d.use_file("y z.py3"), false);
+  EXPECT_EQ(d.use_file("x."), false);
+  EXPECT_EQ(d.use_file("x.c"), false);
+  EXPECT_EQ(d.use_file("x.h"), false);
+}
+
+// NOLINTNEXTLINE
+TEST_F(File_Detector_Test, test_py_file_detection_with_exclude) {
+  // Use the Python solver to import the file regex
+  Solver_Py solver = Solver_Py();
+  string file_regex = solver.get_file_regex();
+  vector<string> exclude_regex;
+  vector<string> base_paths;
+
+  // exclude all *_tmp.py[3w] files (in any case)
+  exclude_regex.emplace_back(".*_tmp\\.[pP][yY][3wW]?$");
+
+  File_Detector d = File_Detector(file_regex, exclude_regex, base_paths);
+
+  EXPECT_EQ(d.use_file("abc.py"), true);
+  EXPECT_EQ(d.use_file("abc.Py"), true);
+  EXPECT_EQ(d.use_file("def.pY"), true);
+  EXPECT_EQ(d.use_file("ghi.PY"), true);
+  EXPECT_EQ(d.use_file("jkl.py3"), true);
+  EXPECT_EQ(d.use_file("mno.pY3"), true);
+  EXPECT_EQ(d.use_file("pqr.PY3"), true);
+  EXPECT_EQ(d.use_file("stu.Py3"), true);
+  EXPECT_EQ(d.use_file("jkl.pyw"), true);
+  EXPECT_EQ(d.use_file("mno.pYw"), true);
+  EXPECT_EQ(d.use_file("pqr.PYw"), true);
+  EXPECT_EQ(d.use_file("stu.Pyw"), true);
+  EXPECT_EQ(d.use_file("vwx.pyW"), true);
+  EXPECT_EQ(d.use_file("yza.pYW"), true);
+  EXPECT_EQ(d.use_file("bcd.PYW"), true);
+  EXPECT_EQ(d.use_file("efg.PyW"), true);
+  EXPECT_EQ(d.use_file(".py"), false);
+  EXPECT_EQ(d.use_file(".Py"), false);
+  EXPECT_EQ(d.use_file(".pY"), false);
+  EXPECT_EQ(d.use_file(".PY"), false);
+  EXPECT_EQ(d.use_file(".Py3"), false);
+  EXPECT_EQ(d.use_file(".pY3"), false);
+  EXPECT_EQ(d.use_file(".PY3"), false);
+  EXPECT_EQ(d.use_file(".pYw"), false);
+  EXPECT_EQ(d.use_file(".PYw"), false);
+  EXPECT_EQ(d.use_file(".Pyw"), false);
+  EXPECT_EQ(d.use_file(".pyW"), false);
+  EXPECT_EQ(d.use_file(".pYW"), false);
+  EXPECT_EQ(d.use_file(".PYW"), false);
+  EXPECT_EQ(d.use_file(".PyW"), false);
+  EXPECT_EQ(d.use_file("1234567890.py"), false);
+  EXPECT_EQ(d.use_file("_1.py"), true);
+  EXPECT_EQ(d.use_file("_.py"), true);
+  EXPECT_EQ(d.use_file("abc.pyc"), false);
+  EXPECT_EQ(d.use_file("y z.py"), false);
+  EXPECT_EQ(d.use_file("y z.pyw"), false);
+  EXPECT_EQ(d.use_file("y z.py3"), false);
+  EXPECT_EQ(d.use_file("x."), false);
+  EXPECT_EQ(d.use_file("x.c"), false);
+  EXPECT_EQ(d.use_file("x.h"), false);
+
+  // the same as the positive cases above but with a "_tmp"
+  EXPECT_EQ(d.use_file("abc_tmp.py"), false);
+  EXPECT_EQ(d.use_file("abc_tmp.Py"), false);
+  EXPECT_EQ(d.use_file("def_tmp.pY"), false);
+  EXPECT_EQ(d.use_file("ghi_tmp.PY"), false);
+  EXPECT_EQ(d.use_file("jkl_tmp.py3"), false);
+  EXPECT_EQ(d.use_file("mno_tmp.pY3"), false);
+  EXPECT_EQ(d.use_file("pqr_tmp.PY3"), false);
+  EXPECT_EQ(d.use_file("stu_tmp.Py3"), false);
+  EXPECT_EQ(d.use_file("jkl_tmp.pyw"), false);
+  EXPECT_EQ(d.use_file("mno_tmp.pYw"), false);
+  EXPECT_EQ(d.use_file("pqr_tmp.PYw"), false);
+  EXPECT_EQ(d.use_file("_1_tmp.py"), false);
+  EXPECT_EQ(d.use_file("_tmp.py"), false);
 }
 
 // vim: filetype=cpp et ts=2 sw=2 sts=2
