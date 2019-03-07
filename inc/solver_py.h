@@ -136,6 +136,15 @@ class Solver_Py : public Solver {
   /// @pre statement is not an empty string.
   std::string get_first_substring(const std::string &statement, const std::string &delimiter);
 
+  /// @brief Checks if a string may be part of a likely local package.
+  /// Not very foolproof. This is needed to differentiate between local and Python
+  /// std packages in the graph.
+  /// @param src_path Source path.
+  /// @param statement The statement to test.
+  /// @return If the string may be a likely package.
+  /// @note Error prone.
+  bool is_likely_local_package(const std::string &src_path, const std::string &statement);
+
 };  // class Solver_Py
 
 }  // namespace INCLUDE_GARDENER

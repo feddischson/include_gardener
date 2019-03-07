@@ -73,7 +73,14 @@ void Solver_Py::add_edge(const string &src_path,
     string module_name = statement;
 
     if (contains_string(statement, ".")) {
-        module_name = get_final_substring(statement, ".");
+
+        // If it is not a local package, do not remove preceding part.
+        // NOTE: This is very error prone.
+
+        if (is_likely_local_package(src_path, get_first_substring(statement, "."))){
+            module_name = get_final_substring(statement, ".");
+        }
+
     }
 
     if (contains_string(statement, " as ")){
@@ -86,6 +93,7 @@ void Solver_Py::add_edge(const string &src_path,
 
     // Does the path contain a module with that name with a legal
     // Python script file extension? Add the edge to that node.
+
     path base = path(src_path).parent_path();
     for (const string &file_extension : file_extensions){
         string module_with_file_extension = module_name + '.' + file_extension;
@@ -109,7 +117,7 @@ void Solver_Py::add_edge(const string &src_path,
       }
     }
 
-    // if non of the cases above found a file:
+    // if none of the cases above found a file:
     // -> add an dummy entry
     insert_edge(src_path, "", module_name, line_no);
 }
@@ -128,29 +136,29 @@ void Solver_Py::insert_edge(const std::string &src_path,
                             const std::string &dst_path,
                             const std::string &name,
                             unsigned int line_no) {
-    add_vertex(name, dst_path);
-    string key;
+  add_vertex(name, dst_path);
+  string key;
 
-    Edge_Descriptor edge;
-    bool b;
+  Edge_Descriptor edge;
+  bool b;
 
-    if (0 == dst_path.length()) {
-      BOOST_LOG_TRIVIAL(trace) << "insert_edge: "
+  if (0 == dst_path.length()) {
+    BOOST_LOG_TRIVIAL(trace) << "insert_edge: "
                                << "\n"
                                << "   src = " << src_path << "\n"
                                << "   dst = " << name << "\n"
                                << "   name = " << name;
-      boost::tie(edge, b) = boost::add_edge_by_label(src_path, name, graph);
-    } else {
-      BOOST_LOG_TRIVIAL(trace) << "insert_edge: "
+    boost::tie(edge, b) = boost::add_edge_by_label(src_path, name, graph);
+  } else {
+    BOOST_LOG_TRIVIAL(trace) << "insert_edge: "
                                << "\n"
                                << "   src = " << src_path << "\n"
                                << "   dst = " << dst_path << "\n"
                                << "   name = " << name;
-      boost::tie(edge, b) = boost::add_edge_by_label(src_path, dst_path, graph);
-    }
+    boost::tie(edge, b) = boost::add_edge_by_label(src_path, dst_path, graph);
+  }
 
-    graph[edge] = Edge{static_cast<int>(line_no)};
+  graph[edge] = Edge{static_cast<int>(line_no)};
 }
 
 bool Solver_Py::contains_string(const std::string &statement,
@@ -167,15 +175,15 @@ std::string Solver_Py::get_final_substring(const std::string &statement,
 
 std::vector<std::string> Solver_Py::separate_string(
         const std::string &statement, const char &delimiter){
-    std::vector<std::string> separated_strings;
-    std::stringstream ss(statement);
-    std::string split_string;
+  std::vector<std::string> separated_strings;
+  std::stringstream ss(statement);
+  std::string split_string;
 
-    while (getline(ss, split_string, delimiter)) {
-        separated_strings.push_back(split_string);
-    }
+  while (getline(ss, split_string, delimiter)) {
+    separated_strings.push_back(split_string);
+  }
 
-    return separated_strings;
+  return separated_strings;
 }
 
 std::string Solver_Py::remove_whitespaces(const std::string &statement){
@@ -188,10 +196,15 @@ std::string Solver_Py::get_first_substring(const std::string &statement, const s
 {
   std::string::size_type pos = statement.find(delimiter);
   if (pos != std::string::npos) {
-      std::string copy = statement.substr(0, pos);
-      return copy;
+    std::string copy = statement.substr(0, pos);
+    return copy;
   }
   return statement;
+}
+
+bool Solver_Py::is_likely_local_package(const std::string &src_path, const std::string &statement)
+{
+  return (contains_string(src_path, statement));
 }
 
 
