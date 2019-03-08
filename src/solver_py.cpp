@@ -127,8 +127,7 @@ void Solver_Py::add_edge(const string &src_path,
 void Solver_Py::add_edges(const std::string &src_path,
                           const std::vector<std::string> &statements,
                           unsigned int idx,
-                          unsigned int line_no)
-{  
+                          unsigned int line_no){  
   for (auto statement: statements){
     add_edge(src_path, statement, idx, line_no);
   }
@@ -143,6 +142,18 @@ void Solver_Py::insert_edge(const std::string &src_path,
 
   Edge_Descriptor edge;
   bool b;
+
+  // Does the same edge already exist?
+
+  if (boost::edge_by_label(src_path, name, graph).second
+          || boost::edge_by_label(src_path, dst_path, graph).second){
+      BOOST_LOG_TRIVIAL(trace) << "Duplicate in insert_edge: "
+                                 << "\n"
+                                 << "   src = " << src_path << "\n"
+                                 << "   dst = " << name << "\n"
+                                 << "   name = " << name;
+      return;
+  }
 
   if (0 == dst_path.length()) {
     BOOST_LOG_TRIVIAL(trace) << "insert_edge: "
@@ -209,13 +220,12 @@ bool Solver_Py::is_likely_local_package(const std::string &statement)
   unique_lock<mutex> glck(graph_mutex);
 
   for (Vertex::Map::iterator it = vertexes.begin(); it != vertexes.end(); ++it){
-      if (contains_string(it->second->get_abs_path(), statement)){
-          return true;
-      }
+    if (contains_string(it->second->get_abs_path(), statement)){
+      return true;
+    }
   }
 
   return false;
-
 }
 
 
