@@ -35,8 +35,8 @@ using std::unique_lock;
 using std::vector;
 
 vector<string> Solver_Py::get_statement_regex() const {
-  vector<string> regex_str = {R"(^[ \t]*import[ \t]+([^\d\W]\w.*)[ \t]*$)",
-                             R"(^[ \t]*from[ \t]+([^\d\W]\w.*)[ \t]+import[ \t]+([^\d\W]\w.*|\*)[ \t]*$)"};
+  vector<string> regex_str = {R"(^[ \t]*import[ \t]+([^\d\W](?:\w.*)*)[ \t]*$)",
+                             R"(^[ \t]*from[ \t]+([^\d\W](?:[\w.]*))[ \t]+import[ \t]+([^\d\W](?:[\w,. ]*)|\*)[ \t]*$)"};
   return regex_str;
 }
 
@@ -74,10 +74,12 @@ void Solver_Py::add_edge(const string &src_path,
 
     if (contains_string(statement, ".")) {
 
+        // Checks if the edge should belong to a file on the local path.
         // If it is not a local package, do not remove preceding part.
-        // NOTE: This is very error prone.
+        // NOTE: This is not very accurate. Accuracy could be attained
+        // by using boost-library for paths.
 
-        if (is_likely_local_package(src_path, get_first_substring(statement, "."))){
+        if (is_likely_local_package(get_first_substring(statement, "."))){
             module_name = get_final_substring(statement, ".");
         }
 
@@ -202,9 +204,18 @@ std::string Solver_Py::get_first_substring(const std::string &statement, const s
   return statement;
 }
 
-bool Solver_Py::is_likely_local_package(const std::string &src_path, const std::string &statement)
+bool Solver_Py::is_likely_local_package(const std::string &statement)
 {
-  return (contains_string(src_path, statement));
+  unique_lock<mutex> glck(graph_mutex);
+
+  for (Vertex::Map::iterator it = vertexes.begin(); it != vertexes.end(); ++it){
+      if (contains_string(it->second->get_abs_path(), statement)){
+          return true;
+      }
+  }
+
+  return false;
+
 }
 
 

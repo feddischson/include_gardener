@@ -109,41 +109,44 @@ class Solver_Py : public Solver {
   /// @param statement The string to examine.
   /// @param string_to_test The string to find in the statement.
   /// @return If statement contains string_to_test.
-  bool contains_string(const std::string &statement, const std::string &string_to_test);
+  bool contains_string(const std::string &statement,
+                       const std::string &string_to_test);
 
   /// @brief Returns the final substring separated by a delimiter.
   /// @param statement The statement to extract substring from.
   /// @param delimiter The final delimiter from which to splitting.
   /// @return The substring between the final delimiter and end of string.
   /// @pre String contains delimiter.
-  std::string get_final_substring(const std::string &statement, const std::string &delimiter);
+  std::string get_final_substring(const std::string &statement,
+                                  const std::string &delimiter);
 
   /// @brief Separates the contents of a string to a vector by delimiter.
   /// @param statement The string to split.
   /// @param delimiter The delimiter to split string by.
   /// @return Vector containing sub-parts of statement as separate strings.
   /// @pre Statement contains delimiter.
-  std::vector<std::string> separate_string(const std::string &statement, const char &delimiter);
+  std::vector<std::string> separate_string(const std::string &statement,
+                                           const char &delimiter);
 
   /// @brief Removes whitespaces from a string and returns result.
   /// @param statement String to remove whitespaces from.
   std::string remove_whitespaces(const std::string &statement);
 
-  /// @brief Gets the first substring before the first occurrence of a delimiter.
+  /// @brief Gets the first substring before the first occurrence
+  /// of a delimiter.
   /// @param statement The string to substring.
   /// @param delimiter The delimiter to split string by.
   /// @return String with everything before delimiter in statement.
   /// @pre statement is not an empty string.
-  std::string get_first_substring(const std::string &statement, const std::string &delimiter);
+  std::string get_first_substring(const std::string &statement,
+                                  const std::string &delimiter);
 
-  /// @brief Checks if a string may be part of a likely local package.
-  /// Not very foolproof. This is needed to differentiate between local and Python
-  /// std packages in the graph.
-  /// @param src_path Source path.
+  /// @brief Checks if a string may be part of a likely local package
+  /// by iterating vertexes absolute paths.
   /// @param statement The statement to test.
   /// @return If the string may be a likely package.
   /// @note Error prone.
-  bool is_likely_local_package(const std::string &src_path, const std::string &statement);
+  bool is_likely_local_package(const std::string &statement);
 
 };  // class Solver_Py
 
