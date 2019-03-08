@@ -54,74 +54,65 @@ void Solver_Py::add_edge(const string &src_path,
                          const string &statement,
                          unsigned int idx,
                          unsigned int line_no) {
-    using boost::filesystem::path;
-    using boost::filesystem::operator/;
+  using boost::filesystem::path;
+  using boost::filesystem::operator/;
 
-    BOOST_LOG_TRIVIAL(trace) << "add_edge: " << src_path << " -> " << statement
+  BOOST_LOG_TRIVIAL(trace) << "add_edge: " << src_path << " -> " << statement
                              << ", idx = " << idx << ", line_no = " << line_no;
 
-    if (statement == "*") return;
-    if (statement.empty()) return;
+  if (statement == "*") return;
+  if (statement.empty()) return;
 
-    // Handle each comma-separated part separately
-    if (contains_string(statement, ",")) {
-        vector<string> comma_separated_statements = separate_string(statement, ',');
-        add_edges(src_path, comma_separated_statements, idx, line_no);
-        return;
+  // Handle each comma-separated part separately
+  if (contains_string(statement, ",")) {
+    vector<string> comma_separated_statements = separate_string(statement, ',');
+    add_edges(src_path, comma_separated_statements, idx, line_no);
+    return;
+  }
+
+  string module_name = statement;
+
+  if (contains_string(statement, ".")) {
+    if (is_likely_local_package(get_first_substring(statement, "."))){
+      module_name = get_final_substring(statement, ".");
     }
+  }
 
-    string module_name = statement;
+  if (contains_string(statement, " as ")){
+    module_name = get_first_substring(statement, " as ");
+  }
 
-    if (contains_string(statement, ".")) {
+  module_name = remove_whitespaces(module_name);
 
-        // Checks if the edge should belong to a file on the local path.
-        // If it is not a local package, do not remove preceding part.
-        // NOTE: This is not very accurate. Accuracy could be attained
-        // by using boost-library for paths.
+  unique_lock<mutex> glck(graph_mutex);
 
-        if (is_likely_local_package(get_first_substring(statement, "."))){
-            module_name = get_final_substring(statement, ".");
-        }
+  path base = path(src_path).parent_path();
 
+  for (const string &file_extension : file_extensions){
+    string module_with_file_extension = module_name + '.' + file_extension;
+    path dst_path = base / module_with_file_extension;
+    if (exists(dst_path)) {
+      dst_path = canonical(dst_path);
+      BOOST_LOG_TRIVIAL(trace) << "   |>> Relative Edge";
+      insert_edge(src_path, dst_path.string(), module_name, line_no);
+      return;
     }
-
-    if (contains_string(statement, " as ")){
-        module_name = get_first_substring(statement, " as ");
-    }
-
-    module_name = remove_whitespaces(module_name);
-
-    unique_lock<mutex> glck(graph_mutex);
-
-    // Does the path contain a module with that name with a legal
-    // Python script file extension? Add the edge to that node.
-
-    path base = path(src_path).parent_path();
-    for (const string &file_extension : file_extensions){
-        string module_with_file_extension = module_name + '.' + file_extension;
-        path dst_path = base / module_with_file_extension;
-        if (exists(dst_path)) {
-          dst_path = canonical(dst_path);
-          BOOST_LOG_TRIVIAL(trace) << "   |>> Relative Edge";
-          insert_edge(src_path, dst_path.string(), module_name, line_no);
-          return;
-        }
-    }
+  }
 
     // search in preconfigured list of standard system directories
-    for (const auto &i_path : include_paths) {
-      path dst_path = i_path / statement;
-      if (exists(dst_path)) {
-        dst_path = canonical(dst_path);
-        BOOST_LOG_TRIVIAL(trace) << "   |>> Absolute Edge";
-        insert_edge(src_path, dst_path.string(), statement, line_no);
-        return;
-      }
+  for (const auto &i_path : include_paths) {
+    path dst_path = i_path / statement;
+    if (exists(dst_path)) {
+      dst_path = canonical(dst_path);
+      BOOST_LOG_TRIVIAL(trace) << "   |>> Absolute Edge";
+      insert_edge(src_path, dst_path.string(), statement, line_no);
+      return;
     }
+  }
 
-    // if none of the cases above found a file:
-    // -> add an dummy entry
-    insert_edge(src_path, "", module_name, line_no);
+  // if none of the cases above found a file:
+  // -> add an dummy entry
+  insert_edge(src_path, "", module_name, line_no);
 }
 
 void Solver_Py::add_edges(const std::string &src_path,
@@ -144,15 +135,14 @@ void Solver_Py::insert_edge(const std::string &src_path,
   bool b;
 
   // Does the same edge already exist?
-
   if (boost::edge_by_label(src_path, name, graph).second
           || boost::edge_by_label(src_path, dst_path, graph).second){
-      BOOST_LOG_TRIVIAL(trace) << "Duplicate in insert_edge: "
-                                 << "\n"
-                                 << "   src = " << src_path << "\n"
-                                 << "   dst = " << name << "\n"
-                                 << "   name = " << name;
-      return;
+    BOOST_LOG_TRIVIAL(trace) << "Duplicate in insert_edge: "
+                               << "\n"
+                               << "   src = " << src_path << "\n"
+                               << "   dst = " << name << "\n"
+                               << "   name = " << name;
+    return;
   }
 
   if (0 == dst_path.length()) {
