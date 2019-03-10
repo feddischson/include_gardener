@@ -8,22 +8,6 @@ Include Gardener
 [![Build Status](https://travis-ci.org/feddischson/include_gardener.svg?branch=master)](https://travis-ci.org/feddischson/include_gardener)
 
 
-This is the multi-language branch. The aim is to re-structure the code to enable support of the following languages:
- - java-script
- - python
- - css
- - php
- - ruby
- - Go
- - Objective-C
-
-Not considered anymore:
- - Scala
- - java
- - C#
- - swift
-You have a use case for one of them? -> Please create a issue and describe it.
-
 Introduction
 -------------
 This is a small C++ based commandline-tool which analyzes C/C++ code
@@ -57,6 +41,10 @@ Test Dependencies:
  - PyUnit
  - PyGraphviz
  - PyGraphml
+ - XMLRunner
+
+Note: `pip` requires GraphViz development files to install PyGraphViz and PyGraphML.
+To install these libraries using `apt-get`, run `sudo apt-get libgraphviz-dev`
 
 ```
 mkdir build
@@ -86,24 +74,45 @@ Usage
 # the result can then be further converted to a scalable vector graphics file.
 dot -Tsvg graph.dot > graph.svg
 ```
-Contributors
+
+Limitations
+============
+
+C/C++/Obj-C
 ------------
-The following list shows all contributors
- - Vishwas Jain (https://github.com/vjvishjn)
- - Jonas Karlsson (https://github.com/karjonas)
- - Kunal Muley (https://github.com/KunalMuley)
- - Timmy (https://github.com/ralismark)
- - Shantanu Mishra (https://github.com/thedarksage)
+This tool does not respect any `#if #else #endif` or other pre-processor statements than `#include`.
+
+
+Versions
+============
+
+1.0.0
+------
+ - Drops configuration file
+ - Re-organizes architecture to allow further languages in fugure
+ - Improves C/C++/Obj-C include statement detection
+
+0.2.0
+------
+ - Adds configuration file
+ - Small stability and performance improvements
+
+0.1.0
+------
+ - Initial Version
+
 
 Contribution
-------------
+============
+
 If you find a bug, unexpected behaviour or if you have a interesting feature
 in your mind which fits to this tool, please add an issue / feature request.
 
 Pull requests are always welcome.
 
 License
-----------
+============
+
 
 This program is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public

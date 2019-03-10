@@ -31,14 +31,15 @@
 
 namespace INCLUDE_GARDENER {
 
+static constexpr int START_LINE = -1;
+
 /// @brief Edge Properties.
 /// @author feddischson
 struct Edge {
    Edge() = default;
    explicit Edge(int l) : line(l) {}
-
-   int line = -1;  ///< The line number where the include statement is defined.
-};
+   int line = START_LINE;  ///< The line number where
+};                         ///  the include statement is defined.
 
 /// @brief Graph definition.
 /// @author feddischson
