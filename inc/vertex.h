@@ -62,6 +62,9 @@ class Vertex {
   /// @brief Returns the name of the vertex.
   std::string get_name() const;
 
+  /// @brief Returns the absolute path of the vertex.
+  std::string get_abs_path() const;
+
  private:
   /// @brief file name, including file ending
   const std::string name;
