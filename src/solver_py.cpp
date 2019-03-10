@@ -35,12 +35,12 @@ using std::unique_lock;
 using std::vector;
 
 vector<string> Solver_Py::get_statement_regex() const {
-  vector<string> regex_str = {R"(^[ \t]*import[ \t]+([^\d\W](?:\w.*)*)[ \t]*$)",
-                             R"(^[ \t]*from[ \t]+([^\d\W](?:[\w.]*))[ \t]+import[ \t]+([^\d\W](?:[\w,. ]*)|\*)[ \t]*$)"};
+  vector<string> regex_str = {R"(^[ \t]*import[ \t]+([^\d\W](?:[\w,\.])*)[ \t]*$)",
+                             R"(^[ \t]*from[ \t]+([^\d\W](?:[\w\.]*))[ \t]+import[ \t]+([^\d\W](?:[\w,\. ]*)|\*)[ \t]*$)"};
   return regex_str;
 }
 
-string Solver_Py::get_file_regex() const { return string("[^\\d\\W]\\w*\\.py[3w]?$"); }
+string Solver_Py::get_file_regex() const { return string(R"(^(?:.*[\/\\])?[^\d\W]\w*\.py[3w]?$)"); }
 
 void Solver_Py::add_options(po::options_description *options __attribute__((unused))) {
 

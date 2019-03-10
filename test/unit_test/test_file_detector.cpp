@@ -173,9 +173,12 @@ TEST_F(File_Detector_Test, test_py_file_detection_without_exclude) {
   EXPECT_EQ(d.use_file("y z.py"), false);
   EXPECT_EQ(d.use_file("y z.pyw"), false);
   EXPECT_EQ(d.use_file("y z.py3"), false);
+  EXPECT_EQ(d.use_file(" z.py3"), false);
   EXPECT_EQ(d.use_file("x."), false);
   EXPECT_EQ(d.use_file("x.c"), false);
   EXPECT_EQ(d.use_file("x.h"), false);
+  EXPECT_EQ(d.use_file("1llegal-name.py"), false);
+  EXPECT_EQ(d.use_file("illegal-name2.py"), false);
 }
 
 // NOLINTNEXTLINE
@@ -231,6 +234,8 @@ TEST_F(File_Detector_Test, test_py_file_detection_with_exclude) {
   EXPECT_EQ(d.use_file("x."), false);
   EXPECT_EQ(d.use_file("x.c"), false);
   EXPECT_EQ(d.use_file("x.h"), false);
+  EXPECT_EQ(d.use_file("c:\\python files\\python123-\\file.pyw"), true);
+  EXPECT_EQ(d.use_file("/python files/python123-/file.py"), true);
 
   // the same as the positive cases above but with a "_tmp"
   EXPECT_EQ(d.use_file("abc_tmp.py"), false);
