@@ -46,7 +46,6 @@ class GardenerTestCases(unittest.TestCase):
         """
         g = pgml.Graph()
 
-        f_1a = g.add_node("1");
         """ List of files by doing find -iname '*.py' -or -iname '*.pyw' -or -iname '*.py3'
         Use as basis for constructing the graph
         ./pack2/file3.py
