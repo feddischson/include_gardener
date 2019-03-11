@@ -46,87 +46,142 @@ class GardenerTestCases(unittest.TestCase):
         """
         g = pgml.Graph()
 
+        f_1a = g.add_node("1");
+        """ List of files by doing find -iname '*.py' -or -iname '*.pyw' -or -iname '*.py3'
+        Use as basis for constructing the graph
+        ./pack2/file3.py
+        ./pack2/file2.py
+        ./pack2/file1.py
+        ./pack2/__init__.py
+        ./_1a.PyW
+        ./ok_name2.py3
+        ./test.py
+        ./file2.py3
+        ./pack1/file3.py
+        ./pack1/file2.py
+        ./pack1/file1.py
+        ./pack1/subpack1/file3.py
+        ./pack1/subpack1/file2.py
+        ./pack1/subpack1/file1.py
+        ./pack1/subpack1/__init__.py
+        ./pack1/__init__.py
+        ./_ok_name.py
+        ./file3.pyw
+        ./b2.py3
+        ./file1.py
+
+        """
+
         # TODO: This might be all wrong... Need to be updated to actually reflect what's in the test pack of python files..
-        p1_f1 = g.add_node("1")
-        p1_f2 = g.add_node("2")
-        p1_f3 = g.add_node("3")
-        p1_s1_f1 = g.add_node("4")
-        p1_s1_f2 = g.add_node("5")
-        p1_s1_f3 = g.add_node("6")
-        p1_init = g.add_node("14")
+        p2_f3 = g.add_node("1")
+        p2_f2 = g.add_node("2")
+        p2_f1 = g.add_node("3")
+        p2_init = g.add_node("4")
+        f_1a = g.add_node("5")
+        ok_2 = g.add_node("6")
+        t = g.add_node("7")
+        f2 = g.add_node("8")
+        p1_f3 = g.add_node("9")
+        p1_f2 = g.add_node("10")
+        p1_f1 = g.add_node("11")
+        p1_s1_f3 = g.add_node("12")
+        p1_s1_f2 = g.add_node("13")
+        p1_s1_f1 = g.add_node("14")
         p1_s1_init = g.add_node("15")
-        non_existing_py = g.add_node("7")
-        sys = g.add_node("8")
-        filecmp = g.add_node("9")
-        pickle = g.add_node("10")
-        f1 = g.add_node("11")
-        f2 = g.add_node("12")
-        f3 = g.add_node("13")
-        p2_f1 = g.add_node("16")
-        p2_f2 = g.add_node("17")
-        p2_f3 = g.add_node("18")
-        p2_init = g.add_node("19")
+        p1_init = g.add_node("16")
+        ok_1 = g.add_node("17")
+        f3 = g.add_node("18")
+        b2 = g.add_node("19")
+        f1 = g.add_node("20")
+        filecmp = g.add_node("21")
         os = g.add_node("20")
-        bogusfile = g.add_node("21")
+        fork = g.add_node("21")
+        sys = g.add_node("22")
+        pickle = g.add_node("23")
+        bogusfile = g.add_node("24")
+        p2 = g.add_node("25")
+        p1 = g.add_node("26")
+        p1_s1 = g.add_node("27")
 
-        p1_f1['key1'] = 'pack1.file1'
-        p1_f2['key1'] = 'pack1.file2'
-        p1_f3['key1'] = 'pack1.file3'
-        p1_init['key1'] = 'pack1.__init__'
-        p1_s1_f1['key1'] = 'pack1.subpack1.file1'
-        p1_s1_f2['key1'] = 'pack1.subpack1.file2'
-        p1_s1_f3['key1'] = 'pack1.subpack1.file3'
-        p1_s1_init['key1'] = 'pack1.subpack1.__init__'
-        non_existing_py['key1'] = 'bogusfilename'
-        sys['key1'] = 'sys'
-        os['key1'] = 'os'
+        p2_f3['key1'] = 'pack2/file3.py'
+        p2_f2['key1'] = 'pack2/file2.py'
+        p2_f1['key1'] = 'pack2/file1.py'
+        p2_init['key1'] = 'pack2/__init__.py'
+        f_1a['key1'] = '_1a.PyW'
+        ok_2['key1'] = 'ok_name2.py3'
+        t['key1'] = 'test.py'
+        f2['key1'] = 'file2.py3'
+        p1_f3['key1'] = 'pack1/file3.py'
+        p1_f2['key1'] = 'pack1/file2.py'
+        p1_f1['key1'] = 'pack1/file1.py'
+        p1_s1_f3['key1'] = 'pack1/subpack1/file3.py'
+        p1_s1_f2['key1'] = 'pack1/subpack1/file2.py'
+        p1_s1_f1['key1'] = 'pack1/subpack1/file1.py'
+        p1_s1_init['key1'] = 'pack1/subpack1/__init__.py'
+        p1_init['key1'] = 'pack1/__init__.py'
+        ok_1['key1'] = '_ok_name.py'
+        f3['key1'] = 'file3.pyw'
+        b2['key1'] = 'b2.py3'
+        f1['key1'] = 'file1.py'
         filecmp['key1'] = 'filecmp'
+        os['key1'] = 'os'
+        fork['key1'] = 'bogusfilename'
+        sys['key1'] = 'sys'
         pickle['key1'] = 'pickle'
-        f1['key1'] = 'file1'
-        f2['key1'] = 'file2'
-        f3['key1'] = 'file3'
-        p2_f1['key1'] = 'pack2.file1'
-        p2_f2['key1'] = 'pack2.file2'
-        p2_f3['key1'] = 'pack2.file3'
-        p2_init['key1'] = 'pack2.__init__'
         bogusfile['key1'] = 'bogusfilename'
-
-        # Pack 1
-        g.add_edge(p1_f1, p1_s1_f1)
-        g.add_edge(p1_f3, sys)
-        g.add_edge(p1_init, pickle)
-        g.add_edge(p1_f1, p2_f1)
-
-        # Subpack 1
-        g.add_edge(p1_s1_f1, p1_s1_f3)
-        g.add_edge(p1_s1_f2, sys)
-        g.add_edge(p1_s1_f2, p1_s1_f1)
+        p1_s1['key1'] = 'pack1/subpack1'
+        p2['key1'] ='pack2'
+        p1['key1'] ='pack1'
 
         # Pack 2
         g.add_edge(p2_f3, p1_f2)
-        g.add_edge(p2_f2, pickle)
-        g.add_edge(p2_init, p1_f1)
         g.add_edge(p2_f2, filecmp)
+        g.add_edge(p2_init, p1_f1)
 
-        # File 1
-        g.add_edge(f1, p1_init)
-        g.add_edge(f1, p2_init)
-        g.add_edge(f1, p1_s1_f1)
-       
-        # File 2
-        g.add_edge(f2, os)
+        # _1a.PyW - no imports
+        # _ok_name2.py3 - no imports
+
+        # Test.py
+        g.add_edge(t, f1)
+        g.add_edge(t, f2)
+        g.add_edge(t, f3)
+
+        # file2.py3
+        g.add_edge(f2, fork)
         g.add_edge(f2, sys)
-        g.add_edge(f2, p1_s1_init)
-        g.add_edge(f2, p2_init)
+        g.add_edge(f2, p1_s1)
+        g.add_edge(f2, p2)
+
+        # Pack 1 (file2 has no imports)
+        g.add_edge(p1_f3, sys)
+        g.add_edge(p1_f1, p1_s1_f1)
+        g.add_edge(p1_f1, p2_f1)
+        g.add_edge(p1_init, pickle)
+
+        # Pack 1, Subpack 1 (no imports in __init__.py)
+        g.add_edge(p1_s1_f3, filecmp)
+        g.add_edge(p1_s1_f2, sys)
+        g.add_edge(p1_s1_f2, p1_s1_f1)
+        g.add_edge(p1_s1_f1, p1_s1_f3)
+
+        # _ok_name.py - no imports
 
         # File 3
         # TODO: Some could be removed if import * statements won't be supported
-        g.add_edge(f3, p2_init)
-        g.add_edge(f3, p2_f1)
-        g.add_edge(f3, p2_f2)
-        g.add_edge(f3, p2_f3)
         g.add_edge(f3, bogusfile)
+        g.add_edge(f3, p2_f3)
+        g.add_edge(f3, p2_f2)
+        g.add_edge(f3, p2_f1)
+        g.add_edge(f3, p2_init)
 
+        # b2.py - no imports
+        # _ok_name2.py3 - no imports
+
+        # File 1
+        g.add_edge(f1, p1)
+        g.add_edge(f1, p2)
+        g.add_edge(f1, p2_init)
+        g.add_edge(f1, p1_s1_f1)
 
         return g
 
@@ -202,6 +257,20 @@ class GardenerTestCases(unittest.TestCase):
         # get the result from the system call:
         return parser.parse(temp.name)
 
+    def test_SimpleCallWithSinglePath_GraphmlOutput(self):
+        """ Tests "include_gardener test_files -f xml -l py"
+
+        The test expects that the result can be read by graphml
+        and that there is at least one node.
+        """
+        g1 = self.graphml_gardener_call(['-l', 'py'])
+
+        # get a reference graph
+        g2 = self.build_reference_graph()
+
+        # both graphs shall be the same
+        self.compare(g1, g2)
+
     def test_SimpleCallWithSinglePath(self):
         """ Tests "include_gardener test_files"
 
@@ -213,20 +282,6 @@ class GardenerTestCases(unittest.TestCase):
         # the first node shall not be None ...
         n = G.get_node(1)
         self.assertNotEqual(n, None)
-
-    def test_SimpleCallWithSinglePath_GraphmlOutput(self):
-        """ Tests "include_gardener test_files -f xml -I test_files/inc"
-
-        The test expects that the result can be read by graphml
-        and that there is at least one node.
-        """
-        g1 = self.graphml_gardener_call(['-I', self.T_PATH + '/inc/'])
-
-        # get a reference graph
-        g2 = self.build_reference_graph()
-
-        # both graphs shall be the same
-        self.compare(g1, g2)
 
 if __name__ == "__main__":
     print(sys.argv)
