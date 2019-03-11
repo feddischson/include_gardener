@@ -1,0 +1,1 @@
+from pack1 import file1

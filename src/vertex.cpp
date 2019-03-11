@@ -29,6 +29,8 @@ Vertex::Vertex(string name, string abs_path)
 
 string Vertex::get_name() const { return name; }
 
+string Vertex::get_abs_path() const { return abs_path; }
+
 }  // namespace INCLUDE_GARDENER
 
 // vim: filetype=cpp et ts=2 sw=2 sts=2

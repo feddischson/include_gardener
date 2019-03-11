@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
       cerr << e.what() << "\n";
       exit(-1);
    } catch (...) {
-      cerr << "Unecpected Error!"
+      cerr << "Unexpected Error!"
            << "\n";
       exit(-1);
    }
