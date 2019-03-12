@@ -78,11 +78,6 @@ class Solver {
                         const std::string &statement, unsigned int idx,
                         unsigned int line_no) = 0;
 
-  /// @brief Adds multiple edges with exclusive access to graph.
-  virtual void add_edges(const std::string &src_path,
-                         const std::vector<std::string> &statement,
-                         unsigned int idx, unsigned int line_no) = 0;
-
   /// @brief Shall return the regex for the statements which shall be
   ///        detected.
   virtual std::vector<std::string> get_statement_regex() const = 0;

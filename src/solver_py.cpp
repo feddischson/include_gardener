@@ -34,9 +34,12 @@ using std::string;
 using std::unique_lock;
 using std::vector;
 
+const int py_import_regex_idx = 0;
+const int py_from_import_regex_idx = 1;
+
 vector<string> Solver_Py::get_statement_regex() const {
   vector<string> regex_str = {R"(^[ \t]*import[ \t]+([^\d\W](?:[\w,\.])*)[ \t]*$)",
-                             R"(^[ \t]*from[ \t]+([^\d\W](?:[\w\.]*))[ \t]+import[ \t]+([^\d\W](?:[\w,\. ]*)|\*)[ \t]*$)"};
+                             R"(^[ \t]*from[ \t]+([^\d\W](?:[\w\.]*)[ \t]+import[ \t]+(?:\*|[^\d\W](?:[\w,\. ]*)))[ \t]*$)"};
   return regex_str;
 }
 
@@ -63,23 +66,46 @@ void Solver_Py::add_edge(const string &src_path,
   if (statement == "*") return;
   if (statement.empty()) return;
 
+  string module_name = statement;
+
+  // from x import y
+  if (idx == py_from_import_regex_idx){
+
+    // Split string, regex better?
+    string from_field = remove_whitespaces(get_first_substring(statement, " import"));
+    string import_field = get_final_substring(statement, "import ");
+
+    // If from_name is likely local, add import_names to graph as well
+    if (contains_string(from_field, ".")) {
+      if (is_likely_local_package(get_first_substring(from_field, "."))){
+        if (contains_string(import_field, ",")){
+          vector<string> comma_separated_statements = separate_string(statement, ',');
+
+          // Regex id should not be passed on, this has already been split
+          add_edges(src_path, comma_separated_statements, 99, line_no);
+        }
+      }
+    }
+
+    module_name = from_field;
+  }
+
   // Handle each comma-separated part separately
-  if (contains_string(statement, ",")) {
-    vector<string> comma_separated_statements = separate_string(statement, ',');
+  if (contains_string(module_name, ",")) {
+    vector<string> comma_separated_statements = separate_string(module_name, ',');
     add_edges(src_path, comma_separated_statements, idx, line_no);
     return;
   }
 
-  string module_name = statement;
-
-  if (contains_string(statement, ".")) {
-    if (is_likely_local_package(get_first_substring(statement, "."))){
-      module_name = get_final_substring(statement, ".");
+  // If the item is local, split the string
+  if (contains_string(module_name, ".")) {
+    if (is_likely_local_package(get_first_substring(module_name, "."))){
+      module_name = get_final_substring(module_name, ".");
     }
   }
 
-  if (contains_string(statement, " as ")){
-    module_name = get_first_substring(statement, " as ");
+  if (contains_string(module_name, " as ")){
+    module_name = get_first_substring(module_name, " as ");
   }
 
   module_name = remove_whitespaces(module_name);
@@ -99,7 +125,7 @@ void Solver_Py::add_edge(const string &src_path,
     }
   }
 
-    // search in preconfigured list of standard system directories
+  // search in preconfigured list of standard system directories
   for (const auto &i_path : include_paths) {
     path dst_path = i_path / statement;
     if (exists(dst_path)) {
@@ -207,6 +233,9 @@ std::string Solver_Py::get_first_substring(const std::string &statement, const s
 
 bool Solver_Py::is_likely_local_package(const std::string &statement)
 {
+  string statement_to_test = statement
+          + boost::filesystem::path::preferred_separator + "__path__.py";
+
   unique_lock<mutex> glck(graph_mutex);
 
   for (Vertex::Map::iterator it = vertexes.begin(); it != vertexes.end(); ++it){
