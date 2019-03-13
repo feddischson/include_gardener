@@ -25,6 +25,10 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/find.hpp>
 
 namespace INCLUDE_GARDENER {
 
@@ -64,25 +68,28 @@ void Solver_Py::add_edge(const string &src_path,
   if (statement.empty()) return;
 
   // Handle each comma-separated part separately
-  if (contains_string(statement, ",")) {
-    vector<string> comma_separated_statements = separate_string(statement, ',');
+  if (boost::contains(statement, ",")) {
+    vector<string> comma_separated_statements;
+    boost::split(comma_separated_statements, statement, [](char c){ return c == ','; });
     add_edges(src_path, comma_separated_statements, idx, line_no);
     return;
   }
 
   string module_name = statement;
 
-  if (contains_string(statement, ".")) {
+  if (boost::contains(statement, ".")) {
     if (is_likely_local_package(get_first_substring(statement, "."))){
       module_name = get_final_substring(statement, ".");
     }
   }
 
-  if (contains_string(statement, " as ")){
+  if (boost::contains(statement, " as ")){
+
     module_name = get_first_substring(statement, " as ");
   }
 
-  module_name = remove_whitespaces(module_name);
+  // Remove whitespace
+  boost::remove_erase_if(module_name, ::isspace);
 
   unique_lock<mutex> glck(graph_mutex);
 
@@ -164,45 +171,15 @@ void Solver_Py::insert_edge(const std::string &src_path,
   graph[edge] = Edge{static_cast<int>(line_no)};
 }
 
-bool Solver_Py::contains_string(const std::string &statement,
-                                const std::string &string_to_test){
-  std::size_t find_result = statement.find(string_to_test);
-  return find_result != std::string::npos;
-}
-
 std::string Solver_Py::get_final_substring(const std::string &statement,
                                            const std::string &delimiter){
   size_t pos_of_last_delim = statement.find_last_of(delimiter);
   return statement.substr(pos_of_last_delim+1);
 }
 
-std::vector<std::string> Solver_Py::separate_string(
-        const std::string &statement, const char &delimiter){
-  std::vector<std::string> separated_strings;
-  std::stringstream ss(statement);
-  std::string split_string;
-
-  while (getline(ss, split_string, delimiter)) {
-    separated_strings.push_back(split_string);
-  }
-
-  return separated_strings;
-}
-
-std::string Solver_Py::remove_whitespaces(const std::string &statement){
-  std::string copied_string = statement;
-  boost::erase_all(copied_string, " ");
-  return copied_string;
-}
-
 std::string Solver_Py::get_first_substring(const std::string &statement, const std::string &delimiter)
 {
-  std::string::size_type pos = statement.find(delimiter);
-  if (pos != std::string::npos) {
-    std::string copy = statement.substr(0, pos);
-    return copy;
-  }
-  return statement;
+  return statement.substr(0, statement.find_first_of(delimiter));
 }
 
 bool Solver_Py::is_likely_local_package(const std::string &statement)
@@ -210,7 +187,7 @@ bool Solver_Py::is_likely_local_package(const std::string &statement)
   unique_lock<mutex> glck(graph_mutex);
 
   for (Vertex::Map::iterator it = vertexes.begin(); it != vertexes.end(); ++it){
-    if (contains_string(it->second->get_abs_path(), statement)){
+    if (boost::contains(it->second->get_abs_path(), statement)){
       return true;
     }
   }
