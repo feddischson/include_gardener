@@ -63,64 +63,59 @@ void Solver_Py::add_edge(const string &src_path,
   BOOST_LOG_TRIVIAL(trace) << "add_edge: " << src_path << " -> " << statement
                              << ", idx = " << idx << ", line_no = " << line_no;
 
-  if (statement == "*") return;
-  if (statement.empty()) return;
+  if (boost::contains(statement, "*")) return; // Import * is not supported yet
 
-  string module_name = statement;
-
-  // from x import y
+  // from (x import y)
   if (idx == py_from_import_regex_idx){
 
-    // Split string, regex better?
-    string from_field = remove_whitespaces(get_first_substring(statement, " import"));
-    string import_field = get_final_substring(statement, "import ");
+    if (boost::contains(statement, ",")){
 
-    // If from_name is likely local, add import_names to graph as well
-    if (contains_string(from_field, ".")) {
-      if (is_likely_local_package(get_first_substring(from_field, "."))){
-        if (contains_string(import_field, ",")){
-          vector<string> comma_separated_statements = separate_string(statement, ',');
+      std::string before_import = get_first_substring(statement, " import");
+      std::string after_import = get_final_substring(statement, "import ");
+      vector<string> comma_separated_statements = separate_string(after_import, ',');
 
-          // Regex id should not be passed on, this has already been split
-          add_edges(src_path, comma_separated_statements, 99, line_no);
-        }
+      // Handle each comma-separated part separately with the from-statement
+      for (auto comma_separated_statement : comma_separated_statements){
+        add_edge(src_path, before_import + comma_separated_statement, 99, line_no);
       }
+
+      return;
     }
 
-    module_name = from_field;
-  }
+  // import (x)
+  } else if (idx == py_import_regex_idx){
 
-  // Handle each comma-separated part separately
-  if (contains_string(module_name, ",")) {
-    vector<string> comma_separated_statements = separate_string(module_name, ',');
-    add_edges(src_path, comma_separated_statements, idx, line_no);
-    return;
-  }
-
-  // If the item is local, split the string
-  if (contains_string(module_name, ".")) {
-    if (is_likely_local_package(get_first_substring(module_name, "."))){
-      module_name = get_final_substring(module_name, ".");
+    if (boost::contains(statement, ",")){
+      vector<string> comma_separated_statements = separate_string(statement, ',');
+      add_edges(src_path, comma_separated_statements, 99, line_no);
+      return;
     }
+
   }
 
-  if (contains_string(module_name, " as ")){
-    module_name = get_first_substring(module_name, " as ");
+  std::string import_to_path;
+
+  // From import_statement_to_path removes everything past " as "
+  if (boost::contains(statement, " import ")){
+    import_to_path = from_import_statement_to_path(statement);
+  } else {
+    import_to_path = import_statement_to_path(statement);
   }
 
-  module_name = remove_whitespaces(module_name);
+  path likely_path = path(src_path).parent_path() / path(import_to_path);
+  std::string likely_module_name = likely_path.stem().string();
+  path likely_parent_path = likely_path.parent_path();
 
   unique_lock<mutex> glck(graph_mutex);
 
-  path base = path(src_path).parent_path();
-
   for (const string &file_extension : file_extensions){
-    string module_with_file_extension = module_name + '.' + file_extension;
-    path dst_path = base / module_with_file_extension;
-    if (exists(dst_path)) {
+    std::string module_with_file_extension = likely_module_name + '.' + file_extension;
+    path dst_path = likely_parent_path / module_with_file_extension;
+
+    if (exists(dst_path)){
       dst_path = canonical(dst_path);
       BOOST_LOG_TRIVIAL(trace) << "   |>> Relative Edge";
-      insert_edge(src_path, dst_path.string(), module_name, line_no);
+      insert_edge(src_path, dst_path.string(), import_to_path, line_no);
       return;
     }
   }
@@ -138,7 +133,7 @@ void Solver_Py::add_edge(const string &src_path,
 
   // if none of the cases above found a file:
   // -> add an dummy entry
-  insert_edge(src_path, "", module_name, line_no);
+  insert_edge(src_path, "", statement, line_no); //module_name
 }
 
 void Solver_Py::add_edges(const std::string &src_path,
@@ -149,6 +144,40 @@ void Solver_Py::add_edges(const std::string &src_path,
     add_edge(src_path, statement, idx, line_no);
   }
 }
+
+std::string Solver_Py::dots_to_system_slash(const std::string &statement)
+{
+  std::string separator(1, boost::filesystem::path::preferred_separator);
+  return boost::replace_all_copy(statement, ".", separator);
+}
+
+std::string Solver_Py::from_import_statement_to_path(const std::string &statement)
+{
+  std::string from_field = remove_whitespaces(get_first_substring(statement, " "));
+  std::string import_field = get_final_substring(statement, " ");
+
+  std::string path_concatenation = dots_to_system_slash(remove_whitespaces(
+    from_field
+    + boost::filesystem::path::preferred_separator
+    + import_field ));
+
+  return path_concatenation;
+}
+
+std::string Solver_Py::import_statement_to_path(const std::string &statement){
+  std::string import_field = statement;
+
+  if (boost::contains(import_field, " as ")){
+      import_field = import_field.substr(0, import_field.find(" as "));
+  }
+
+  std::string path_concatenation = dots_to_system_slash(remove_whitespaces(
+    boost::filesystem::path::preferred_separator
+    + import_field ));
+
+  return path_concatenation;
+}
+
 
 void Solver_Py::insert_edge(const std::string &src_path,
                             const std::string &dst_path,
@@ -196,12 +225,6 @@ bool Solver_Py::contains_string(const std::string &statement,
   return find_result != std::string::npos;
 }
 
-std::string Solver_Py::get_final_substring(const std::string &statement,
-                                           const std::string &delimiter){
-  size_t pos_of_last_delim = statement.find_last_of(delimiter);
-  return statement.substr(pos_of_last_delim+1);
-}
-
 std::vector<std::string> Solver_Py::separate_string(
         const std::string &statement, const char &delimiter){
   std::vector<std::string> separated_strings;
@@ -231,20 +254,10 @@ std::string Solver_Py::get_first_substring(const std::string &statement, const s
   return statement;
 }
 
-bool Solver_Py::is_likely_local_package(const std::string &statement)
-{
-  string statement_to_test = statement
-          + boost::filesystem::path::preferred_separator + "__path__.py";
-
-  unique_lock<mutex> glck(graph_mutex);
-
-  for (Vertex::Map::iterator it = vertexes.begin(); it != vertexes.end(); ++it){
-    if (contains_string(it->second->get_abs_path(), statement)){
-      return true;
-    }
-  }
-
-  return false;
+std::string Solver_Py::get_final_substring(const std::string &statement,
+                                           const std::string &delimiter){
+  size_t pos_of_last_delim = statement.find_last_of(delimiter);
+  return statement.substr(pos_of_last_delim+1);
 }
 
 

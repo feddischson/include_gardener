@@ -132,13 +132,6 @@ class Solver_Py : public Solver {
   std::string get_first_substring(const std::string &statement,
                                   const std::string &delimiter);
 
-  /// @brief Checks if a string may be part of a likely local package
-  /// by iterating vertexes absolute paths.
-  /// @param statement The statement to test.
-  /// @return If the string may be a likely package.
-  /// @note Error prone.
-  bool is_likely_local_package(const std::string &statement);
-
   /// @brief Adds multiple edges to the graph.
   /// @param src_path The source path (where the statement is detected).
   /// @param statements The detected statements.
@@ -148,6 +141,15 @@ class Solver_Py : public Solver {
                  const std::vector<std::string> &statements,
                  unsigned int idx, unsigned int line_no);
 
+  /// @brief Converts dots in a string to slashes used in paths
+  /// in the current system and returns a copy.
+  /// @param statement The statement to have this occur in.
+  /// @return Copy of statement where the modification has been done.
+  std::string dots_to_system_slash(const std::string &statement);
+
+  std::string from_import_statement_to_path(const std::string &statement);
+
+  std::string import_statement_to_path(const std::string &statement);
 };  // class Solver_Py
 
 }  // namespace INCLUDE_GARDENER
