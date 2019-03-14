@@ -25,6 +25,10 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/find.hpp>
 
 namespace INCLUDE_GARDENER {
 
@@ -72,7 +76,10 @@ void Solver_Py::add_edge(const string &src_path,
 
       std::string before_import = get_first_substring(statement, " import");
       std::string after_import = get_final_substring(statement, "import ");
-      vector<string> comma_separated_statements = separate_string(after_import, ',');
+      vector<string> comma_separated_statements;
+
+      // Commas are not allowed before "import" if it's done "from"
+      boost::split(comma_separated_statements, after_import, [](char c){ return c == ','; });
 
       // Handle each comma-separated part separately with the from-statement
       for (auto comma_separated_statement : comma_separated_statements){
@@ -84,18 +91,14 @@ void Solver_Py::add_edge(const string &src_path,
 
   // import (x)
   } else if (idx == py_import_regex_idx){
-
     if (boost::contains(statement, ",")){
-      vector<string> comma_separated_statements = separate_string(statement, ',');
+      vector<string> comma_separated_statements;
+      boost::split(comma_separated_statements, statement, [](char c){ return c == ','; });
       add_edges(src_path, comma_separated_statements, 99, line_no);
       return;
-    }
-
   }
 
   std::string import_to_path;
-
-  // From import_statement_to_path removes everything past " as "
   if (boost::contains(statement, " import ")){
     import_to_path = from_import_statement_to_path(statement);
   } else {
@@ -134,8 +137,8 @@ void Solver_Py::add_edge(const string &src_path,
   // if none of the cases above found a file:
   // -> add an dummy entry
   insert_edge(src_path, "", statement, line_no); //module_name
+  }
 }
-
 void Solver_Py::add_edges(const std::string &src_path,
                           const std::vector<std::string> &statements,
                           unsigned int idx,
@@ -153,13 +156,16 @@ std::string Solver_Py::dots_to_system_slash(const std::string &statement)
 
 std::string Solver_Py::from_import_statement_to_path(const std::string &statement)
 {
-  std::string from_field = remove_whitespaces(get_first_substring(statement, " "));
+  std::string from_field = get_first_substring(statement, " ");
   std::string import_field = get_final_substring(statement, " ");
+  boost::erase_all(from_field, " ");
 
-  std::string path_concatenation = dots_to_system_slash(remove_whitespaces(
+  std::string path_concatenation = dots_to_system_slash(
     from_field
     + boost::filesystem::path::preferred_separator
-    + import_field ));
+    + import_field);
+
+  boost::erase_all(path_concatenation, " ");
 
   return path_concatenation;
 }
@@ -171,10 +177,11 @@ std::string Solver_Py::import_statement_to_path(const std::string &statement){
       import_field = import_field.substr(0, import_field.find(" as "));
   }
 
-  std::string path_concatenation = dots_to_system_slash(remove_whitespaces(
-    boost::filesystem::path::preferred_separator
-    + import_field ));
+  std::string path_concatenation = dots_to_system_slash(
+              boost::filesystem::path::preferred_separator
+                                + import_field);
 
+  boost::erase_all(path_concatenation, " ");
   return path_concatenation;
 }
 
@@ -219,39 +226,9 @@ void Solver_Py::insert_edge(const std::string &src_path,
   graph[edge] = Edge{static_cast<int>(line_no)};
 }
 
-bool Solver_Py::contains_string(const std::string &statement,
-                                const std::string &string_to_test){
-  std::size_t find_result = statement.find(string_to_test);
-  return find_result != std::string::npos;
-}
-
-std::vector<std::string> Solver_Py::separate_string(
-        const std::string &statement, const char &delimiter){
-  std::vector<std::string> separated_strings;
-  std::stringstream ss(statement);
-  std::string split_string;
-
-  while (getline(ss, split_string, delimiter)) {
-    separated_strings.push_back(split_string);
-  }
-
-  return separated_strings;
-}
-
-std::string Solver_Py::remove_whitespaces(const std::string &statement){
-  std::string copied_string = statement;
-  boost::erase_all(copied_string, " ");
-  return copied_string;
-}
-
 std::string Solver_Py::get_first_substring(const std::string &statement, const std::string &delimiter)
 {
-  std::string::size_type pos = statement.find(delimiter);
-  if (pos != std::string::npos) {
-    std::string copy = statement.substr(0, pos);
-    return copy;
-  }
-  return statement;
+  return statement.substr(0, statement.find_first_of(delimiter));
 }
 
 std::string Solver_Py::get_final_substring(const std::string &statement,
