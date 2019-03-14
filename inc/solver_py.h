@@ -25,6 +25,7 @@
 
 #include <memory>
 #include <boost/algorithm/string.hpp>
+#include <boost/regex.hpp>
 
 namespace INCLUDE_GARDENER {
 
@@ -96,6 +97,12 @@ class Solver_Py : public Solver {
   /// @brief Legal file extensions for Python script files.
   std::vector<std::string> file_extensions{"py", "pyw", "py3"};
 
+  /// @brief Regex to match the first dot(s) in a string
+  std::string dot_regex = "^[ \\t]*([.]+).*$";
+
+  /// @brief Regex to match everything past the first dot(s) in a string
+  std::string past_dot_regex = "^[ \\t]*[.]+(.*)$";
+
   /// @brief Returns the final substring separated by a delimiter.
   /// @param statement The statement to extract substring from.
   /// @param delimiter The final delimiter from which to splitting.
@@ -113,15 +120,6 @@ class Solver_Py : public Solver {
   std::string get_first_substring(const std::string &statement,
                                   const std::string &delimiter);
 
-  /// @brief Adds multiple edges to the graph.
-  /// @param src_path The source path (where the statement is detected).
-  /// @param statements The detected statements.
-  /// @param idx The index of the regular expression, which matched.
-  /// @param line_no The line number where the statement is detected.
-  void add_edges(const std::string &src_path,
-                 const std::vector<std::string> &statements,
-                 unsigned int idx, unsigned int line_no);
-
   /// @brief Converts dots in a string to slashes used in paths
   /// in the current system and returns a copy.
   /// @param statement The statement to have this occur in.
@@ -131,6 +129,13 @@ class Solver_Py : public Solver {
   std::string from_import_statement_to_path(const std::string &statement);
 
   std::string import_statement_to_path(const std::string &statement);
+
+  unsigned int how_many_directories_above(const std::string &statement);
+
+  bool begins_with_dot(const std::string &statement);
+
+  std::string without_prepended_dots(const std::string &statement);
+
 };  // class Solver_Py
 
 }  // namespace INCLUDE_GARDENER
