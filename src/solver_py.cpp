@@ -161,7 +161,7 @@ void Solver_Py::add_edge(const string &src_path,
 
   // if none of the cases above found a file:
   // -> add an dummy entry
-  insert_edge(src_path, "", statement, line_no); //module_name
+  insert_edge(src_path, "", get_first_substring(statement, " "), line_no); //module_name
 
 }
 
