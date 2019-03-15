@@ -29,6 +29,8 @@
 
 namespace INCLUDE_GARDENER {
 
+#define BOOST_REGEX_MATCH_EXTRA
+
 /// @brief Solver class for Python language.
 /// @details
 ///   To be implemented.
@@ -103,6 +105,8 @@ class Solver_Py : public Solver {
   /// @brief Regex to match everything past the first dot(s) in a string
   std::string past_dot_regex = "^[ \\t]*[.]+(.*)$";
 
+  std::string as_detection_regex = "( as [^,\\s]+)(?:,.*( as [^,\\s]+))?";
+
   /// @brief Returns the final substring separated by a delimiter.
   /// @param statement The statement to extract substring from.
   /// @param delimiter The final delimiter from which to splitting.
@@ -135,6 +139,9 @@ class Solver_Py : public Solver {
   bool begins_with_dot(const std::string &statement);
 
   std::string without_prepended_dots(const std::string &statement);
+
+
+  std::string remove_as_statements(const std::string &statement);
 
 };  // class Solver_Py
 

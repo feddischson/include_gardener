@@ -69,13 +69,20 @@ void Solver_Py::add_edge(const string &src_path,
 
   if (boost::contains(statement, "*")) return; // Import * is not supported yet
 
+  std::string import_line_to_path = statement;
+
+  // Remove " as x" from the string.
+  if (idx == 0 || idx == 1){
+      import_line_to_path = remove_as_statements(import_line_to_path);
+  }
+
   // from (x import y)
   if (idx == 1){
 
-    if (boost::contains(statement, ",")){
+    if (boost::contains(import_line_to_path, ",")){
 
-      std::string before_import = get_first_substring(statement, " ");
-      std::string after_import = get_final_substring(statement, " ");
+      std::string before_import = get_first_substring(import_line_to_path, " ");
+      std::string after_import = get_final_substring(import_line_to_path, " ");
       vector<string> comma_separated_statements;
 
       // Commas are not allowed before "import" if it's done with "from"
@@ -104,7 +111,6 @@ void Solver_Py::add_edge(const string &src_path,
   }
 
   path parent_directory = path(src_path).parent_path();
-  std::string import_line_to_path = statement;
 
   // Relative import
   if (begins_with_dot(import_line_to_path)){
@@ -198,7 +204,7 @@ unsigned int Solver_Py::how_many_directories_above(const std::string &statement)
   boost::regex r(dot_regex);
   boost::match_results<std::string::const_iterator> results;
   if (boost::regex_match(statement, results, r)){
-    return results[1].length() - 1;
+    return results[1].length() - 1;  // The first dot is current directory
   }
 
   return 0;
@@ -212,13 +218,38 @@ bool Solver_Py::begins_with_dot(const std::string &statement)
 
 std::string Solver_Py::without_prepended_dots(const std::string &statement)
 {
-    boost::regex r(past_dot_regex);
-    boost::match_results<std::string::const_iterator> results;
-    if (boost::regex_match(statement, results, r)){
-        return results[1].str();
+  boost::regex r(past_dot_regex);
+  boost::match_results<std::string::const_iterator> results;
+  if (boost::regex_match(statement, results, r)){
+    if (results.size() > 1){
+      return results[1].str();
     }
+  }
 
-    return statement;
+  return statement;
+}
+
+std::string Solver_Py::remove_as_statements(const std::string &statement)
+{
+  std::string string_copy = statement;
+  std::string::size_type as_pos;
+  std::string::size_type comma_pos;
+
+  do {
+    as_pos = string_copy.find(" as ");
+    if (as_pos != std::string::npos){
+      comma_pos = string_copy.find(",", as_pos);
+      if (comma_pos != std::string::npos){
+        string_copy.erase(as_pos, comma_pos);
+      } else {
+        string_copy.erase(as_pos, std::string::npos);
+      }
+    } else {
+      break;
+    }
+  } while (as_pos != std::string::npos);
+
+  return string_copy;
 }
 
 void Solver_Py::insert_edge(const std::string &src_path,
