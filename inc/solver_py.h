@@ -137,6 +137,9 @@ class Solver_Py : public Solver {
   /// @brief Regex to match everything past the first dot(s) in a string
   std::string past_dot_regex = "^[ \\t]*[.]+(.*)$";
 
+  // Enum naming the different import types (corresponds to regex index)
+  enum Py_Regex { IMPORT = 0, FROM_IMPORT };
+
 };  // class Solver_Py
 
 }  // namespace INCLUDE_GARDENER

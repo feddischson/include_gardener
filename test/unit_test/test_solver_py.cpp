@@ -253,6 +253,19 @@ TEST_F(Solver_Py_Test, Multi_Line_Match) {
 }
 
 // NOLINTNEXTLINE
+TEST_F(Solver_Py_Test, Comma_Separated_Match) {
+  auto s = make_shared<MockSolver_Py>();
+  auto d = make_shared<Mock_Statement_Detector>(s);
+
+  string statement = "import xxx,yyy";
+  stringstream sstream(statement);
+
+  EXPECT_CALL(*s, add_edge(_, _, _, _)).Times(2);
+  d->call_process_stream(sstream, "id");
+  d->wait_for_workers();
+}
+
+// NOLINTNEXTLINE
 TEST_F(Solver_Py_Test, From_XXX_Import_YYY_No_Dots) {
     string s = "xxx import yyy";
 
