@@ -68,12 +68,10 @@ void Solver_Py::add_edge(const string &src_path,
                              << ", idx = " << idx << ", line_no = " << line_no;
 
   if (boost::contains(statement, "*")) return; // Import * is not supported yet
-
   // from (x import y)
   if (idx == 1){
 
     if (boost::contains(statement, ",")){
-
       std::string before_import = get_first_substring(statement, " ");
       std::string after_import = get_final_substring(statement, " ");
       vector<string> comma_separated_statements;

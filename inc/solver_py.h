@@ -89,7 +89,41 @@ class Solver_Py : public Solver {
   virtual void insert_edge(const std::string &src_path,
                            const std::string &dst_path, const std::string &name,
                            unsigned int line_no);
+  /// @brief Returns the final substring separated by a delimiter.
+  /// @param statement The statement to extract substring from.
+  /// @param delimiter The final delimiter from which to splitting.
+  /// @return The substring between the final delimiter and end of string.
+  /// @pre String contains delimiter.
+  virtual std::string get_final_substring(const std::string &statement,
+                                  const std::string &delimiter);
 
+  /// @brief Gets the first substring before the first occurrence
+  /// of a delimiter.
+  /// @param statement The string to substring.
+  /// @param delimiter The delimiter to split string by.
+  /// @return String with everything before delimiter in statement.
+  /// @pre statement is not an empty string.
+  virtual std::string get_first_substring(const std::string &statement,
+                                  const std::string &delimiter);
+
+  /// @brief Converts dots in a string to slashes used in paths
+  /// in the current system and returns a copy.
+  /// @param statement The statement to have this occur in.
+  /// @return Copy of statement where the modification has been done.
+  virtual std::string dots_to_system_slash(const std::string &statement);
+
+  virtual std::string from_import_statement_to_path(const std::string &statement);
+
+  virtual std::string import_statement_to_path(const std::string &statement);
+
+  virtual unsigned int how_many_directories_above(const std::string &statement);
+
+  virtual bool begins_with_dot(const std::string &statement);
+
+  virtual std::string without_prepended_dots(const std::string &statement);
+  virtual std::string test() {
+                                return std::string("Hello");
+                            };
  private:
   /// @brief Search path for include statements.
   std::vector<std::string> include_paths;
@@ -102,39 +136,6 @@ class Solver_Py : public Solver {
 
   /// @brief Regex to match everything past the first dot(s) in a string
   std::string past_dot_regex = "^[ \\t]*[.]+(.*)$";
-
-  /// @brief Returns the final substring separated by a delimiter.
-  /// @param statement The statement to extract substring from.
-  /// @param delimiter The final delimiter from which to splitting.
-  /// @return The substring between the final delimiter and end of string.
-  /// @pre String contains delimiter.
-  std::string get_final_substring(const std::string &statement,
-                                  const std::string &delimiter);
-
-  /// @brief Gets the first substring before the first occurrence
-  /// of a delimiter.
-  /// @param statement The string to substring.
-  /// @param delimiter The delimiter to split string by.
-  /// @return String with everything before delimiter in statement.
-  /// @pre statement is not an empty string.
-  std::string get_first_substring(const std::string &statement,
-                                  const std::string &delimiter);
-
-  /// @brief Converts dots in a string to slashes used in paths
-  /// in the current system and returns a copy.
-  /// @param statement The statement to have this occur in.
-  /// @return Copy of statement where the modification has been done.
-  std::string dots_to_system_slash(const std::string &statement);
-
-  std::string from_import_statement_to_path(const std::string &statement);
-
-  std::string import_statement_to_path(const std::string &statement);
-
-  unsigned int how_many_directories_above(const std::string &statement);
-
-  bool begins_with_dot(const std::string &statement);
-
-  std::string without_prepended_dots(const std::string &statement);
 
 };  // class Solver_Py
 
