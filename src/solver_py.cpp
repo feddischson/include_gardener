@@ -68,16 +68,6 @@ void Solver_Py::add_edge(const string &src_path,
   BOOST_LOG_TRIVIAL(trace) << "add_edge: " << src_path << " -> " << statement
                              << ", idx = " << idx << ", line_no = " << line_no;
 
-<<<<<<< HEAD
-  if (boost::contains(statement, "*")) return; // Import * is not supported yet
-  // from (x import y)
-  if (idx == FROM_IMPORT){
-
-    if (boost::contains(statement, ",")){
-      std::string before_import = get_first_substring(statement, " ");
-      std::string after_import = get_final_substring(statement, " ");
-      vector<string> comma_separated_statements;
-=======
   std::string import_line_to_path = "";
 
   if (boost::contains(statement, "*")){ // Note: Imports with * are not yet supported
@@ -93,7 +83,6 @@ void Solver_Py::add_edge(const string &src_path,
 
       std::string before_import = get_first_substring(import_line_to_path, " ");
       std::string after_import = get_final_substring(import_line_to_path, " ");
->>>>>>> remove-add-edges
 
       vector<string> comma_separated_statements;
       boost::split(comma_separated_statements, after_import, [](char c){ return c == ','; });
@@ -106,14 +95,8 @@ void Solver_Py::add_edge(const string &src_path,
 
       return;
 
-<<<<<<< HEAD
-  // import (x)
-  } else if (idx == IMPORT){
-    if (boost::contains(statement, ",")){
-=======
     // import (x), handle comma separated items separately
     } else if (idx == py_import_regex_idx && boost::contains(import_line_to_path, ",")){
->>>>>>> remove-add-edges
       vector<string> comma_separated_statements;
       boost::split(comma_separated_statements, statement, [](char c){ return c == ','; });
 
@@ -196,24 +179,32 @@ std::string Solver_Py::dots_to_system_slash(const std::string &statement)
 
 std::string Solver_Py::from_import_statement_to_path(const std::string &statement)
 {
-  std::string from_field = get_first_substring(statement, " ");
-  std::string import_field = get_final_substring(statement, " ");
-  boost::erase_all(from_field, " ");
+  std::string as_statements_removed = remove_as_statements(statement);
 
-  std::string path_concatenation = dots_to_system_slash(
-    from_field
-    + boost::filesystem::path::preferred_separator
-    + import_field);
+  std::string from_field;
+  std::string import_field;
+  std::string path_concatenation;
 
-  boost::erase_all(path_concatenation, " ");
-  return path_concatenation;
+  if (boost::contains(as_statements_removed, " ")){
+    from_field = get_first_substring(as_statements_removed, " "); // Before import
+    import_field = get_final_substring(as_statements_removed, " "); // After import
+    boost::erase_all(from_field, " ");
+    boost::erase_all(import_field, " ");
+    path_concatenation = dots_to_system_slash(
+          from_field
+          + boost::filesystem::path::preferred_separator
+          + import_field);
+    return path_concatenation;
+  } else {
+    return dots_to_system_slash(as_statements_removed);
+  }
 }
 
 std::string Solver_Py::import_statement_to_path(const std::string &statement){
-  std::string import_field = statement;
+  std::string as_statements_removed = remove_as_statements(statement);
   std::string path_concatenation = dots_to_system_slash(
               boost::filesystem::path::preferred_separator
-                                + import_field);
+                                + as_statements_removed);
   boost::erase_all(path_concatenation, " ");
   return path_concatenation;
 }
@@ -317,13 +308,17 @@ std::string Solver_Py::get_first_substring(const std::string &statement, const s
     std::string str_copy = statement.substr(0, pos_of_first_delim);
     return str_copy;
   }
-  return statement;
+  return "";
 }
 
 std::string Solver_Py::get_final_substring(const std::string &statement,
                                            const std::string &delimiter){
   std::string::size_type pos_of_last_delim = statement.find_last_of(delimiter);
-  return statement.substr(pos_of_last_delim+1);
+  if (pos_of_last_delim != std::string::npos){
+    std::string str_copy = statement.substr(pos_of_last_delim + 1);
+    return str_copy;
+  }
+  return "";
 }
 }  // namespace INCLUDE_GARDENER
 

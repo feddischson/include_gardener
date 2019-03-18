@@ -29,8 +29,6 @@
 
 namespace INCLUDE_GARDENER {
 
-#define BOOST_REGEX_MATCH_EXTRA
-
 /// @brief Solver class for Python language.
 /// @details
 ///   To be implemented.
@@ -92,22 +90,6 @@ class Solver_Py : public Solver {
                            const std::string &dst_path, const std::string &name,
                            unsigned int line_no);
 
- private:
-  /// @brief Search path for include statements.
-  const std::vector<std::string> include_paths;
-
-  /// @brief Legal file extensions for Python script files.
-  const std::vector<std::string> file_extensions{"py", "pyw", "py3"};
-
-  /// @brief Regex to match the first dot(s) in a string
-  const std::string dot_regex = "^[ \\t]*([.]+).*$";
-
-  /// @brief Regex to match everything past the first dot(s) in a string
-  const std::string past_dot_regex = "^[ \\t]*[.]+(.*)$";
-
-  /// @brief Regex to match " as " statements.
-  const std::string as_detection_regex = "( as [^,\\s]+)(?:,.*( as [^,\\s]+))?";
-
   /// @brief Returns the final substring separated by a delimiter.
   /// @param statement The statement to extract substring from.
   /// @param delimiter The final delimiter char from which to begin splitting.
@@ -147,16 +129,19 @@ class Solver_Py : public Solver {
 
  private:
   /// @brief Search path for include statements.
-  std::vector<std::string> include_paths;
+  const std::vector<std::string> include_paths;
 
   /// @brief Legal file extensions for Python script files.
-  std::vector<std::string> file_extensions{"py", "pyw", "py3"};
+  const std::vector<std::string> file_extensions{"py", "pyw", "py3"};
 
   /// @brief Regex to match the first dot(s) in a string
-  std::string dot_regex = "^[ \\t]*([.]+).*$";
+  const std::string dot_regex = "^[ \\t]*([.]+).*$";
 
   /// @brief Regex to match everything past the first dot(s) in a string
-  std::string past_dot_regex = "^[ \\t]*[.]+(.*)$";
+  const std::string past_dot_regex = "^[ \\t]*[.]+(.*)$";
+
+  /// @brief Regex to match " as " statements.
+  const std::string as_detection_regex = "( as [^,\\s]+)(?:,.*( as [^,\\s]+))?";
 
   // Enum naming the different import types (corresponds to regex index)
   enum Py_Regex { IMPORT = 0, FROM_IMPORT };

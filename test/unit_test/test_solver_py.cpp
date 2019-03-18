@@ -63,6 +63,7 @@ public:
     using Solver_Py::how_many_directories_above;
     using Solver_Py::begins_with_dot;
     using Solver_Py::without_prepended_dots;
+    using Solver_Py::remove_as_statements;
 };
 
 class MockSolver_Py : public Solver_Py {
@@ -78,12 +79,11 @@ public:
     MockSolver_Py2() = default;
 
     MOCK_METHOD1(from_import_statement_to_path, string(const std::string &statement));
-
     MOCK_METHOD1(import_statement_to_path, string(const std::string &statement));
-
     MOCK_METHOD1(how_many_directories_above, unsigned int(const std::string &statement));
     MOCK_METHOD1(begins_with_dot, bool(const std::string &statement));
     MOCK_METHOD1(without_prepended_dots, string(const std::string &statement));
+    MOCK_METHOD1(remove_as_statements, string(const std::string &statement));
 
     void insert_edge(const std::string &,
                                 const std::string &,
@@ -113,26 +113,39 @@ TEST_F(Solver_Py_Test, GetFirstLastSubstring) {
     EXPECT_THAT("A string with", StrEq(get_first_substring(s,",")));
     EXPECT_THAT("A string", StrNe(get_first_substring(s,",")));
     EXPECT_THAT("A string with, some. kind", StrEq(get_first_substring(s,":")));
+    EXPECT_THAT("", StrEq(get_first_substring(s,"^")));  // ^ does not exist in string
 
     EXPECT_THAT(" delimeter", StrEq(get_final_substring(s,"-")));
     EXPECT_THAT("delimeter", StrNe(get_final_substring(s,"-")));
     EXPECT_THAT(" - delimeter", StrEq(get_final_substring(s,":")));
-
+    EXPECT_THAT("", StrEq(get_final_substring(s,"^"))); // ^ does not exist in string
 }
 
 TEST_F(Solver_Py_Test, Dots_To_Slash) {
     const string sep(1, boost::filesystem::path::preferred_separator);
-    string s = "string.with.dots";
-    EXPECT_THAT(dots_to_system_slash(s),HasSubstr(sep));
-    EXPECT_THAT(dots_to_system_slash(s),Not(HasSubstr(".")));
+    string input = "string.with.dots";
+    string expected = "string" + sep + "with" + sep + "dots";
+    string output = dots_to_system_slash(input);
+    EXPECT_THAT(output, HasSubstr(sep));
+    EXPECT_THAT(output, Not(HasSubstr(".")));
+    EXPECT_THAT(output, expected);
+}
 
-    EXPECT_THAT("string/with/dots", StrEq(dots_to_system_slash(s)));
+
+TEST_F(Solver_Py_Test, Dots_To_Slash_2) {
+    const string sep(1, boost::filesystem::path::preferred_separator);
+    string input = "string    .    with.   dots";
+    string expected = "string    " + sep + "    with" + sep + "   dots";
+    string output = dots_to_system_slash(input);
+    EXPECT_THAT(output, HasSubstr(sep));
+    EXPECT_THAT(output, Not(HasSubstr(".")));
+    EXPECT_THAT(output, expected);
 }
 
 TEST_F(Solver_Py_Test, Import_To_Path) {
     const string sep(1, boost::filesystem::path::preferred_separator);
-    // The "from x import y"-regex returns result in this form
 
+    // The "from x import y"-regex returns result in this form
     string input = "foo.bar import baz";
     string expected = "foo" + sep + "bar" + sep + "baz";
     string output = from_import_statement_to_path(input);
@@ -140,6 +153,7 @@ TEST_F(Solver_Py_Test, Import_To_Path) {
     EXPECT_THAT(output, HasSubstr(sep));
     EXPECT_THAT(output, Not(HasSubstr(".")));
     EXPECT_THAT(output, Not(HasSubstr(" ")));
+    ASSERT_EQ(output.size(), 11);
     EXPECT_THAT(expected, StrEq(output));
 }
 
@@ -152,8 +166,7 @@ TEST_F(Solver_Py_Test, Import_As_To_Path) {
     EXPECT_THAT(output, HasSubstr(sep));
     EXPECT_THAT(output, Not(HasSubstr(".")));
     EXPECT_THAT(output, Not(HasSubstr(" ")));
-
-    EXPECT_THAT("foo/bar", StrEq(import_statement_to_path(s)));
+    EXPECT_THAT(output, expected);
 }
 
 TEST_F(Solver_Py_Test, Directories_Above) {
