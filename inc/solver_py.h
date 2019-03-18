@@ -29,6 +29,8 @@
 
 namespace INCLUDE_GARDENER {
 
+#define BOOST_REGEX_MATCH_EXTRA
+
 /// @brief Solver class for Python language.
 /// @details
 ///   To be implemented.
@@ -89,11 +91,29 @@ class Solver_Py : public Solver {
   virtual void insert_edge(const std::string &src_path,
                            const std::string &dst_path, const std::string &name,
                            unsigned int line_no);
+
+ private:
+  /// @brief Search path for include statements.
+  const std::vector<std::string> include_paths;
+
+  /// @brief Legal file extensions for Python script files.
+  const std::vector<std::string> file_extensions{"py", "pyw", "py3"};
+
+  /// @brief Regex to match the first dot(s) in a string
+  const std::string dot_regex = "^[ \\t]*([.]+).*$";
+
+  /// @brief Regex to match everything past the first dot(s) in a string
+  const std::string past_dot_regex = "^[ \\t]*[.]+(.*)$";
+
+  /// @brief Regex to match " as " statements.
+  const std::string as_detection_regex = "( as [^,\\s]+)(?:,.*( as [^,\\s]+))?";
+
   /// @brief Returns the final substring separated by a delimiter.
   /// @param statement The statement to extract substring from.
-  /// @param delimiter The final delimiter from which to splitting.
+  /// @param delimiter The final delimiter char from which to begin splitting.
   /// @return The substring between the final delimiter and end of string.
   /// @pre String contains delimiter.
+  /// @pre Delimiter is one character.
   virtual std::string get_final_substring(const std::string &statement,
                                   const std::string &delimiter);
 
@@ -103,6 +123,7 @@ class Solver_Py : public Solver {
   /// @param delimiter The delimiter to split string by.
   /// @return String with everything before delimiter in statement.
   /// @pre statement is not an empty string.
+  /// @pre Delimiter is one character.
   virtual std::string get_first_substring(const std::string &statement,
                                   const std::string &delimiter);
 
@@ -121,9 +142,9 @@ class Solver_Py : public Solver {
   virtual bool begins_with_dot(const std::string &statement);
 
   virtual std::string without_prepended_dots(const std::string &statement);
-  virtual std::string test() {
-                                return std::string("Hello");
-                            };
+
+  virtual std::string remove_as_statements(const std::string &statement);
+
  private:
   /// @brief Search path for include statements.
   std::vector<std::string> include_paths;

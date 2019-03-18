@@ -131,19 +131,27 @@ TEST_F(Solver_Py_Test, Dots_To_Slash) {
 
 TEST_F(Solver_Py_Test, Import_To_Path) {
     const string sep(1, boost::filesystem::path::preferred_separator);
-    // TODO: should it really be from ... import ... ??
-    string s = "foo.bar import baz";
-    EXPECT_THAT(from_import_statement_to_path(s),HasSubstr(sep));
-    EXPECT_THAT(from_import_statement_to_path(s),Not(HasSubstr(".")));
+    // The "from x import y"-regex returns result in this form
 
-    EXPECT_THAT("foo/bar/baz", StrEq(from_import_statement_to_path(s)));
+    string input = "foo.bar import baz";
+    string expected = "foo" + sep + "bar" + sep + "baz";
+    string output = from_import_statement_to_path(input);
+
+    EXPECT_THAT(output, HasSubstr(sep));
+    EXPECT_THAT(output, Not(HasSubstr(".")));
+    EXPECT_THAT(output, Not(HasSubstr(" ")));
+    EXPECT_THAT(expected, StrEq(output));
 }
 
 TEST_F(Solver_Py_Test, Import_As_To_Path) {
     const string sep(1, boost::filesystem::path::preferred_separator);
-    string s = "foo.bar as baz";
-    EXPECT_THAT(import_statement_to_path(s),HasSubstr(sep));
-    EXPECT_THAT(import_statement_to_path(s),Not(HasSubstr(".")));
+    string input = "foo.bar as baz";
+    string expected = "foo" + sep + "bar";
+    string output = from_import_statement_to_path(input);
+
+    EXPECT_THAT(output, HasSubstr(sep));
+    EXPECT_THAT(output, Not(HasSubstr(".")));
+    EXPECT_THAT(output, Not(HasSubstr(" ")));
 
     EXPECT_THAT("foo/bar", StrEq(import_statement_to_path(s)));
 }
@@ -156,7 +164,6 @@ TEST_F(Solver_Py_Test, Directories_Above) {
     EXPECT_EQ(0, how_many_directories_above(none));
     EXPECT_EQ(1, how_many_directories_above(one));
     EXPECT_EQ(20, how_many_directories_above(twenty));
-
 }
 
 TEST_F(Solver_Py_Test, Starts_With_Dot) {
