@@ -56,36 +56,36 @@ using testing::_;
 
 class Solver_Py_Test : public ::testing::Test, public Solver_Py {
 public:
-    using Solver_Py::get_first_substring;
-    using Solver_Py::dots_to_system_slash;
-    using Solver_Py::from_import_statement_to_path;
-    using Solver_Py::import_statement_to_path;
-    using Solver_Py::how_many_directories_above;
-    using Solver_Py::begins_with_dot;
-    using Solver_Py::without_prepended_dots;
-    using Solver_Py::remove_as_statements;
+  using Solver_Py::get_first_substring;
+  using Solver_Py::dots_to_system_slash;
+  using Solver_Py::from_import_statement_to_path;
+  using Solver_Py::import_statement_to_path;
+  using Solver_Py::how_many_directories_above;
+  using Solver_Py::begins_with_dot;
+  using Solver_Py::without_prepended_dots;
+  using Solver_Py::remove_as_statements;
 };
 
 class MockSolver_Py : public Solver_Py {
 public:
-    MockSolver_Py() = default;
-    MOCK_METHOD4(add_edge, void(const string &, const string &, unsigned int,
+  MockSolver_Py() = default;
+  MOCK_METHOD4(add_edge, void(const string &, const string &, unsigned int,
                                 unsigned int));
 };
 
 // For testing Solver_Py specific functions
 class MockSolver_Py2 : public Solver_Py {
 public:
-    MockSolver_Py2() = default;
+  MockSolver_Py2() = default;
 
-    MOCK_METHOD1(from_import_statement_to_path, string(const std::string &statement));
-    MOCK_METHOD1(import_statement_to_path, string(const std::string &statement));
-    MOCK_METHOD1(how_many_directories_above, unsigned int(const std::string &statement));
-    MOCK_METHOD1(begins_with_dot, bool(const std::string &statement));
-    MOCK_METHOD1(without_prepended_dots, string(const std::string &statement));
-    MOCK_METHOD1(remove_as_statements, string(const std::string &statement));
+  MOCK_METHOD1(from_import_statement_to_path, string(const std::string &statement));
+  MOCK_METHOD1(import_statement_to_path, string(const std::string &statement));
+  MOCK_METHOD1(how_many_directories_above, unsigned int(const std::string &statement));
+  MOCK_METHOD1(begins_with_dot, bool(const std::string &statement));
+  MOCK_METHOD1(without_prepended_dots, string(const std::string &statement));
+  MOCK_METHOD1(remove_as_statements, string(const std::string &statement));
 
-    void insert_edge(const std::string &,
+  void insert_edge(const std::string &,
                                 const std::string &,
                                 const std::string &,
                                 unsigned int) {}
@@ -107,97 +107,96 @@ class Mock_Statement_Detector : public Statement_Detector {
 
 TEST_F(Solver_Py_Test, GetFirstLastSubstring) {
 
-    // Asserts that the first / last substring is returned
-    string s = "A string with, some. kind: of: - delimeter";
+  // Asserts that the first / last substring is returned
+  string s = "A string with, some. kind: of: - delimeter";
 
-    EXPECT_THAT("A string with", StrEq(get_first_substring(s,",")));
-    EXPECT_THAT("A string", StrNe(get_first_substring(s,",")));
-    EXPECT_THAT("A string with, some. kind", StrEq(get_first_substring(s,":")));
-    EXPECT_THAT("", StrEq(get_first_substring(s,"^")));  // ^ does not exist in string
+  EXPECT_THAT("A string with", StrEq(get_first_substring(s,",")));
+  EXPECT_THAT("A string", StrNe(get_first_substring(s,",")));
+  EXPECT_THAT("A string with, some. kind", StrEq(get_first_substring(s,":")));
+  EXPECT_THAT("", StrEq(get_first_substring(s,"^")));  // ^ does not exist in string
 
-    EXPECT_THAT(" delimeter", StrEq(get_final_substring(s,"-")));
-    EXPECT_THAT("delimeter", StrNe(get_final_substring(s,"-")));
-    EXPECT_THAT(" - delimeter", StrEq(get_final_substring(s,":")));
-    EXPECT_THAT("", StrEq(get_final_substring(s,"^"))); // ^ does not exist in string
+  EXPECT_THAT(" delimeter", StrEq(get_final_substring(s,"-")));
+  EXPECT_THAT("delimeter", StrNe(get_final_substring(s,"-")));
+  EXPECT_THAT(" - delimeter", StrEq(get_final_substring(s,":")));
+  EXPECT_THAT("", StrEq(get_final_substring(s,"^"))); // ^ does not exist in string
 }
 
 TEST_F(Solver_Py_Test, Dots_To_Slash) {
-    const string sep(1, boost::filesystem::path::preferred_separator);
-    string input = "string.with.dots";
-    string expected = "string" + sep + "with" + sep + "dots";
-    string output = dots_to_system_slash(input);
-    EXPECT_THAT(output, HasSubstr(sep));
-    EXPECT_THAT(output, Not(HasSubstr(".")));
-    EXPECT_THAT(output, expected);
+  const string sep(1, boost::filesystem::path::preferred_separator);
+  string input = "string.with.dots";
+  string expected = "string" + sep + "with" + sep + "dots";
+  string output = dots_to_system_slash(input);
+  EXPECT_THAT(output, HasSubstr(sep));
+  EXPECT_THAT(output, Not(HasSubstr(".")));
+  EXPECT_THAT(output, expected);
 }
 
 
 TEST_F(Solver_Py_Test, Dots_To_Slash_2) {
-    const string sep(1, boost::filesystem::path::preferred_separator);
-    string input = "string    .    with.   dots";
-    string expected = "string    " + sep + "    with" + sep + "   dots";
-    string output = dots_to_system_slash(input);
-    EXPECT_THAT(output, HasSubstr(sep));
-    EXPECT_THAT(output, Not(HasSubstr(".")));
-    EXPECT_THAT(output, expected);
+  const string sep(1, boost::filesystem::path::preferred_separator);
+  string input = "string    .    with.   dots";
+  string expected = "string    " + sep + "    with" + sep + "   dots";
+  string output = dots_to_system_slash(input);
+  EXPECT_THAT(output, HasSubstr(sep));
+  EXPECT_THAT(output, Not(HasSubstr(".")));
+  EXPECT_THAT(output, expected);
 }
 
 TEST_F(Solver_Py_Test, Import_To_Path) {
-    const string sep(1, boost::filesystem::path::preferred_separator);
+  const string sep(1, boost::filesystem::path::preferred_separator);
 
-    // The "from x import y"-regex returns result in this form
-    string input = "foo.bar import baz";
-    string expected = "foo" + sep + "bar" + sep + "baz";
-    string output = from_import_statement_to_path(input);
+  // The "from x import y"-regex returns result in below form
+  string input = "foo.bar import baz";
+  string expected = "foo" + sep + "bar" + sep + "baz";
+  string output = from_import_statement_to_path(input);
 
-    EXPECT_THAT(output, HasSubstr(sep));
-    EXPECT_THAT(output, Not(HasSubstr(".")));
-    EXPECT_THAT(output, Not(HasSubstr(" ")));
-    ASSERT_EQ(output.size(), 11);
-    EXPECT_THAT(expected, StrEq(output));
+  EXPECT_THAT(output, HasSubstr(sep));
+  EXPECT_THAT(output, Not(HasSubstr(".")));
+  EXPECT_THAT(output, Not(HasSubstr(" ")));
+  ASSERT_EQ(output.size(), 11);
+  EXPECT_THAT(expected, StrEq(output));
 }
 
 TEST_F(Solver_Py_Test, Import_As_To_Path) {
-    const string sep(1, boost::filesystem::path::preferred_separator);
-    string input = "foo.bar as baz";
-    string expected = "foo" + sep + "bar";
-    string output = from_import_statement_to_path(input);
+  const string sep(1, boost::filesystem::path::preferred_separator);
+  string input = "foo.bar as baz";
+  string expected = "foo" + sep + "bar";
+  string output = from_import_statement_to_path(input);
 
-    EXPECT_THAT(output, HasSubstr(sep));
-    EXPECT_THAT(output, Not(HasSubstr(".")));
-    EXPECT_THAT(output, Not(HasSubstr(" ")));
-    EXPECT_THAT(output, expected);
+  EXPECT_THAT(output, HasSubstr(sep));
+  EXPECT_THAT(output, Not(HasSubstr(".")));
+  EXPECT_THAT(output, Not(HasSubstr(" ")));
+  EXPECT_THAT(output, expected);
 }
 
 TEST_F(Solver_Py_Test, Directories_Above) {
-    const string none = " .no.dir.above";
-    const string one = " ..one.dir.above";
-    const string twenty = " .....................twenty.dirs.above";
+  const string none = " .no.dir.above";
+  const string one = " ..one.dir.above";
+  const string twenty = " .....................twenty.dirs.above";
 
-    EXPECT_EQ(0, how_many_directories_above(none));
-    EXPECT_EQ(1, how_many_directories_above(one));
-    EXPECT_EQ(20, how_many_directories_above(twenty));
+  EXPECT_EQ(0, how_many_directories_above(none));
+  EXPECT_EQ(1, how_many_directories_above(one));
+  EXPECT_EQ(20, how_many_directories_above(twenty));
 }
 
 TEST_F(Solver_Py_Test, Starts_With_Dot) {
-    const string dot_beginning = "    .yes.it.does";
-    const string dot_beginning_too = ".dot";
-    const string no_dot_beginning = "no.dots";
+  const string dot_beginning = "    .yes.it.does";
+  const string dot_beginning_too = ".dot";
+  const string no_dot_beginning = "no.dots";
 
-    EXPECT_TRUE(begins_with_dot(dot_beginning));
-    EXPECT_TRUE(begins_with_dot(dot_beginning_too));
-    EXPECT_FALSE(begins_with_dot(no_dot_beginning));
+  EXPECT_TRUE(begins_with_dot(dot_beginning));
+  EXPECT_TRUE(begins_with_dot(dot_beginning_too));
+  EXPECT_FALSE(begins_with_dot(no_dot_beginning));
 }
 
 TEST_F(Solver_Py_Test, Remove_Starting_Dots) {
-    const string dot_beginning = "....dots";
-    const string dot_beginning_too = ".dot";
-    const string no_dot_beginning = "no.dots";
+  const string dot_beginning = "....dots";
+  const string dot_beginning_too = ".dot";
+  const string no_dot_beginning = "no.dots";
 
-    EXPECT_THAT("dots", StrEq(without_prepended_dots(dot_beginning)));
-    EXPECT_THAT("dot", StrEq(without_prepended_dots(dot_beginning_too)));
-    EXPECT_THAT("no.dots", StrEq(without_prepended_dots(no_dot_beginning)));
-
+  EXPECT_THAT("dots", StrEq(without_prepended_dots(dot_beginning)));
+  EXPECT_THAT("dot", StrEq(without_prepended_dots(dot_beginning_too)));
+  EXPECT_THAT("no.dots", StrEq(without_prepended_dots(no_dot_beginning)));
 }
 // NOLINTNEXTLINE
 TEST_F(Solver_Py_Test, empty_initialization) {
@@ -280,58 +279,40 @@ TEST_F(Solver_Py_Test, Comma_Separated_Match) {
   string statement = "import xxx,yyy";
   stringstream sstream(statement);
 
-  EXPECT_CALL(*s, add_edge(_, _, _, _)).Times(2);
+  // Is called twice recursively in add_edge
+  EXPECT_CALL(*s, add_edge(_, _, _, _)).Times(1);
   d->call_process_stream(sstream, "id");
   d->wait_for_workers();
 }
 
 // NOLINTNEXTLINE
 TEST_F(Solver_Py_Test, From_XXX_Import_YYY_No_Dots) {
-    string s = "xxx import yyy";
-
-    EXPECT_THAT("xxx/yyy", StrEq(from_import_statement_to_path(s)));
+  string s = "xxx import yyy";
+  EXPECT_THAT("xxx/yyy", StrEq(from_import_statement_to_path(s)));
 }
 
 // NOLINTNEXTLINE
 TEST_F(Solver_Py_Test, From_XXX_Import_YYY_Three_Dots) {
-    string s = "...xxx import yyy";
-
-    EXPECT_THAT("../../xxx/yyy", StrEq(from_import_statement_to_path(s)));
+  string s = "...xxx import yyy";
+  EXPECT_THAT("../../xxx/yyy", StrEq(from_import_statement_to_path(s)));
 }
 
 // NOLINTNEXTLINE
 TEST_F(Solver_Py_Test, From_XXX_Import_YYY_As_ZZZ_No_Dots) {
-    string s = "xxx import yyy as zzz";
-
-    EXPECT_THAT("xxx/yyy", StrEq(from_import_statement_to_path(s)));
+  string s = "xxx import yyy as zzz";
+  EXPECT_THAT("xxx/yyy", StrEq(from_import_statement_to_path(s)));
 }
 
 // NOLINTNEXTLINE
 TEST_F(Solver_Py_Test, From_XXX_Import_YYY_As_ZZZ_Three_Dots) {
-    string s = "...xxx import yyy as zzz";
-
-    EXPECT_THAT("../../xxx/yyy", StrEq(from_import_statement_to_path(s)));
+  string s = "...xxx import yyy as zzz";
+  EXPECT_THAT("../../xxx/yyy", StrEq(from_import_statement_to_path(s)));
 }
 
 // NOLINTNEXTLINE
 TEST_F(Solver_Py_Test, Import_XXX_Dot_YYY_Dot_ZZZ) {
-    string s = "xxx.yyy.zzz";
-
-    EXPECT_THAT("xxx/yyy/zzz", StrEq(import_statement_to_path(s)));
-}
-
-// NOLINTNEXTLINE
-TEST_F(Solver_Py_Test, Import_XXX_From_YYY) {
-    string s = "yyy from zzz";
-
-    EXPECT_THAT("zzz/yyy", StrEq(import_statement_to_path(s)));
-}
-
-// NOLINTNEXTLINE
-TEST_F(Solver_Py_Test, Import_XXX_From_YYY_As_ZZZ) {
-    string s = "yyy from zzz as xxx";
-
-    EXPECT_THAT("zzz/yyy", StrEq(import_statement_to_path(s)));
+  string s = "xxx.yyy.zzz";
+  EXPECT_THAT("xxx/yyy/zzz", StrEq(import_statement_to_path(s)));
 }
 
 // vim: filetype=cpp et ts=2 sw=2 sts=2

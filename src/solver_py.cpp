@@ -202,9 +202,7 @@ std::string Solver_Py::from_import_statement_to_path(const std::string &statemen
 
 std::string Solver_Py::import_statement_to_path(const std::string &statement){
   std::string as_statements_removed = remove_as_statements(statement);
-  std::string path_concatenation = dots_to_system_slash(
-              boost::filesystem::path::preferred_separator
-                                + as_statements_removed);
+  std::string path_concatenation = dots_to_system_slash(as_statements_removed);
   boost::erase_all(path_concatenation, " ");
   return path_concatenation;
 }
