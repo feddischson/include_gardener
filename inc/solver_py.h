@@ -31,7 +31,25 @@ namespace INCLUDE_GARDENER {
 
 /// @brief Solver class for Python language.
 /// @details
-///   To be implemented.
+///   An instance of this class attempts to convert
+///   Python import strings to paths that are inserted
+///   in the internal Graph with import-relations
+///   between the files.
+///
+///   The class should support relative imports that
+///   are prepended with dots (ex. import ..helloworld).
+///   It should also support imports on the following forms:
+///
+///   1. import x
+///   2. from x import y
+///
+///   Both work even if as-statements are included,
+///   but these are removed when a path is created.
+///
+///   1. x can contain comma-separated items.
+///      x can contain prepended dots.
+///   2. y can contain comma-separated items.
+///      x can contain prepended dots.
 
 class Solver_Py : public Solver {
 
@@ -109,22 +127,43 @@ class Solver_Py : public Solver {
   virtual std::string get_first_substring(const std::string &statement,
                                   const std::string &delimiter);
 
-  /// @brief Converts dots in a string to slashes used in paths
-  /// in the current system and returns a copy.
-  /// @param statement The statement to have this occur in.
-  /// @return Copy of statement where the modification has been done.
+  /// @brief Converts dots in a string to system slashes.
+  /// @param statement The statement to copy and modify.
+  /// @return String with dots converted to system slashes.
+  /// @note The slashes that should be used are gotten from
+  /// boost::filesystem::path::preferred_separator.
   virtual std::string dots_to_system_slash(const std::string &statement);
 
+  /// @brief Converts a Python "(from) x import y" statement to
+  /// a system path string.
+  /// @param statement The statement to convert.
+  /// @return String with converted statement as system path.
   virtual std::string from_import_statement_to_path(const std::string &statement);
 
+  /// @brief Converts a Python "import (x)" statement to a
+  /// system path string.
+  /// @param statement The statement to convert.
+  /// @return String with converted statement as system path.
   virtual std::string import_statement_to_path(const std::string &statement);
 
+  /// @brief Counts how many dots a string is prepended with.
+  /// @param statement The statement to test.
+  /// @return How many dots the string was prepended with.
   virtual unsigned int how_many_directories_above(const std::string &statement);
 
+  /// @brief Checks if a string begins with a dot.
+  /// @param statement The statement to test.
+  /// @return If the statement begins with a dot.
   virtual bool begins_with_dot(const std::string &statement);
 
+  /// @brief Removes prepended dots from string.
+  /// @param statement to remove dots from.
+  /// @return The modified string.
   virtual std::string without_prepended_dots(const std::string &statement);
 
+  /// @brief Removes " as x" statements from Python import string.
+  /// @param statement to remove " as "-statements from.
+  /// @return The modified string.
   virtual std::string remove_as_statements(const std::string &statement);
 
  private:
@@ -144,7 +183,7 @@ class Solver_Py : public Solver {
   const std::string as_detection_regex = "( as [^,\\s]+)(?:,.*( as [^,\\s]+))?";
 
   // Enum naming the different import types (corresponds to regex index)
-  enum Py_Regex { IMPORT = 0, FROM_IMPORT };
+  enum Py_Regex { IMPORT = 0, FROM_IMPORT, HAS_DONE_FIRST_PASS = 99 };
 
 };  // class Solver_Py
 

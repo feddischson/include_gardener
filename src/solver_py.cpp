@@ -38,10 +38,6 @@ using std::string;
 using std::unique_lock;
 using std::vector;
 
-const int py_import_regex_idx = 0;
-const int py_from_import_regex_idx = 1;
-const int has_done_first_pass = 99;
-
 vector<string> Solver_Py::get_statement_regex() const {
   vector<string> regex_str = {R"(^[ \t]*import[ \t]+((?:[.]*)[^\d\W](?:[\w,\. ])*)[ \t]*$)",
                              R"(^[ \t]*from[ \t]+([^\d\W](?:[\w\.]*)[ \t]+import[ \t]+(?:\*|[^\d\W](?:[\w,\. ]*)))[ \t]*$)"};
@@ -70,46 +66,47 @@ void Solver_Py::add_edge(const string &src_path,
 
   std::string import_line_to_path = "";
 
-  if (boost::contains(statement, "*")){ // Note: Imports with * are not yet supported
+  if (boost::contains(statement, "*")){ // Note: Imports with * are not yet fully supported
     import_line_to_path = get_first_substring(statement, " ");
-    idx = py_import_regex_idx;
+    idx = IMPORT;
   } else {
     import_line_to_path = statement;
   }
 
-  if (idx != has_done_first_pass){
-    // from (x import y), handle comma separate items separately
-    if (idx == 1 && boost::contains(import_line_to_path, ",")){
+  // Handle comma separated parts separately by calling add_edge() again
+  if (idx != HAS_DONE_FIRST_PASS && boost::contains(import_line_to_path, ",")){
+
+
+    if (idx == FROM_IMPORT && boost::contains(import_line_to_path, ",")){
 
       std::string before_import = get_first_substring(import_line_to_path, " ");
       std::string after_import = get_final_substring(import_line_to_path, " ");
 
+      // Only after " import " can you have comma separation.
       vector<string> comma_separated_statements;
       boost::split(comma_separated_statements, after_import, [](char c){ return c == ','; });
 
-      // Handle each comma-separated part separately as a package name
+      // Handle each part separately as a package name
       for (auto comma_separated_statement : comma_separated_statements){
         add_edge(src_path, before_import + "." + comma_separated_statement,
-                 has_done_first_pass, line_no);
+                 HAS_DONE_FIRST_PASS, line_no);
       }
 
       return;
 
-    // import (x), handle comma separated items separately
-    } else if (idx == py_import_regex_idx && boost::contains(import_line_to_path, ",")){
+    } else if (idx == IMPORT){
       vector<string> comma_separated_statements;
       boost::split(comma_separated_statements, statement, [](char c){ return c == ','; });
 
       for (auto comma_separated_statement: comma_separated_statements){
         add_edge(src_path, comma_separated_statement,
-               has_done_first_pass, line_no);
+               HAS_DONE_FIRST_PASS, line_no);
       }
 
       return;
     }
   }
 
-  import_line_to_path = remove_as_statements(import_line_to_path);
   path parent_directory = path(src_path).parent_path();
 
   // Relative import
@@ -204,7 +201,7 @@ std::string Solver_Py::from_import_statement_to_path(const std::string &statemen
 
     if (dirs_above > 0){
       for (auto i = 0; i < dirs_above; i++){
-        path_concatenation.insert(0, "../");
+        path_concatenation.insert(0, ".." + boost::filesystem::path::preferred_separator);
       }
     }
 
