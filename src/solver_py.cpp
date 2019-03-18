@@ -184,16 +184,30 @@ std::string Solver_Py::from_import_statement_to_path(const std::string &statemen
   std::string from_field;
   std::string import_field;
   std::string path_concatenation;
+  auto dirs_above = 0;
+
+  if (begins_with_dot(as_statements_removed)){
+    dirs_above = how_many_directories_above(as_statements_removed);
+    as_statements_removed = without_prepended_dots(as_statements_removed);
+  }
 
   if (boost::contains(as_statements_removed, " ")){
     from_field = get_first_substring(as_statements_removed, " "); // Before import
     import_field = get_final_substring(as_statements_removed, " "); // After import
     boost::erase_all(from_field, " ");
     boost::erase_all(import_field, " ");
+
     path_concatenation = dots_to_system_slash(
           from_field
           + boost::filesystem::path::preferred_separator
           + import_field);
+
+    if (dirs_above > 0){
+      for (auto i = 0; i < dirs_above; i++){
+        path_concatenation.insert(0, "../");
+      }
+    }
+
     return path_concatenation;
   } else {
     return dots_to_system_slash(as_statements_removed);
