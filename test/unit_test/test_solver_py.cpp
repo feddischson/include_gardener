@@ -29,6 +29,7 @@
 #include <gtest/gtest.h>
 
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
 #include <sstream>
 
 using INCLUDE_GARDENER::Solver_Py;
@@ -50,9 +51,12 @@ using testing::StrEq;
 using testing::StrNe;
 using testing::Not;
 using testing::HasSubstr;
+using testing::Contains;
 using testing::Ge;
 using testing::Return;
 using testing::_;
+
+using boost::filesystem::path;
 
 class Solver_Py_Test : public ::testing::Test, public Solver_Py {
 public:
@@ -122,51 +126,54 @@ TEST_F(Solver_Py_Test, GetFirstLastSubstring) {
 }
 
 TEST_F(Solver_Py_Test, Dots_To_Slash) {
-  const string sep(1, boost::filesystem::path::preferred_separator);
   string input = "string.with.dots";
-  string expected = "string" + sep + "with" + sep + "dots";
+  path expected{"string"};
+  expected /= "with";
+  expected /= "dots";
   string output = dots_to_system_slash(input);
-  EXPECT_THAT(output, HasSubstr(sep));
-  EXPECT_THAT(output, Not(HasSubstr(".")));
+  EXPECT_THAT(output, Contains(path::preferred_separator));
+  EXPECT_THAT(output, Not(Contains('.')));
   EXPECT_THAT(output, expected);
 }
 
 
 TEST_F(Solver_Py_Test, Dots_To_Slash_2) {
-  const string sep(1, boost::filesystem::path::preferred_separator);
   string input = "string    .    with.   dots";
-  string expected = "string    " + sep + "    with" + sep + "   dots";
+  path expected{"string    "};
+  expected /= "    with";
+  expected /= "   dots";
   string output = dots_to_system_slash(input);
-  EXPECT_THAT(output, HasSubstr(sep));
-  EXPECT_THAT(output, Not(HasSubstr(".")));
-  EXPECT_THAT(output, expected);
+  EXPECT_THAT(output, Contains(path::preferred_separator));
+  EXPECT_THAT(output, Not(Contains('.')));
+  EXPECT_THAT(output, StrEq(expected.string()));
 }
 
 TEST_F(Solver_Py_Test, Import_To_Path) {
-  const string sep(1, boost::filesystem::path::preferred_separator);
-
   // The "from x import y"-regex returns result in below form
   string input = "foo.bar import baz";
-  string expected = "foo" + sep + "bar" + sep + "baz";
+  path expected{"foo"};
+  expected /= "bar";
+  expected /= "baz";
+
   string output = from_import_statement_to_path(input);
 
-  EXPECT_THAT(output, HasSubstr(sep));
-  EXPECT_THAT(output, Not(HasSubstr(".")));
-  EXPECT_THAT(output, Not(HasSubstr(" ")));
+  EXPECT_THAT(output, Contains(path::preferred_separator));
+  EXPECT_THAT(output, Not(Contains('.')));
+  EXPECT_THAT(output, Not(Contains(' ')));
   ASSERT_EQ(output.size(), 11);
-  EXPECT_THAT(expected, StrEq(output));
+  EXPECT_THAT(output, StrEq(expected.string()));
 }
 
 TEST_F(Solver_Py_Test, Import_As_To_Path) {
-  const string sep(1, boost::filesystem::path::preferred_separator);
   string input = "foo.bar as baz";
-  string expected = "foo" + sep + "bar";
+  path p{"foo"};
+  p /= "bar";
   string output = from_import_statement_to_path(input);
 
-  EXPECT_THAT(output, HasSubstr(sep));
+  EXPECT_THAT(output, Contains(path::preferred_separator));
   EXPECT_THAT(output, Not(HasSubstr(".")));
   EXPECT_THAT(output, Not(HasSubstr(" ")));
-  EXPECT_THAT(output, expected);
+  EXPECT_THAT(output, p);
 }
 
 TEST_F(Solver_Py_Test, Directories_Above) {
