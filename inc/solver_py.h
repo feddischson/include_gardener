@@ -179,9 +179,6 @@ class Solver_Py : public Solver {
   /// @brief Regex to match everything past the first dot(s) in a string
   const std::string past_dot_regex = "^[ \\t]*[.]+(.*)$";
 
-  /// @brief Regex to match " as " statements.
-  const std::string as_detection_regex = "( as [^,\\s]+)(?:,.*( as [^,\\s]+))?";
-
   // Enum naming the different import types (corresponds to regex index)
   enum Py_Regex { IMPORT = 0, FROM_IMPORT, HAS_DONE_FIRST_PASS = 99 };
 

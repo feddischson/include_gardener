@@ -76,7 +76,6 @@ void Solver_Py::add_edge(const string &src_path,
   // Handle comma separated parts separately by calling add_edge() again
   if (idx != HAS_DONE_FIRST_PASS && boost::contains(import_line_to_path, ",")){
 
-
     if (idx == FROM_IMPORT && boost::contains(import_line_to_path, ",")){
 
       std::string before_import = get_first_substring(import_line_to_path, " ");
