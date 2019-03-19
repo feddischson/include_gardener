@@ -83,19 +83,19 @@ class Solver_Py : public Solver {
   void add_edge(const std::string &src_path, const std::string &statement,
                 unsigned int idx, unsigned int line_no) override;
 
-  /// @brief Returns the regex which
-  ///        detects the statements.
+  /// @brief Returns the regex which detects the import statements.
   std::vector<std::string> get_statement_regex() const override;
 
-  /// @brief Returns the regex which
-  ///        detects the files.
+  /// @brief Returns the regex which detects the files.
   std::string get_file_regex() const override;
 
   /// @brief Extracts solver-specific options (variables).
+  /// @note Not implemented yet.
   void extract_options(
       const boost::program_options::variables_map &vm) override;
 
   /// @brief Adds solver-specific options.
+  /// @note Not implemented yet.
   static void add_options(boost::program_options::options_description *options);
 
  protected:
@@ -167,9 +167,6 @@ class Solver_Py : public Solver {
   virtual std::string remove_as_statements(const std::string &statement);
 
  private:
-  /// @brief Search path for include statements.
-  const std::vector<std::string> include_paths;
-
   /// @brief Legal file extensions for Python script files.
   const std::vector<std::string> file_extensions{"py", "pyw", "py3"};
 

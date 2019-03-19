@@ -47,11 +47,11 @@ vector<string> Solver_Py::get_statement_regex() const {
 string Solver_Py::get_file_regex() const { return string(R"(^(?:.*[\/\\])?[^\d\W]\w*\.py[3w]?$)"); }
 
 void Solver_Py::add_options(po::options_description *options __attribute__((unused))) {
-
+  BOOST_LOG_TRIVIAL(trace) << "add_options in Solver_Py has not been implemented";
 }
 
 void Solver_Py::extract_options(const po::variables_map &vm __attribute__((unused))) {
-
+  BOOST_LOG_TRIVIAL(trace) << "extract_options in Solver_Py has not been implemented";
 }
 
 void Solver_Py::add_edge(const string &src_path,
@@ -146,17 +146,6 @@ void Solver_Py::add_edge(const string &src_path,
       dst_path = canonical(dst_path);
       BOOST_LOG_TRIVIAL(trace) << "   |>> Relative Edge";
       insert_edge(src_path, dst_path.string(), import_line_to_path, line_no);
-      return;
-    }
-  }
-
-  // search in preconfigured list of standard system directories
-  for (const auto &i_path : include_paths) {
-    path dst_path = i_path / statement;
-    if (exists(dst_path)) {
-      dst_path = canonical(dst_path);
-      BOOST_LOG_TRIVIAL(trace) << "   |>> Absolute Edge";
-      insert_edge(src_path, dst_path.string(), statement, line_no);
       return;
     }
   }
