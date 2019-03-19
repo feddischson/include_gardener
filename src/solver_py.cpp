@@ -108,7 +108,7 @@ void Solver_Py::add_edge(const string &src_path,
 
   path parent_directory = path(src_path).parent_path();
 
-  // Relative import
+  // Relative import that contains dots
   if (begins_with_dot(import_line_to_path)){
 
     // Go up directories in src-path
@@ -151,8 +151,8 @@ void Solver_Py::add_edge(const string &src_path,
   }
 
   // if none of the cases above found a file:
-  // -> add an dummy entry
-  insert_edge(src_path, "", get_first_substring(statement, " "), line_no); //module_name
+  // -> add a dummy entry
+  insert_edge(src_path, "", get_first_substring(statement, " "), line_no);
 
 }
 
@@ -186,17 +186,18 @@ std::string Solver_Py::from_import_statement_to_path(const std::string &statemen
           from_field
           + boost::filesystem::path::preferred_separator
           + import_field);
-
-    if (dirs_above > 0){
-      for (auto i = 0; i < dirs_above; i++){
-        path_concatenation.insert(0, ".." + boost::filesystem::path::preferred_separator);
-      }
-    }
-
-    return path_concatenation;
   } else {
-    return dots_to_system_slash(as_statements_removed);
+    path_concatenation = dots_to_system_slash(as_statements_removed);
+    boost::erase_all(path_concatenation, " ");
   }
+
+  if (dirs_above > 0){
+    for (auto i = 0; i < dirs_above; i++){
+      path_concatenation.insert(0, ".." + boost::filesystem::path::preferred_separator);
+    }
+  }
+
+  return path_concatenation;
 }
 
 std::string Solver_Py::import_statement_to_path(const std::string &statement){

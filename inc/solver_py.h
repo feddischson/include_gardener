@@ -44,12 +44,18 @@ namespace INCLUDE_GARDENER {
 ///   2. from x import y
 ///
 ///   Both work even if as-statements are included,
-///   but these are removed when a path is created.
+///   but these are removed when it is converted
+///   to a path.
 ///
 ///   1. x can contain comma-separated items.
 ///      x can contain prepended dots.
 ///   2. y can contain comma-separated items.
 ///      x can contain prepended dots.
+///      y can contain *, but results are not
+///      guaranteed.
+///
+/// @note Imports with * are not yet fully supported.
+/// @note Options have not been implemented.
 
 class Solver_Py : public Solver {
 
@@ -96,7 +102,8 @@ class Solver_Py : public Solver {
 
   /// @brief Adds solver-specific options.
   /// @note Not implemented yet.
-  static void add_options(boost::program_options::options_description *options);
+  static void add_options(
+      boost::program_options::options_description *options);
 
  protected:
   /// @brief Adds an edge
@@ -112,7 +119,8 @@ class Solver_Py : public Solver {
   /// @param statement The statement to extract substring from.
   /// @param delimiter The final delimiter char from which to begin splitting.
   /// @return The substring between the final delimiter and end of string.
-  /// @pre String contains delimiter.
+  /// On failure an empty string is returned.
+  /// @pre statement contains delimiter.
   /// @pre Delimiter is one character.
   virtual std::string get_final_substring(const std::string &statement,
                                   const std::string &delimiter);
@@ -122,7 +130,9 @@ class Solver_Py : public Solver {
   /// @param statement The string to substring.
   /// @param delimiter The delimiter to split string by.
   /// @return String with everything before delimiter in statement.
+  /// On failure an empty string is returned.
   /// @pre statement is not an empty string.
+  /// @pre statement contains delimiter.
   /// @pre Delimiter is one character.
   virtual std::string get_first_substring(const std::string &statement,
                                   const std::string &delimiter);
@@ -138,27 +148,37 @@ class Solver_Py : public Solver {
   /// a system path string.
   /// @param statement The statement to convert.
   /// @return String with converted statement as system path.
+  /// @pre statement contains the string " import "
   virtual std::string from_import_statement_to_path(const std::string &statement);
 
   /// @brief Converts a Python "import (x)" statement to a
   /// system path string.
   /// @param statement The statement to convert.
   /// @return String with converted statement as system path.
+  /// @pre statement does not contain the statement " import "
   virtual std::string import_statement_to_path(const std::string &statement);
 
   /// @brief Counts how many dots a string is prepended with.
   /// @param statement The statement to test.
-  /// @return How many dots the string was prepended with.
+  /// @return How many dots the string was prepended with minus one.
+  /// @note Uses regex in variable dot_regex.
+  /// @note The first relative dot in Python is the current directory,
+  /// and such this function returns zero for one dot.
   virtual unsigned int how_many_directories_above(const std::string &statement);
 
   /// @brief Checks if a string begins with a dot.
   /// @param statement The statement to test.
-  /// @return If the statement begins with a dot.
+  /// @return If the statement begins with a dot not
+  /// worrying about whitespace or tab.
+  /// @note Regex used is in variable dot_regex.
   virtual bool begins_with_dot(const std::string &statement);
 
   /// @brief Removes prepended dots from string.
   /// @param statement to remove dots from.
   /// @return The modified string.
+  /// @pre That the string begins with dot(s), not worrying
+  /// about tabs or whitespaces.
+  /// @note Regex used is in variable past_dot_regex.
   virtual std::string without_prepended_dots(const std::string &statement);
 
   /// @brief Removes " as x" statements from Python import string.
