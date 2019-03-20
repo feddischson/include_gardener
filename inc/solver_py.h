@@ -116,7 +116,7 @@ class Solver_Py : public Solver {
                            unsigned int line_no);
 
   /// @brief Returns the final substring separated by a delimiter.
-  /// @param statement The statement to extract substring from.
+  /// @param statement The statemestatementnt to extract substring from.
   /// @param delimiter The final delimiter char from which to begin splitting.
   /// @return The substring between the final delimiter and end of string.
   /// On failure an empty string is returned.
@@ -185,6 +185,11 @@ class Solver_Py : public Solver {
   /// @param statement to remove " as "-statements from.
   /// @return The modified string.
   virtual std::string remove_as_statements(const std::string &statement);
+
+  /// @brief Splits a comma separated string into separate parts
+  /// @param comma separated string
+  /// @return a vector with each substring represented
+  virtual std::vector<std::string> split_comma_string(const std::string &statement);
 
  private:
   /// @brief Legal file extensions for Python script files.

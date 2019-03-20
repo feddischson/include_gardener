@@ -54,11 +54,12 @@ using testing::HasSubstr;
 using testing::Contains;
 using testing::Ge;
 using testing::Return;
+using testing::SizeIs;
 using testing::_;
 
 using boost::filesystem::path;
 
-class Solver_Py_Test : public ::testing::Test, public Solver_Py {
+class SolverPyTest : public ::testing::Test, public Solver_Py {
 public:
   using Solver_Py::get_first_substring;
   using Solver_Py::dots_to_system_slash;
@@ -75,6 +76,7 @@ public:
   MockSolver_Py() = default;
   MOCK_METHOD4(add_edge, void(const string &, const string &, unsigned int,
                                 unsigned int));
+  MOCK_METHOD1(split_comma_string, vector<string>(const string &statement));
 };
 
 // For testing Solver_Py specific functions
@@ -82,16 +84,16 @@ class MockSolver_Py2 : public Solver_Py {
 public:
   MockSolver_Py2() = default;
 
-  MOCK_METHOD1(from_import_statement_to_path, string(const std::string &statement));
-  MOCK_METHOD1(import_statement_to_path, string(const std::string &statement));
-  MOCK_METHOD1(how_many_directories_above, unsigned int(const std::string &statement));
-  MOCK_METHOD1(begins_with_dot, bool(const std::string &statement));
-  MOCK_METHOD1(without_prepended_dots, string(const std::string &statement));
-  MOCK_METHOD1(remove_as_statements, string(const std::string &statement));
+  MOCK_METHOD1(from_import_statement_to_path, string(const string &statement));
+  MOCK_METHOD1(import_statement_to_path, string(const string &statement));
+  MOCK_METHOD1(how_many_directories_above, unsigned int(const string &statement));
+  MOCK_METHOD1(begins_with_dot, bool(const string &statement));
+  MOCK_METHOD1(without_prepended_dots, string(const string &statement));
+  MOCK_METHOD1(remove_as_statements, string(const string &statement));
 
-  void insert_edge(const std::string &,
-                                const std::string &,
-                                const std::string &,
+  void insert_edge(const string &,
+                                const string &,
+                                const string &,
                                 unsigned int) {}
 };
 
@@ -100,7 +102,7 @@ class Mock_Statement_Detector : public Statement_Detector {
   explicit Mock_Statement_Detector(const Solver::Ptr &solver)
       : Statement_Detector(solver, 0) {}
   optional<pair<string, unsigned int>> call_detect(
-      const std::string &line) const {
+      const string &line) const {
     return detect(line);
   }
 
@@ -109,7 +111,7 @@ class Mock_Statement_Detector : public Statement_Detector {
   }
 };
 
-TEST_F(Solver_Py_Test, GetFirstLastSubstring) {
+TEST_F(SolverPyTest, GetFirstLastSubstring) {
 
   // Asserts that the first / last substring is returned
   string s = "A string with, some. kind: of: - delimeter";
@@ -125,7 +127,7 @@ TEST_F(Solver_Py_Test, GetFirstLastSubstring) {
   EXPECT_THAT("", StrEq(get_final_substring(s,"^"))); // ^ does not exist in string
 }
 
-TEST_F(Solver_Py_Test, Dots_To_Slash) {
+TEST_F(SolverPyTest, DotsToSlash) {
   string input = "string.with.dots";
   path expected{"string"};
   expected /= "with";
@@ -137,7 +139,7 @@ TEST_F(Solver_Py_Test, Dots_To_Slash) {
 }
 
 
-TEST_F(Solver_Py_Test, Dots_To_Slash_2) {
+TEST_F(SolverPyTest, DotsToSlash2) {
   string input = "string    .    with.   dots";
   path expected{"string    "};
   expected /= "    with";
@@ -148,7 +150,7 @@ TEST_F(Solver_Py_Test, Dots_To_Slash_2) {
   EXPECT_THAT(output, StrEq(expected.string()));
 }
 
-TEST_F(Solver_Py_Test, Import_To_Path) {
+TEST_F(SolverPyTest, ImportToPath) {
   // The "from x import y"-regex returns result in below form
   string input = "foo.bar import baz";
   path expected{"foo"};
@@ -164,7 +166,7 @@ TEST_F(Solver_Py_Test, Import_To_Path) {
   EXPECT_THAT(output, StrEq(expected.string()));
 }
 
-TEST_F(Solver_Py_Test, Import_As_To_Path) {
+TEST_F(SolverPyTest, ImportAsToPath) {
   string input = "foo.bar as baz";
   path p{"foo"};
   p /= "bar";
@@ -176,7 +178,7 @@ TEST_F(Solver_Py_Test, Import_As_To_Path) {
   EXPECT_THAT(output, p);
 }
 
-TEST_F(Solver_Py_Test, Directories_Above) {
+TEST_F(SolverPyTest, DirectoriesAbove) {
   const string none = " .no.dir.above";
   const string one = " ..one.dir.above";
   const string twenty = " .....................twenty.dirs.above";
@@ -186,7 +188,7 @@ TEST_F(Solver_Py_Test, Directories_Above) {
   EXPECT_EQ(20, how_many_directories_above(twenty));
 }
 
-TEST_F(Solver_Py_Test, Starts_With_Dot) {
+TEST_F(SolverPyTest, StartsWithDot) {
   const string dot_beginning = "    .yes.it.does";
   const string dot_beginning_too = ".dot";
   const string no_dot_beginning = "no.dots";
@@ -196,7 +198,7 @@ TEST_F(Solver_Py_Test, Starts_With_Dot) {
   EXPECT_FALSE(begins_with_dot(no_dot_beginning));
 }
 
-TEST_F(Solver_Py_Test, Remove_Starting_Dots) {
+TEST_F(SolverPyTest, RemoveStartingDots) {
   const string dot_beginning = "....dots";
   const string dot_beginning_too = ".dot";
   const string no_dot_beginning = "no.dots";
@@ -206,7 +208,7 @@ TEST_F(Solver_Py_Test, Remove_Starting_Dots) {
   EXPECT_THAT("no.dots", StrEq(without_prepended_dots(no_dot_beginning)));
 }
 // NOLINTNEXTLINE
-TEST_F(Solver_Py_Test, empty_initialization) {
+TEST_F(SolverPyTest, emptyinitialization) {
   auto s = make_shared<MockSolver_Py>();
   auto d = make_shared<Statement_Detector>(s);
   EXPECT_EQ(d->get_statements().size(), 2);
@@ -214,7 +216,7 @@ TEST_F(Solver_Py_Test, empty_initialization) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(Solver_Py_Test, simple_detection) {
+TEST_F(SolverPyTest, simpledetection) {
   auto s = make_shared<MockSolver_Py>();
   auto d = make_shared<Mock_Statement_Detector>(s);
   EXPECT_EQ(d->get_statements().size(), 2);
@@ -226,7 +228,7 @@ TEST_F(Solver_Py_Test, simple_detection) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(Solver_Py_Test, No_Match) {
+TEST_F(SolverPyTest, NoMatch) {
   auto s = make_shared<MockSolver_Py>();
   auto d = make_shared<Mock_Statement_Detector>(s);
 
@@ -243,7 +245,7 @@ TEST_F(Solver_Py_Test, No_Match) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(Solver_Py_Test, Multi_Match) {
+TEST_F(SolverPyTest, MultiMatch) {
   auto s = make_shared<MockSolver_Py>();
   auto d = make_shared<Mock_Statement_Detector>(s);
 
@@ -259,7 +261,7 @@ TEST_F(Solver_Py_Test, Multi_Match) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(Solver_Py_Test, Multi_Line_Match) {
+TEST_F(SolverPyTest, MultiLineMatch) {
   auto s = make_shared<MockSolver_Py>();
   auto d = make_shared<Mock_Statement_Detector>(s);
 
@@ -279,45 +281,37 @@ TEST_F(Solver_Py_Test, Multi_Line_Match) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(Solver_Py_Test, Comma_Separated_Match) {
-  auto s = make_shared<MockSolver_Py>();
-  auto d = make_shared<Mock_Statement_Detector>(s);
-
+TEST_F(SolverPyTest, CommaSeparatedMatch) {
   string statement = "import xxx,yyy";
-  stringstream sstream(statement);
-
-  // Is called twice recursively in add_edge
-  EXPECT_CALL(*s, add_edge(_, _, _, _)).Times(1);
-  d->call_process_stream(sstream, "id");
-  d->wait_for_workers();
+  EXPECT_THAT(split_comma_string(statement), SizeIs(2));
 }
 
 // NOLINTNEXTLINE
-TEST_F(Solver_Py_Test, From_XXX_Import_YYY_No_Dots) {
+TEST_F(SolverPyTest, FromXXXImportYYYNoDots) {
   string s = "xxx import yyy";
   EXPECT_THAT("xxx/yyy", StrEq(from_import_statement_to_path(s)));
 }
 
 // NOLINTNEXTLINE
-TEST_F(Solver_Py_Test, From_XXX_Import_YYY_Three_Dots) {
+TEST_F(SolverPyTest, FromXXXImportYYYThreeDots) {
   string s = "...xxx import yyy";
   EXPECT_THAT("../../xxx/yyy", StrEq(from_import_statement_to_path(s)));
 }
 
 // NOLINTNEXTLINE
-TEST_F(Solver_Py_Test, From_XXX_Import_YYY_As_ZZZ_No_Dots) {
+TEST_F(SolverPyTest, FromXXXImportYYYAsZZZNoDots) {
   string s = "xxx import yyy as zzz";
   EXPECT_THAT("xxx/yyy", StrEq(from_import_statement_to_path(s)));
 }
 
 // NOLINTNEXTLINE
-TEST_F(Solver_Py_Test, From_XXX_Import_YYY_As_ZZZ_Three_Dots) {
+TEST_F(SolverPyTest, FromXXXImportYYYAsZZZThreeDots) {
   string s = "...xxx import yyy as zzz";
   EXPECT_THAT("../../xxx/yyy", StrEq(from_import_statement_to_path(s)));
 }
 
 // NOLINTNEXTLINE
-TEST_F(Solver_Py_Test, Import_XXX_Dot_YYY_Dot_ZZZ) {
+TEST_F(SolverPyTest, ImportXXXDotYYYDotZZZ) {
   string s = "xxx.yyy.zzz";
   EXPECT_THAT("xxx/yyy/zzz", StrEq(import_statement_to_path(s)));
 }

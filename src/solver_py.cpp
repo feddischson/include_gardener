@@ -37,6 +37,7 @@ using std::mutex;
 using std::string;
 using std::unique_lock;
 using std::vector;
+using boost::filesystem::path;
 
 vector<string> Solver_Py::get_statement_regex() const {
   vector<string> regex_str = {R"(^[ \t]*import[ \t]+((?:[.]*)[^\d\W](?:[\w,\. ])*)[ \t]*$)",
@@ -64,7 +65,7 @@ void Solver_Py::add_edge(const string &src_path,
   BOOST_LOG_TRIVIAL(trace) << "add_edge: " << src_path << " -> " << statement
                              << ", idx = " << idx << ", line_no = " << line_no;
 
-  std::string import_line_to_path = "";
+  string import_line_to_path = "";
 
   if (boost::contains(statement, "*")){ // Note: Imports with * are not yet fully supported
     import_line_to_path = get_first_substring(statement, " ");
@@ -78,12 +79,11 @@ void Solver_Py::add_edge(const string &src_path,
 
     if (idx == FROM_IMPORT && boost::contains(import_line_to_path, ",")){
 
-      std::string before_import = get_first_substring(import_line_to_path, " ");
-      std::string after_import = get_final_substring(import_line_to_path, " ");
+      string before_import = get_first_substring(import_line_to_path, " ");
+      string after_import = get_final_substring(import_line_to_path, " ");
 
       // Only after " import " can you have comma separation.
-      vector<string> comma_separated_statements;
-      boost::split(comma_separated_statements, after_import, [](char c){ return c == ','; });
+      vector<string> comma_separated_statements(split_comma_string(after_import));
 
       // Handle each part separately as a package name
       for (auto comma_separated_statement : comma_separated_statements){
@@ -133,13 +133,13 @@ void Solver_Py::add_edge(const string &src_path,
   }
 
   path likely_path = parent_directory / path(import_line_to_path);
-  std::string likely_module_name = likely_path.stem().string();
+  string likely_module_name = likely_path.stem().string();
   path likely_module_parent_path = likely_path.parent_path();
 
   unique_lock<mutex> glck(graph_mutex);
 
   for (const string &file_extension : file_extensions){
-    std::string module_with_file_extension = likely_module_name + '.' + file_extension;
+    string module_with_file_extension = likely_module_name + '.' + file_extension;
     path dst_path = likely_module_parent_path / module_with_file_extension;
 
     if (exists(dst_path)){
@@ -156,19 +156,25 @@ void Solver_Py::add_edge(const string &src_path,
 
 }
 
-std::string Solver_Py::dots_to_system_slash(const std::string &statement)
+vector<string> Solver_Py::split_comma_string(const std::string &statement) {
+    vector<string> separate_statements;
+    boost::split(separate_statements, statement, [](char c){ return c == ','; });
+    return separate_statements;
+}
+
+string Solver_Py::dots_to_system_slash(const string &statement)
 {
-  std::string separator(1, boost::filesystem::path::preferred_separator);
+  const string separator(1, path::preferred_separator);
   return boost::replace_all_copy(statement, ".", separator);
 }
 
-std::string Solver_Py::from_import_statement_to_path(const std::string &statement)
+string Solver_Py::from_import_statement_to_path(const string &statement)
 {
-  std::string as_statements_removed = remove_as_statements(statement);
+  string as_statements_removed = remove_as_statements(statement);
 
-  std::string from_field;
-  std::string import_field;
-  std::string path_concatenation;
+  string from_field;
+  string import_field;
+  path path_concatenation;
   auto dirs_above = 0;
 
   if (begins_with_dot(as_statements_removed)){
@@ -182,34 +188,32 @@ std::string Solver_Py::from_import_statement_to_path(const std::string &statemen
     boost::erase_all(from_field, " ");
     boost::erase_all(import_field, " ");
 
-    path_concatenation = dots_to_system_slash(
-          from_field
-          + boost::filesystem::path::preferred_separator
-          + import_field);
+    path_concatenation = path{dots_to_system_slash(from_field)}
+                        / path{dots_to_system_slash(import_field)};
   } else {
     path_concatenation = dots_to_system_slash(as_statements_removed);
-    boost::erase_all(path_concatenation, " ");
+
   }
 
   if (dirs_above > 0){
     for (auto i = 0; i < dirs_above; i++){
-      path_concatenation.insert(0, ".." + boost::filesystem::path::preferred_separator);
+      path_concatenation = path{".."} / path_concatenation;
     }
   }
 
-  return path_concatenation;
+  return boost::erase_all_copy(path_concatenation.string(), " ");
 }
 
-std::string Solver_Py::import_statement_to_path(const std::string &statement){
-  std::string as_statements_removed = remove_as_statements(statement);
-  std::string path_concatenation = dots_to_system_slash(as_statements_removed);
+string Solver_Py::import_statement_to_path(const string &statement){
+  string as_statements_removed = remove_as_statements(statement);
+  string path_concatenation = dots_to_system_slash(as_statements_removed);
   boost::erase_all(path_concatenation, " ");
   return path_concatenation;
 }
 
-unsigned int Solver_Py::how_many_directories_above(const std::string &statement){
+unsigned int Solver_Py::how_many_directories_above(const string &statement){
   boost::regex r(dot_regex);
-  boost::match_results<std::string::const_iterator> results;
+  boost::match_results<string::const_iterator> results;
   if (boost::regex_match(statement, results, r)){
     return results[1].length() - 1;  // The first dot is current directory
   }
@@ -217,16 +221,16 @@ unsigned int Solver_Py::how_many_directories_above(const std::string &statement)
   return 0;
 }
 
-bool Solver_Py::begins_with_dot(const std::string &statement)
+bool Solver_Py::begins_with_dot(const string &statement)
 {
   boost::regex r(dot_regex);
   return boost::regex_match(statement, r);
 }
 
-std::string Solver_Py::without_prepended_dots(const std::string &statement)
+string Solver_Py::without_prepended_dots(const string &statement)
 {
   boost::regex r(past_dot_regex);
-  boost::match_results<std::string::const_iterator> results;
+  boost::match_results<string::const_iterator> results;
   if (boost::regex_match(statement, results, r)){
     if (results.size() > 1){
       return results[1].str();
@@ -236,32 +240,32 @@ std::string Solver_Py::without_prepended_dots(const std::string &statement)
   return statement;
 }
 
-std::string Solver_Py::remove_as_statements(const std::string &statement)
+string Solver_Py::remove_as_statements(const string &statement)
 {
-  std::string string_copy = statement;
-  std::string::size_type as_pos;
-  std::string::size_type comma_pos;
+  string string_copy = statement;
+  string::size_type as_pos;
+  string::size_type comma_pos;
 
   do {
     as_pos = string_copy.find(" as ");
-    if (as_pos != std::string::npos){
+    if (as_pos != string::npos){
       comma_pos = string_copy.find(",", as_pos);
-      if (comma_pos != std::string::npos){
+      if (comma_pos != string::npos){
         string_copy.erase(as_pos, comma_pos);
       } else {
-        string_copy.erase(as_pos, std::string::npos);
+        string_copy.erase(as_pos, string::npos);
       }
     } else {
       break;
     }
-  } while (as_pos != std::string::npos);
+  } while (as_pos != string::npos);
 
   return string_copy;
 }
 
-void Solver_Py::insert_edge(const std::string &src_path,
-                            const std::string &dst_path,
-                            const std::string &name,
+void Solver_Py::insert_edge(const string &src_path,
+                            const string &dst_path,
+                            const string &name,
                             unsigned int line_no) {
   add_vertex(name, dst_path);
   string key;
@@ -299,21 +303,21 @@ void Solver_Py::insert_edge(const std::string &src_path,
   graph[edge] = Edge{static_cast<int>(line_no)};
 }
 
-std::string Solver_Py::get_first_substring(const std::string &statement, const std::string &delimiter)
+string Solver_Py::get_first_substring(const string &statement, const string &delimiter)
 {
-  std::string::size_type pos_of_first_delim = statement.find(delimiter);
-  if (pos_of_first_delim != std::string::npos){
-    std::string str_copy = statement.substr(0, pos_of_first_delim);
+  string::size_type pos_of_first_delim = statement.find(delimiter);
+  if (pos_of_first_delim != string::npos){
+    string str_copy = statement.substr(0, pos_of_first_delim);
     return str_copy;
   }
   return "";
 }
 
-std::string Solver_Py::get_final_substring(const std::string &statement,
-                                           const std::string &delimiter){
-  std::string::size_type pos_of_last_delim = statement.find_last_of(delimiter);
-  if (pos_of_last_delim != std::string::npos){
-    std::string str_copy = statement.substr(pos_of_last_delim + 1);
+string Solver_Py::get_final_substring(const string &statement,
+                                           const string &delimiter){
+  string::size_type pos_of_last_delim = statement.find_last_of(delimiter);
+  if (pos_of_last_delim != string::npos){
+    string str_copy = statement.substr(pos_of_last_delim + 1);
     return str_copy;
   }
   return "";
