@@ -25,12 +25,37 @@
 
 #include <memory>
 #include <boost/algorithm/string.hpp>
+#include <boost/regex.hpp>
 
 namespace INCLUDE_GARDENER {
 
 /// @brief Solver class for Python language.
 /// @details
-///   To be implemented.
+///   An instance of this class attempts to convert
+///   Python import strings to paths that are inserted
+///   in the internal Graph with import-relations
+///   between the files.
+///
+///   The class should support relative imports that
+///   are prepended with dots (ex. import ..helloworld).
+///   It should also support imports on the following forms:
+///
+///   1. import x
+///   2. from x import y
+///
+///   Both work even if as-statements are included,
+///   but these are removed when it is converted
+///   to a path.
+///
+///   1. x can contain comma-separated items.
+///      x can contain prepended dots.
+///   2. y can contain comma-separated items.
+///      x can contain prepended dots.
+///      y can contain *, but results are not
+///      guaranteed.
+///
+/// @note Imports with * are not yet fully supported.
+/// @note Options have not been implemented.
 
 class Solver_Py : public Solver {
 
@@ -64,29 +89,21 @@ class Solver_Py : public Solver {
   void add_edge(const std::string &src_path, const std::string &statement,
                 unsigned int idx, unsigned int line_no) override;
 
-  /// @brief Adds multiple edges to the graph.
-  /// @param src_path The source path (where the statement is detected).
-  /// @param statements The detected statements.
-  /// @param idx The index of the regular expression, which matched.
-  /// @param line_no The line number where the statement is detected.
-  void add_edges(const std::string &src_path,
-                 const std::vector<std::string> &statements,
-                 unsigned int idx, unsigned int line_no) override;
-
-  /// @brief Returns the regex which
-  ///        detects the statements.
+  /// @brief Returns the regex which detects the import statements.
   std::vector<std::string> get_statement_regex() const override;
 
-  /// @brief Returns the regex which
-  ///        detects the files.
+  /// @brief Returns the regex which detects the files.
   std::string get_file_regex() const override;
 
   /// @brief Extracts solver-specific options (variables).
+  /// @note Not implemented yet.
   void extract_options(
       const boost::program_options::variables_map &vm) override;
 
   /// @brief Adds solver-specific options.
-  static void add_options(boost::program_options::options_description *options);
+  /// @note Not implemented yet.
+  static void add_options(
+      boost::program_options::options_description *options);
 
  protected:
   /// @brief Adds an edge
@@ -98,55 +115,94 @@ class Solver_Py : public Solver {
                            const std::string &dst_path, const std::string &name,
                            unsigned int line_no);
 
- private:
-  /// @brief Search path for include statements.
-  std::vector<std::string> include_paths;
-
-  /// @brief Legal file extensions for Python script files.
-  std::vector<std::string> file_extensions{"py", "pyw", "py3"};
-
-  /// @brief Checks if a string contains some other string
-  /// @param statement The string to examine.
-  /// @param string_to_test The string to find in the statement.
-  /// @return If statement contains string_to_test.
-  bool contains_string(const std::string &statement,
-                       const std::string &string_to_test);
-
   /// @brief Returns the final substring separated by a delimiter.
-  /// @param statement The statement to extract substring from.
-  /// @param delimiter The final delimiter from which to splitting.
+  /// @param statement The statemestatementnt to extract substring from.
+  /// @param delimiter The final delimiter char from which to begin splitting.
   /// @return The substring between the final delimiter and end of string.
-  /// @pre String contains delimiter.
-  std::string get_final_substring(const std::string &statement,
+  /// On failure an empty string is returned.
+  /// @pre statement contains delimiter.
+  /// @pre Delimiter is one character.
+  virtual std::string get_final_substring(const std::string &statement,
                                   const std::string &delimiter);
-
-  /// @brief Separates the contents of a string to a vector by delimiter.
-  /// @param statement The string to split.
-  /// @param delimiter The delimiter to split string by.
-  /// @return Vector containing sub-parts of statement as separate strings.
-  /// @pre Statement contains delimiter.
-  std::vector<std::string> separate_string(const std::string &statement,
-                                           const char &delimiter);
-
-  /// @brief Removes whitespaces from a string and returns result.
-  /// @param statement String to remove whitespaces from.
-  std::string remove_whitespaces(const std::string &statement);
 
   /// @brief Gets the first substring before the first occurrence
   /// of a delimiter.
   /// @param statement The string to substring.
   /// @param delimiter The delimiter to split string by.
   /// @return String with everything before delimiter in statement.
+  /// On failure an empty string is returned.
   /// @pre statement is not an empty string.
-  std::string get_first_substring(const std::string &statement,
+  /// @pre statement contains delimiter.
+  /// @pre Delimiter is one character.
+  virtual std::string get_first_substring(const std::string &statement,
                                   const std::string &delimiter);
 
-  /// @brief Checks if a string may be part of a likely local package
-  /// by iterating vertexes absolute paths.
+  /// @brief Converts dots in a string to system slashes.
+  /// @param statement The statement to copy and modify.
+  /// @return String with dots converted to system slashes.
+  /// @note The slashes that should be used are gotten from
+  /// boost::filesystem::path::preferred_separator.
+  virtual std::string dots_to_system_slash(const std::string &statement);
+
+  /// @brief Converts a Python "(from) x import y" statement to
+  /// a system path string.
+  /// @param statement The statement to convert.
+  /// @return String with converted statement as system path.
+  /// @pre statement contains the string " import "
+  virtual std::string from_import_statement_to_path(const std::string &statement);
+
+  /// @brief Converts a Python "import (x)" statement to a
+  /// system path string.
+  /// @param statement The statement to convert.
+  /// @return String with converted statement as system path.
+  /// @pre statement does not contain the statement " import "
+  virtual std::string import_statement_to_path(const std::string &statement);
+
+  /// @brief Counts how many dots a string is prepended with.
   /// @param statement The statement to test.
-  /// @return If the string may be a likely package.
-  /// @note Error prone.
-  bool is_likely_local_package(const std::string &statement);
+  /// @return How many dots the string was prepended with minus one.
+  /// @note Uses regex in variable dot_regex.
+  /// @note The first relative dot in Python is the current directory,
+  /// and such this function returns zero for one dot.
+  virtual unsigned int how_many_directories_above(const std::string &statement);
+
+  /// @brief Checks if a string begins with a dot.
+  /// @param statement The statement to test.
+  /// @return If the statement begins with a dot not
+  /// worrying about whitespace or tab.
+  /// @note Regex used is in variable dot_regex.
+  virtual bool begins_with_dot(const std::string &statement);
+
+  /// @brief Removes prepended dots from string.
+  /// @param statement to remove dots from.
+  /// @return The modified string.
+  /// @pre That the string begins with dot(s), not worrying
+  /// about tabs or whitespaces.
+  /// @note Regex used is in variable past_dot_regex.
+  virtual std::string without_prepended_dots(const std::string &statement);
+
+  /// @brief Removes " as x" statements from Python import string.
+  /// @param statement to remove " as "-statements from.
+  /// @return The modified string.
+  virtual std::string remove_as_statements(const std::string &statement);
+
+  /// @brief Splits a comma separated string into separate parts
+  /// @param comma separated string
+  /// @return a vector with each substring represented
+  virtual std::vector<std::string> split_comma_string(const std::string &statement);
+
+ private:
+  /// @brief Legal file extensions for Python script files.
+  const std::vector<std::string> file_extensions{"py", "pyw", "py3"};
+
+  /// @brief Regex to match the first dot(s) in a string
+  const std::string dot_regex = "^[ \\t]*([.]+).*$";
+
+  /// @brief Regex to match everything past the first dot(s) in a string
+  const std::string past_dot_regex = "^[ \\t]*[.]+(.*)$";
+
+  // Enum naming the different import types (corresponds to regex index)
+  enum Py_Regex { IMPORT = 0, FROM_IMPORT, HAS_DONE_FIRST_PASS = 99 };
 
 };  // class Solver_Py
 

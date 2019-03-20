@@ -25,6 +25,10 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/find.hpp>
 
 namespace INCLUDE_GARDENER {
 
@@ -33,21 +37,22 @@ using std::mutex;
 using std::string;
 using std::unique_lock;
 using std::vector;
+using boost::filesystem::path;
 
 vector<string> Solver_Py::get_statement_regex() const {
-  vector<string> regex_str = {R"(^[ \t]*import[ \t]+([^\d\W](?:[\w,\.])*)[ \t]*$)",
-                             R"(^[ \t]*from[ \t]+([^\d\W](?:[\w\.]*))[ \t]+import[ \t]+([^\d\W](?:[\w,\. ]*)|\*)[ \t]*$)"};
+  vector<string> regex_str = {R"(^[ \t]*import[ \t]+((?:[.]*)[^\d\W](?:[\w,\. ])*)[ \t]*$)",
+                             R"(^[ \t]*from[ \t]+([^\d\W](?:[\w\.]*)[ \t]+import[ \t]+(?:\*|[^\d\W](?:[\w,\. ]*)))[ \t]*$)"};
   return regex_str;
 }
 
 string Solver_Py::get_file_regex() const { return string(R"(^(?:.*[\/\\])?[^\d\W]\w*\.py[3w]?$)"); }
 
 void Solver_Py::add_options(po::options_description *options __attribute__((unused))) {
-
+  BOOST_LOG_TRIVIAL(trace) << "add_options in Solver_Py has not been implemented";
 }
 
 void Solver_Py::extract_options(const po::variables_map &vm __attribute__((unused))) {
-
+  BOOST_LOG_TRIVIAL(trace) << "extract_options in Solver_Py has not been implemented";
 }
 
 void Solver_Py::add_edge(const string &src_path,
@@ -60,73 +65,207 @@ void Solver_Py::add_edge(const string &src_path,
   BOOST_LOG_TRIVIAL(trace) << "add_edge: " << src_path << " -> " << statement
                              << ", idx = " << idx << ", line_no = " << line_no;
 
-  if (statement == "*") return;
-  if (statement.empty()) return;
+  string import_line_to_path = "";
 
-  // Handle each comma-separated part separately
-  if (contains_string(statement, ",")) {
-    vector<string> comma_separated_statements = separate_string(statement, ',');
-    add_edges(src_path, comma_separated_statements, idx, line_no);
-    return;
+  if (boost::contains(statement, "*")){ // Note: Imports with * are not yet fully supported
+    import_line_to_path = get_first_substring(statement, " ");
+    idx = IMPORT;
+  } else {
+    import_line_to_path = statement;
   }
 
-  string module_name = statement;
+  // Handle comma separated parts separately by calling add_edge() again
+  if (idx != HAS_DONE_FIRST_PASS && boost::contains(import_line_to_path, ",")){
 
-  if (contains_string(statement, ".")) {
-    if (is_likely_local_package(get_first_substring(statement, "."))){
-      module_name = get_final_substring(statement, ".");
-    }
-  }
+    if (idx == FROM_IMPORT && boost::contains(import_line_to_path, ",")){
 
-  if (contains_string(statement, " as ")){
-    module_name = get_first_substring(statement, " as ");
-  }
+      string before_import = get_first_substring(import_line_to_path, " ");
+      string after_import = get_final_substring(import_line_to_path, " ");
 
-  module_name = remove_whitespaces(module_name);
+      // Only after " import " can you have comma separation.
+      vector<string> comma_separated_statements(split_comma_string(after_import));
 
-  unique_lock<mutex> glck(graph_mutex);
+      // Handle each part separately as a package name
+      for (auto comma_separated_statement : comma_separated_statements){
+        add_edge(src_path, before_import + "." + comma_separated_statement,
+                 HAS_DONE_FIRST_PASS, line_no);
+      }
 
-  path base = path(src_path).parent_path();
+      return;
 
-  for (const string &file_extension : file_extensions){
-    string module_with_file_extension = module_name + '.' + file_extension;
-    path dst_path = base / module_with_file_extension;
-    if (exists(dst_path)) {
-      dst_path = canonical(dst_path);
-      BOOST_LOG_TRIVIAL(trace) << "   |>> Relative Edge";
-      insert_edge(src_path, dst_path.string(), module_name, line_no);
+    } else if (idx == IMPORT){
+      vector<string> comma_separated_statements;
+      boost::split(comma_separated_statements, statement, [](char c){ return c == ','; });
+
+      for (auto comma_separated_statement: comma_separated_statements){
+        add_edge(src_path, comma_separated_statement,
+               HAS_DONE_FIRST_PASS, line_no);
+      }
+
       return;
     }
   }
 
-    // search in preconfigured list of standard system directories
-  for (const auto &i_path : include_paths) {
-    path dst_path = i_path / statement;
-    if (exists(dst_path)) {
+  path parent_directory = path(src_path).parent_path();
+
+  // Relative import that contains dots
+  if (begins_with_dot(import_line_to_path)){
+
+    // Go up directories in src-path
+    unsigned int directories_above = how_many_directories_above(import_line_to_path);
+    for (unsigned int i = 0; i < directories_above; i++){
+      parent_directory = parent_directory.parent_path();
+    }
+
+    // Remove prepended dots
+    import_line_to_path = without_prepended_dots(import_line_to_path);
+  }
+
+  // Check if the package import is referring to the current directory and go up if so
+  if (parent_directory.stem().string() == get_first_substring(import_line_to_path, ".")){
+    parent_directory = parent_directory.parent_path();
+  }
+
+  if (boost::contains(import_line_to_path, " import ")){
+    import_line_to_path = from_import_statement_to_path(import_line_to_path);
+  } else {
+    import_line_to_path = import_statement_to_path(import_line_to_path);
+  }
+
+  path likely_path = parent_directory / path(import_line_to_path);
+  string likely_module_name = likely_path.stem().string();
+  path likely_module_parent_path = likely_path.parent_path();
+
+  unique_lock<mutex> glck(graph_mutex);
+
+  for (const string &file_extension : file_extensions){
+    string module_with_file_extension = likely_module_name + '.' + file_extension;
+    path dst_path = likely_module_parent_path / module_with_file_extension;
+
+    if (exists(dst_path)){
       dst_path = canonical(dst_path);
-      BOOST_LOG_TRIVIAL(trace) << "   |>> Absolute Edge";
-      insert_edge(src_path, dst_path.string(), statement, line_no);
+      BOOST_LOG_TRIVIAL(trace) << "   |>> Relative Edge";
+      insert_edge(src_path, dst_path.string(), import_line_to_path, line_no);
       return;
     }
   }
 
   // if none of the cases above found a file:
-  // -> add an dummy entry
-  insert_edge(src_path, "", module_name, line_no);
+  // -> add a dummy entry
+  insert_edge(src_path, "", get_first_substring(statement, " "), line_no);
+
 }
 
-void Solver_Py::add_edges(const std::string &src_path,
-                          const std::vector<std::string> &statements,
-                          unsigned int idx,
-                          unsigned int line_no){  
-  for (auto statement: statements){
-    add_edge(src_path, statement, idx, line_no);
+vector<string> Solver_Py::split_comma_string(const std::string &statement) {
+    vector<string> separate_statements;
+    boost::split(separate_statements, statement, [](char c){ return c == ','; });
+    return separate_statements;
+}
+
+string Solver_Py::dots_to_system_slash(const string &statement)
+{
+  const string separator(1, path::preferred_separator);
+  return boost::replace_all_copy(statement, ".", separator);
+}
+
+string Solver_Py::from_import_statement_to_path(const string &statement)
+{
+  string as_statements_removed = remove_as_statements(statement);
+
+  string from_field;
+  string import_field;
+  path path_concatenation;
+  auto dirs_above = 0;
+
+  if (begins_with_dot(as_statements_removed)){
+    dirs_above = how_many_directories_above(as_statements_removed);
+    as_statements_removed = without_prepended_dots(as_statements_removed);
   }
+
+  if (boost::contains(as_statements_removed, " ")){
+    from_field = get_first_substring(as_statements_removed, " "); // Before import
+    import_field = get_final_substring(as_statements_removed, " "); // After import
+    boost::erase_all(from_field, " ");
+    boost::erase_all(import_field, " ");
+
+    path_concatenation = path{dots_to_system_slash(from_field)}
+                        / path{dots_to_system_slash(import_field)};
+  } else {
+    path_concatenation = dots_to_system_slash(as_statements_removed);
+
+  }
+
+  if (dirs_above > 0){
+    for (auto i = 0; i < dirs_above; i++){
+      path_concatenation = path{".."} / path_concatenation;
+    }
+  }
+
+  return boost::erase_all_copy(path_concatenation.string(), " ");
 }
 
-void Solver_Py::insert_edge(const std::string &src_path,
-                            const std::string &dst_path,
-                            const std::string &name,
+string Solver_Py::import_statement_to_path(const string &statement){
+  string as_statements_removed = remove_as_statements(statement);
+  string path_concatenation = dots_to_system_slash(as_statements_removed);
+  boost::erase_all(path_concatenation, " ");
+  return path_concatenation;
+}
+
+unsigned int Solver_Py::how_many_directories_above(const string &statement){
+  boost::regex r(dot_regex);
+  boost::match_results<string::const_iterator> results;
+  if (boost::regex_match(statement, results, r)){
+    return results[1].length() - 1;  // The first dot is current directory
+  }
+
+  return 0;
+}
+
+bool Solver_Py::begins_with_dot(const string &statement)
+{
+  boost::regex r(dot_regex);
+  return boost::regex_match(statement, r);
+}
+
+string Solver_Py::without_prepended_dots(const string &statement)
+{
+  boost::regex r(past_dot_regex);
+  boost::match_results<string::const_iterator> results;
+  if (boost::regex_match(statement, results, r)){
+    if (results.size() > 1){
+      return results[1].str();
+    }
+  }
+
+  return statement;
+}
+
+string Solver_Py::remove_as_statements(const string &statement)
+{
+  string string_copy = statement;
+  string::size_type as_pos;
+  string::size_type comma_pos;
+
+  do {
+    as_pos = string_copy.find(" as ");
+    if (as_pos != string::npos){
+      comma_pos = string_copy.find(",", as_pos);
+      if (comma_pos != string::npos){
+        string_copy.erase(as_pos, comma_pos);
+      } else {
+        string_copy.erase(as_pos, string::npos);
+      }
+    } else {
+      break;
+    }
+  } while (as_pos != string::npos);
+
+  return string_copy;
+}
+
+void Solver_Py::insert_edge(const string &src_path,
+                            const string &dst_path,
+                            const string &name,
                             unsigned int line_no) {
   add_vertex(name, dst_path);
   string key;
@@ -164,61 +303,25 @@ void Solver_Py::insert_edge(const std::string &src_path,
   graph[edge] = Edge{static_cast<int>(line_no)};
 }
 
-bool Solver_Py::contains_string(const std::string &statement,
-                                const std::string &string_to_test){
-  std::size_t find_result = statement.find(string_to_test);
-  return find_result != std::string::npos;
-}
-
-std::string Solver_Py::get_final_substring(const std::string &statement,
-                                           const std::string &delimiter){
-  size_t pos_of_last_delim = statement.find_last_of(delimiter);
-  return statement.substr(pos_of_last_delim+1);
-}
-
-std::vector<std::string> Solver_Py::separate_string(
-        const std::string &statement, const char &delimiter){
-  std::vector<std::string> separated_strings;
-  std::stringstream ss(statement);
-  std::string split_string;
-
-  while (getline(ss, split_string, delimiter)) {
-    separated_strings.push_back(split_string);
-  }
-
-  return separated_strings;
-}
-
-std::string Solver_Py::remove_whitespaces(const std::string &statement){
-  std::string copied_string = statement;
-  boost::erase_all(copied_string, " ");
-  return copied_string;
-}
-
-std::string Solver_Py::get_first_substring(const std::string &statement, const std::string &delimiter)
+string Solver_Py::get_first_substring(const string &statement, const string &delimiter)
 {
-  std::string::size_type pos = statement.find(delimiter);
-  if (pos != std::string::npos) {
-    std::string copy = statement.substr(0, pos);
-    return copy;
+  string::size_type pos_of_first_delim = statement.find(delimiter);
+  if (pos_of_first_delim != string::npos){
+    string str_copy = statement.substr(0, pos_of_first_delim);
+    return str_copy;
   }
-  return statement;
+  return "";
 }
 
-bool Solver_Py::is_likely_local_package(const std::string &statement)
-{
-  unique_lock<mutex> glck(graph_mutex);
-
-  for (Vertex::Map::iterator it = vertexes.begin(); it != vertexes.end(); ++it){
-    if (contains_string(it->second->get_abs_path(), statement)){
-      return true;
-    }
+string Solver_Py::get_final_substring(const string &statement,
+                                           const string &delimiter){
+  string::size_type pos_of_last_delim = statement.find_last_of(delimiter);
+  if (pos_of_last_delim != string::npos){
+    string str_copy = statement.substr(pos_of_last_delim + 1);
+    return str_copy;
   }
-
-  return false;
+  return "";
 }
-
-
 }  // namespace INCLUDE_GARDENER
 
 // vim: filetype=cpp et ts=2 sw=2 sts=2
