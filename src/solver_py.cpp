@@ -94,8 +94,7 @@ void Solver_Py::add_edge(const string &src_path,
       return;
 
     } else if (idx == IMPORT){
-      vector<string> comma_separated_statements;
-      boost::split(comma_separated_statements, statement, [](char c){ return c == ','; });
+      vector<string> comma_separated_statements(split_comma_string(import_line_to_path));
 
       for (auto comma_separated_statement: comma_separated_statements){
         add_edge(src_path, comma_separated_statement,
@@ -152,7 +151,19 @@ void Solver_Py::add_edge(const string &src_path,
 
   // if none of the cases above found a file:
   // -> add a dummy entry
-  insert_edge(src_path, "", get_first_substring(statement, " "), line_no);
+
+  string dummy_name;
+  if (boost::contains(statement, " ")){
+
+      dummy_name = get_first_substring(statement, " ");
+      if (dummy_name.empty()){
+          dummy_name = boost::erase_all_copy(statement, " ");
+      }
+  } else {
+      dummy_name = statement;
+  }
+
+  insert_edge(src_path, "", dummy_name, line_no);
 
 }
 
@@ -179,9 +190,8 @@ string Solver_Py::from_import_statement_to_path(const string &statement)
 
   if (begins_with_dot(as_statements_removed)){
     dirs_above = how_many_directories_above(as_statements_removed);
-    as_statements_removed = without_prepended_dots(as_statements_removed);
+    as_statements_removed =  without_prepended_dots(as_statements_removed);
   }
-
   if (boost::contains(as_statements_removed, " ")){
     from_field = get_first_substring(as_statements_removed, " "); // Before import
     import_field = get_final_substring(as_statements_removed, " "); // After import
