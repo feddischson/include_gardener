@@ -44,4 +44,5 @@ CMakeLists.txt.user
 test/cmd_line/test-reports
 
 # Python cache
-__pycache__
+__pycache__/
+*.py[cod]
