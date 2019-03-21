@@ -97,7 +97,7 @@ class GardenerTestCases(unittest.TestCase):
         f2['key1'] = 'file2.py3'
         f3['key1'] = 'file3.pyw'
         filecmp['key1'] = 'filecmp'
-        fork['key1'] = 'bogusfilename'
+        fork['key1'] = 'fork'
         os['key1'] = 'os'
         p1_f1['key1'] = 'pack1/file1.py'
         p1_f2['key1'] = 'pack1/file2.py'
