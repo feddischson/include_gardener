@@ -46,14 +46,12 @@ class GardenerTestCases(unittest.TestCase):
         """
 
         """ List of files by doing find -iname '*.py' -or -iname '*.pyw' -or -iname '*.py3'
+
         Use as basis for constructing the graph
         ./pack2/file3.py
         ./pack2/file2.py
         ./pack2/file1.py
         ./pack2/__init__.py
-        ./_1a.PyW
-        ./ok_name2.py3
-        ./test.py
         ./file2.py3
         ./pack1/file3.py
         ./pack1/file2.py
@@ -63,124 +61,100 @@ class GardenerTestCases(unittest.TestCase):
         ./pack1/subpack1/file1.py
         ./pack1/subpack1/__init__.py
         ./pack1/__init__.py
-        ./_ok_name.py
-        ./file3.pyw
-        ./b2.py3
         ./file1.py
 
         """
 
         g = pgml.Graph()
 
-        p2_f3 = g.add_node("1")
-        p2_f2 = g.add_node("2")
-        p2_f1 = g.add_node("3")
-        p2_init = g.add_node("4")
-        f_1a = g.add_node("5")
-        ok_2 = g.add_node("6")
-        t = g.add_node("7")
-        f2 = g.add_node("8")
-        p1_f3 = g.add_node("9")
-        p1_f2 = g.add_node("10")
-        p1_f1 = g.add_node("11")
-        p1_s1_f3 = g.add_node("12")
-        p1_s1_f2 = g.add_node("13")
-        p1_s1_f1 = g.add_node("14")
-        p1_s1_init = g.add_node("15")
-        p1_init = g.add_node("16")
-        ok_1 = g.add_node("17")
-        f3 = g.add_node("18")
-        b2 = g.add_node("19")
-        f1 = g.add_node("20")
-        filecmp = g.add_node("21")
-        os = g.add_node("20")
-        fork = g.add_node("21")
-        sys = g.add_node("22")
+        bogusfile = g.add_node("1")
+        f1 = g.add_node("2")
+        f2 = g.add_node("3")
+        f3 = g.add_node("4")
+        filecmp = g.add_node("5")
+        fork = g.add_node("6")
+        os = g.add_node("7")
+        p1_f1 = g.add_node("8")
+        p1_f2 = g.add_node("9")
+        p1_f3 = g.add_node("10")
+        p1 = g.add_node("11")
+        p1_init = g.add_node("12")
+        p1_s1_f1 = g.add_node("13")
+        p1_s1_f2 = g.add_node("14")
+        p1_s1_f3 = g.add_node("15")
+        p1_s1 = g.add_node("16")
+        p1_s1_init = g.add_node("17")
+        p2_f1 = g.add_node("18")
+        p2_f2 = g.add_node("19")
+        p2_f3 = g.add_node("20")
+        p2 = g.add_node("21")
+        p2_init = g.add_node("22")
         pickle = g.add_node("23")
-        bogusfile = g.add_node("24")
-        p2 = g.add_node("25")
-        p1 = g.add_node("26")
-        p1_s1 = g.add_node("27")
+        sys = g.add_node("24")
 
-        p2_f3['key1'] = 'pack2/file3.py'
-        p2_f2['key1'] = 'pack2/file2.py'
-        p2_f1['key1'] = 'pack2/file1.py'
-        p2_init['key1'] = 'pack2/__init__.py'
-        f_1a['key1'] = '_1a.PyW'
-        ok_2['key1'] = 'ok_name2.py3'
-        t['key1'] = 'test.py'
-        f2['key1'] = 'file2.py3'
-        p1_f3['key1'] = 'pack1/file3.py'
-        p1_f2['key1'] = 'pack1/file2.py'
-        p1_f1['key1'] = 'pack1/file1.py'
-        p1_s1_f3['key1'] = 'pack1/subpack1/file3.py'
-        p1_s1_f2['key1'] = 'pack1/subpack1/file2.py'
-        p1_s1_f1['key1'] = 'pack1/subpack1/file1.py'
-        p1_s1_init['key1'] = 'pack1/subpack1/__init__.py'
-        p1_init['key1'] = 'pack1/__init__.py'
-        ok_1['key1'] = '_ok_name.py'
-        f3['key1'] = 'file3.pyw'
-        b2['key1'] = 'b2.py3'
-        f1['key1'] = 'file1.py'
-        filecmp['key1'] = 'filecmp'
-        os['key1'] = 'os'
-        fork['key1'] = 'bogusfilename'
-        sys['key1'] = 'sys'
-        pickle['key1'] = 'pickle'
         bogusfile['key1'] = 'bogusfilename'
-        p1_s1['key1'] = 'pack1/subpack1'
-        p2['key1'] ='pack2'
+        f1['key1'] = 'file1.py'
+        f2['key1'] = 'file2.py3'
+        f3['key1'] = 'file3.pyw'
+        filecmp['key1'] = 'filecmp'
+        fork['key1'] = 'fork'
+        os['key1'] = 'os'
+        p1_f1['key1'] = 'pack1/file1.py'
+        p1_f2['key1'] = 'pack1/file2.py'
+        p1_f3['key1'] = 'pack1/file3.py'
+        p1_init['key1'] = 'pack1/__init__.py'
         p1['key1'] ='pack1'
+        p1_s1_f1['key1'] = 'pack1/subpack1/file1.py'
+        p1_s1_f2['key1'] = 'pack1/subpack1/file2.py'
+        p1_s1_f3['key1'] = 'pack1/subpack1/file3.py'
+        p1_s1_init['key1'] = 'pack1/subpack1/__init__.py'
+        p1_s1['key1'] = 'pack1/subpack1'
+        p2_f1['key1'] = 'pack2/file1.py'
+        p2_f2['key1'] = 'pack2/file2.py'
+        p2_f3['key1'] = 'pack2/file3.py'
+        p2_init['key1'] = 'pack2/__init__.py'
+        p2['key1'] ='pack2'
+        pickle['key1'] = 'pickle'
+        sys['key1'] = 'sys'
+
+        # Pack 1
+        g.add_edge(p1_init, pickle)
+        g.add_edge(p1_f1, p1_s1_f1)
+        g.add_edge(p1_f1, p2_f1)
+        g.add_edge(p1_f2, p1_f1)
+        g.add_edge(p1_f2, p1_f3)
+        g.add_edge(p1_f2, p1_s1_f1)
+        g.add_edge(p1_f3, sys)
+
+        # Pack 1, Subpack 1 (no imports in __init__.py)
+        g.add_edge(p1_s1_f1, p1_s1_f3)
+        g.add_edge(p1_s1_f2, sys)
+        g.add_edge(p1_s1_f2, p1_s1_f1)
+        g.add_edge(p1_s1_f3, filecmp)
 
         # Pack 2
         g.add_edge(p2_f3, p1_f2)
         g.add_edge(p2_f2, filecmp)
         g.add_edge(p2_init, p1_f1)
 
-        # _1a.PyW - no imports
-        # _ok_name2.py3 - no imports
+        # File1.py
+        g.add_edge(f1, p1)
+        g.add_edge(f1, p2)
+        g.add_edge(f1, p2_init)
+        g.add_edge(f1, p1_s1_f1)
 
-        # Test.py
-        g.add_edge(t, f1)
-        g.add_edge(t, f2)
-        g.add_edge(t, f3)
-
-        # file2.py3
+        # File2.py3
         g.add_edge(f2, fork)
         g.add_edge(f2, sys)
         g.add_edge(f2, p1_s1)
         g.add_edge(f2, p2)
 
-        # Pack 1 (file2 has no imports)
-        g.add_edge(p1_f3, sys)
-        g.add_edge(p1_f1, p1_s1_f1)
-        g.add_edge(p1_f1, p2_f1)
-        g.add_edge(p1_init, pickle)
-
-        # Pack 1, Subpack 1 (no imports in __init__.py)
-        g.add_edge(p1_s1_f3, filecmp)
-        g.add_edge(p1_s1_f2, sys)
-        g.add_edge(p1_s1_f2, p1_s1_f1)
-        g.add_edge(p1_s1_f1, p1_s1_f3)
-
-        # _ok_name.py - no imports
-
-        # File 3
-        # TODO: Some could be removed if import * statements won't be supported
+        # File3.pyw
         g.add_edge(f3, bogusfile)
-        g.add_edge(f3, p2_f3)
-        g.add_edge(f3, p2_f2)
-        g.add_edge(f3, p2_f1)
         g.add_edge(f3, p2_init)
-
-        # b2.py - no imports
-        # _ok_name2.py3 - no imports
-
-        # File 1
-        g.add_edge(f1, p1)
-        g.add_edge(f1, p2)
-        g.add_edge(f1, p2_init)
-        g.add_edge(f1, p1_s1_f1)
+        g.add_edge(f3, p2_f1)
+        g.add_edge(f3, p2_f2)
+        g.add_edge(f3, p2_f3)
 
         return g
 
@@ -233,7 +207,7 @@ class GardenerTestCases(unittest.TestCase):
 
     def gardener_call(self, options, subpath=""):
 
-        p_args = [self.G_PATH, os.path.join(self.T_PATH, subpath)] + options
+        p_args = [self.G_PATH, os.path.join(self.T_PATH, subpath)] + options + ['-l', 'py']
         # print( ' '.join( p_args ) )
         pipe = Popen(p_args, stdout=PIPE)
         result_str = pipe.communicate()[0]
@@ -246,8 +220,7 @@ class GardenerTestCases(unittest.TestCase):
         """
         # we don't use '-f dot' because dot is the default!
         result_str = self.gardener_call([] + options, subpath).decode("utf-8")
-        # print("result:")
-        # print(result_str)
+
         G = pgv.AGraph(result_str)
         return G
 
@@ -259,8 +232,7 @@ class GardenerTestCases(unittest.TestCase):
         result_str = self.gardener_call(['-f', 'xml'] + options, subpath)
         if len(result_str) == 0:
             return None
-        # print("result:")
-        # print(result_str.decode('utf-8'))
+
         temp = tempfile.NamedTemporaryFile()
         temp.write(result_str)
         temp.flush()
@@ -275,7 +247,7 @@ class GardenerTestCases(unittest.TestCase):
         The test expects that the result can be read by graphml
         and that there is at least one node.
         """
-        g1 = self.graphml_gardener_call(['-l', 'py'])
+        g1 = self.graphml_gardener_call([])
 
         # get a reference graph
         g2 = self.build_reference_graph()
@@ -292,7 +264,7 @@ class GardenerTestCases(unittest.TestCase):
         G = self.dot_gardener_call(['-j', '1'])
 
         # the first node shall not be None ...
-        n = G.get_node("n1")
+        n = G.get_node(1)
         self.assertNotEqual(n, None)
 
 if __name__ == "__main__":
