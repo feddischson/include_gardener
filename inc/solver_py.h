@@ -191,7 +191,15 @@ class Solver_Py : public Solver {
   /// @return a vector with each substring represented
   virtual std::vector<std::string> split_comma_string(const std::string &statement);
 
+
+  virtual bool is_relative_import(const std::string &statement);
+  virtual bool is_module(const std::string &path_string);
+  virtual bool is_package(const std::string &path_string);
+
  private:
+  /// @brief The process paths given as a program argument.
+  std::vector<std::string> process_path;
+
   /// @brief Legal file extensions for Python script files.
   const std::vector<std::string> file_extensions{"py", "pyw", "py3"};
 

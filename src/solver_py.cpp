@@ -51,23 +51,26 @@ void Solver_Py::add_options(po::options_description *options __attribute__((unus
   BOOST_LOG_TRIVIAL(trace) << "add_options in Solver_Py has not been implemented";
 }
 
-void Solver_Py::extract_options(const po::variables_map &vm __attribute__((unused))) {
-  BOOST_LOG_TRIVIAL(trace) << "extract_options in Solver_Py has not been implemented";
+void Solver_Py::extract_options(const po::variables_map &vm) {
+  if (vm.count("process-path") != 0u) {
+    process_path = vm["process-path"].as<vector<string>>();
+  }
 }
 
 void Solver_Py::add_edge(const string &src_path,
                          const string &statement,
                          unsigned int idx,
                          unsigned int line_no) {
-  using boost::filesystem::path;
   using boost::filesystem::operator/;
 
   BOOST_LOG_TRIVIAL(trace) << "add_edge: " << src_path << " -> " << statement
                              << ", idx = " << idx << ", line_no = " << line_no;
 
   string import_line_to_path = "";
+  bool contains_star = false;
 
-  if (boost::contains(statement, "*")){ // Note: Imports with * are not yet fully supported
+  if (boost::contains(statement, "*")){
+    contains_star = true;
     import_line_to_path = get_first_substring(statement, " ");
     idx = IMPORT;
   } else {
@@ -105,24 +108,19 @@ void Solver_Py::add_edge(const string &src_path,
     }
   }
 
-  path parent_directory = path(src_path).parent_path();
+  path parent_directory;
 
-  // Relative import that contains dots
-  if (begins_with_dot(import_line_to_path)){
+  if (is_relative_import(import_line_to_path)){
+    parent_directory = path(src_path).parent_path();
 
-    // Go up directories in src-path
     unsigned int directories_above = how_many_directories_above(import_line_to_path);
     for (unsigned int i = 0; i < directories_above; i++){
       parent_directory = parent_directory.parent_path();
     }
 
-    // Remove prepended dots
     import_line_to_path = without_prepended_dots(import_line_to_path);
-  }
-
-  // Check if the package import is referring to the current directory and go up if so
-  if (parent_directory.stem().string() == get_first_substring(import_line_to_path, ".")){
-    parent_directory = parent_directory.parent_path();
+  } else {
+    parent_directory = path(process_path[0]);
   }
 
   if (boost::contains(import_line_to_path, " import ")){
@@ -143,9 +141,15 @@ void Solver_Py::add_edge(const string &src_path,
 
     if (exists(dst_path)){
       dst_path = canonical(dst_path);
-      BOOST_LOG_TRIVIAL(trace) << "   |>> Relative Edge";
       insert_edge(src_path, dst_path.string(), import_line_to_path, line_no);
       return;
+    } else if (contains_star && is_package((likely_module_parent_path/likely_module_name).string())){
+      // Add edge between importing file and __init__.py in the imported package.
+      import_line_to_path += "/__init__.py";
+      insert_edge(src_path, canonical((likely_module_parent_path / likely_module_name / "__init__.py")).string(), import_line_to_path, line_no);
+      return;
+    } else if (is_package((likely_module_parent_path/likely_module_name).string())) {
+      return; // Not a valid import!
     }
   }
 
@@ -171,6 +175,42 @@ vector<string> Solver_Py::split_comma_string(const std::string &statement) {
     vector<string> separate_statements;
     boost::split(separate_statements, statement, [](char c){ return c == ','; });
     return separate_statements;
+}
+
+bool Solver_Py::is_relative_import(const std::string &statement)
+{
+    return begins_with_dot(statement);
+}
+
+bool Solver_Py::is_module(const std::string &path_string)
+{
+  using boost::filesystem::path;
+  using boost::filesystem::operator/;
+
+  path path_to_test = path(path_string);
+  string likely_module_name = path_to_test.stem().string();
+  path likely_module_parent_path = path_to_test.parent_path();
+
+  for (const string &file_extension : file_extensions){
+    string module_with_file_extension = likely_module_name + '.' + file_extension;
+    path dst_path = likely_module_parent_path / module_with_file_extension;
+
+    if (exists(dst_path)){
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool Solver_Py::is_package(const std::string &path_string)
+{
+    using boost::filesystem::path;
+    using boost::filesystem::operator/;
+
+    path as_path = path(path_string);
+    path init_file = path("__init__.py");
+    return is_directory(as_path) && exists(as_path / init_file);
 }
 
 string Solver_Py::dots_to_system_slash(const string &statement)
