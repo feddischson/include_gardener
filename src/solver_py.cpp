@@ -79,33 +79,8 @@ void Solver_Py::add_edge(const string &src_path,
 
   // Handle comma separated parts separately by calling add_edge() again
   if (idx != HAS_DONE_FIRST_PASS && boost::contains(import_line_to_path, ",")){
-
-    if (idx == FROM_IMPORT && boost::contains(import_line_to_path, ",")){
-
-      string before_import = get_first_substring(import_line_to_path, " ");
-      string after_import = get_final_substring(import_line_to_path, " ");
-
-      // Only after " import " can you have comma separation.
-      vector<string> comma_separated_statements(split_comma_string(after_import));
-
-      // Handle each part separately as a package name
-      for (auto comma_separated_statement : comma_separated_statements){
-        add_edge(src_path, before_import + "." + comma_separated_statement,
-                 HAS_DONE_FIRST_PASS, line_no);
-      }
-
-      return;
-
-    } else if (idx == IMPORT){
-      vector<string> comma_separated_statements(split_comma_string(import_line_to_path));
-
-      for (auto comma_separated_statement: comma_separated_statements){
-        add_edge(src_path, comma_separated_statement,
-               HAS_DONE_FIRST_PASS, line_no);
-      }
-
-      return;
-    }
+    handle_comma_separated_import(src_path, import_line_to_path, idx, line_no);
+    return;
   }
 
   path parent_directory;
@@ -177,6 +152,14 @@ vector<string> Solver_Py::split_comma_string(const std::string &statement) {
     return separate_statements;
 }
 
+void Solver_Py::add_edges(const std::vector<std::string> &statements, string src_path,
+  unsigned int idx, unsigned int line_no)
+{
+    for (const string &statement : statements){
+        add_edge(src_path, statement, idx, line_no);
+    }
+}
+
 bool Solver_Py::is_relative_import(const std::string &statement)
 {
     return begins_with_dot(statement);
@@ -211,6 +194,31 @@ bool Solver_Py::is_package(const std::string &path_string)
     path as_path = path(path_string);
     path init_file = path("__init__.py");
     return is_directory(as_path) && exists(as_path / init_file);
+}
+
+void Solver_Py::handle_comma_separated_import(const std::string &src_path, const std::string &statement, unsigned int idx, unsigned int line_no)
+{
+  vector<string> comma_separated_statements;
+
+  if (idx == FROM_IMPORT){
+    string before_import = get_first_substring(statement, " ");
+    string after_import = get_final_substring(statement, " ");
+    comma_separated_statements = split_comma_string(after_import);
+
+    // Append package name to item being imported
+    for (auto &comma_separated_statement : comma_separated_statements){
+      comma_separated_statement.insert(0, before_import + ".");
+    }
+
+    add_edges(comma_separated_statements, src_path, HAS_DONE_FIRST_PASS, line_no);
+
+  } else if (idx == IMPORT){
+    comma_separated_statements = split_comma_string(statement);
+  }
+
+  add_edges(comma_separated_statements, src_path, HAS_DONE_FIRST_PASS, line_no);
+
+  return;
 }
 
 string Solver_Py::dots_to_system_slash(const string &statement)

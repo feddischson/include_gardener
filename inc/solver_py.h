@@ -182,19 +182,21 @@ class Solver_Py : public Solver {
   virtual std::string without_prepended_dots(const std::string &statement);
 
   /// @brief Removes " as x" statements from Python import string.
-  /// @param statement to remove " as "-statements from.
-  /// @return The modified string.
   virtual std::string remove_as_statements(const std::string &statement);
 
-  /// @brief Splits a comma separated string into separate parts
-  /// @param comma separated string
-  /// @return a vector with each substring represented
+  /// @brief Splits a comma separated string into a vector.
   virtual std::vector<std::string> split_comma_string(const std::string &statement);
 
+  virtual void add_edges(const std::vector<std::string> &statements, std::string src_path, unsigned int idx, unsigned int line_no);
 
   virtual bool is_relative_import(const std::string &statement);
   virtual bool is_module(const std::string &path_string);
   virtual bool is_package(const std::string &path_string);
+
+  virtual void handle_comma_separated_import(const std::string &src_path,
+                                             const std::string &statement,
+                                             unsigned int idx,
+                                             unsigned int line_no);
 
  private:
   /// @brief The process paths given as a program argument.
