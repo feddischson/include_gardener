@@ -217,7 +217,7 @@ class Solver_Py : public Solver {
   const std::string past_dot_regex = "^[ \\t]*[.]+(.*)$";
 
   // Enum naming the different import types (corresponds to regex index)
-  enum Py_Regex { IMPORT = 0, FROM_IMPORT, HAS_DONE_FIRST_PASS = 99 };
+  enum Py_Regex { IMPORT = 0, FROM_IMPORT, ALL_IMPORT, HAS_DONE_FIRST_PASS = 99 };
 
 };  // class Solver_Py
 

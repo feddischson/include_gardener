@@ -41,7 +41,8 @@ using boost::filesystem::path;
 
 vector<string> Solver_Py::get_statement_regex() const {
   vector<string> regex_str = {R"(^[ \t]*import[ \t]+((?:[.]*)[^\d\W](?:[\w,\. ])*)[ \t]*$)",
-                             R"(^[ \t]*from[ \t]+([^\d\W](?:[\w\.]*)[ \t]+import[ \t]+(?:\*|[^\d\W](?:[\w,\. ]*)))[ \t]*$)"};
+                             R"(^[ \t]*from[ \t]+([^\d\W](?:[\w\.]*)[ \t]+import[ \t]+(?:\*|[^\d\W](?:[\w,\. ]*)))[ \t]*$)",
+                             R"(^[ \t]*__all__[ \t]*=[ \t]*\[(.*)\]$)"};
   return regex_str;
 }
 
@@ -69,12 +70,21 @@ void Solver_Py::add_edge(const string &src_path,
   string import_line_to_path = "";
   bool contains_star = false;
 
-  if (boost::contains(statement, "*")){
+  if (idx == FROM_IMPORT && boost::contains(statement, "*")){
     contains_star = true;
     import_line_to_path = get_first_substring(statement, " ");
     idx = IMPORT;
   } else {
     import_line_to_path = statement;
+  }
+
+  if (idx == ALL_IMPORT){
+    import_line_to_path = boost::erase_all_copy(import_line_to_path, "\"");
+    import_line_to_path = boost::erase_all_copy(import_line_to_path, "\'");
+
+    if (!boost::contains(import_line_to_path, ",")){
+      import_line_to_path.insert(0, "."); // __all__ imports are relative
+    }
   }
 
   // Handle comma separated parts separately by calling add_edge() again
@@ -189,6 +199,13 @@ void Solver_Py::handle_comma_separated_import(const std::string &src_path, const
 
   } else if (idx == IMPORT){
     comma_separated_statements = split_comma_string(statement);
+  } else if (idx == ALL_IMPORT){
+    comma_separated_statements = split_comma_string(statement);
+
+    // __all__ imports are always relative to current directory
+    for (auto &comma_separated_statement : comma_separated_statements){
+      comma_separated_statement.insert(0, ".");
+    }
   }
 
   add_edges(comma_separated_statements, src_path, HAS_DONE_FIRST_PASS, line_no);
