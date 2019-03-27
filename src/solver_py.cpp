@@ -86,24 +86,12 @@ void Solver_Py::add_edge(const string &src_path,
   path parent_directory;
 
   if (is_relative_import(import_line_to_path)){
-    parent_directory = path(src_path).parent_path();
-
-    unsigned int directories_above = how_many_directories_above(import_line_to_path);
-    for (unsigned int i = 0; i < directories_above; i++){
-      parent_directory = parent_directory.parent_path();
-    }
-
-    import_line_to_path = without_prepended_dots(import_line_to_path);
+    modify_path_and_statement_to_relative_import(import_line_to_path, src_path, parent_directory);
   } else {
-    parent_directory = path(process_path[0]);
+    parent_directory = path(process_path[0]); // Absolute import
   }
 
-  if (boost::contains(import_line_to_path, " import ")){
-    import_line_to_path = from_import_statement_to_path(import_line_to_path);
-  } else {
-    import_line_to_path = import_statement_to_path(import_line_to_path);
-  }
-
+  import_line_to_path = convert_import_statement_to_path_str(import_line_to_path);
   path likely_path = parent_directory / path(import_line_to_path);
   string likely_module_name = likely_path.stem().string();
   path likely_module_parent_path = likely_path.parent_path();
@@ -119,7 +107,6 @@ void Solver_Py::add_edge(const string &src_path,
       insert_edge(src_path, dst_path.string(), import_line_to_path, line_no);
       return;
     } else if (contains_star && is_package((likely_module_parent_path/likely_module_name).string())){
-      // Add edge between importing file and __init__.py in the imported package.
       import_line_to_path += "/__init__.py";
       insert_edge(src_path, canonical((likely_module_parent_path / likely_module_name / "__init__.py")).string(), import_line_to_path, line_no);
       return;
@@ -130,20 +117,8 @@ void Solver_Py::add_edge(const string &src_path,
 
   // if none of the cases above found a file:
   // -> add a dummy entry
-
-  string dummy_name;
-  if (boost::contains(statement, " ")){
-
-      dummy_name = get_first_substring(statement, " ");
-      if (dummy_name.empty()){
-          dummy_name = boost::erase_all_copy(statement, " ");
-      }
-  } else {
-      dummy_name = statement;
-  }
-
+  string dummy_name = extract_dummy_node_name(statement);
   insert_edge(src_path, "", dummy_name, line_no);
-
 }
 
 vector<string> Solver_Py::split_comma_string(const std::string &statement) {
@@ -221,14 +196,40 @@ void Solver_Py::handle_comma_separated_import(const std::string &src_path, const
   return;
 }
 
-string Solver_Py::dots_to_system_slash(const string &statement)
+void Solver_Py::modify_path_and_statement_to_relative_import(
+    string &statement, const string &src_path,
+    boost::filesystem::path &parent_directory){
+
+  parent_directory = path(src_path).parent_path();
+  unsigned int directories_above = how_many_directories_above(statement);
+  for (unsigned int i = 0; i < directories_above; i++){
+    parent_directory = parent_directory.parent_path();
+  }
+
+  statement = without_prepended_dots(statement);
+}
+
+string Solver_Py::extract_dummy_node_name(const string &statement)
 {
+  string dummy_name;
+  if (boost::contains(statement, " ")){
+    dummy_name = get_first_substring(statement, " ");
+    if (dummy_name.empty()){
+      dummy_name = boost::erase_all_copy(statement, " ");
+    }
+  } else {
+    dummy_name = statement;
+  }
+
+  return dummy_name;
+}
+
+string Solver_Py::dots_to_system_slash(const string &statement){
   const string separator(1, path::preferred_separator);
   return boost::replace_all_copy(statement, ".", separator);
 }
 
-string Solver_Py::from_import_statement_to_path(const string &statement)
-{
+string Solver_Py::convert_import_statement_to_path_str(const string &statement){
   string as_statements_removed = remove_as_statements(statement);
 
   string from_field;
@@ -250,7 +251,6 @@ string Solver_Py::from_import_statement_to_path(const string &statement)
                         / path{dots_to_system_slash(import_field)};
   } else {
     path_concatenation = dots_to_system_slash(as_statements_removed);
-
   }
 
   if (dirs_above > 0){
@@ -260,13 +260,6 @@ string Solver_Py::from_import_statement_to_path(const string &statement)
   }
 
   return boost::erase_all_copy(path_concatenation.string(), " ");
-}
-
-string Solver_Py::import_statement_to_path(const string &statement){
-  string as_statements_removed = remove_as_statements(statement);
-  string path_concatenation = dots_to_system_slash(as_statements_removed);
-  boost::erase_all(path_concatenation, " ");
-  return path_concatenation;
 }
 
 unsigned int Solver_Py::how_many_directories_above(const string &statement){

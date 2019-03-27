@@ -26,6 +26,7 @@
 #include <memory>
 #include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
+#include <boost/filesystem.hpp>
 
 namespace INCLUDE_GARDENER {
 
@@ -149,14 +150,7 @@ class Solver_Py : public Solver {
   /// @param statement The statement to convert.
   /// @return String with converted statement as system path.
   /// @pre statement contains the string " import "
-  virtual std::string from_import_statement_to_path(const std::string &statement);
-
-  /// @brief Converts a Python "import (x)" statement to a
-  /// system path string.
-  /// @param statement The statement to convert.
-  /// @return String with converted statement as system path.
-  /// @pre statement does not contain the statement " import "
-  virtual std::string import_statement_to_path(const std::string &statement);
+  virtual std::string convert_import_statement_to_path_str(const std::string &statement);
 
   /// @brief Counts how many dots a string is prepended with.
   /// @param statement The statement to test.
@@ -181,13 +175,18 @@ class Solver_Py : public Solver {
   /// @note Regex used is in variable past_dot_regex.
   virtual std::string without_prepended_dots(const std::string &statement);
 
-  /// @brief Removes " as x" statements from Python import string.
+  /// @brief Removes " as x" statements from Python import string
+  /// and returns a copy.
   virtual std::string remove_as_statements(const std::string &statement);
 
   /// @brief Splits a comma separated string into a vector.
   virtual std::vector<std::string> split_comma_string(const std::string &statement);
 
-  virtual void add_edges(const std::vector<std::string> &statements, std::string src_path, unsigned int idx, unsigned int line_no);
+  /// @brief Convenience function for adding a vector of statements
+  /// as edges through add_edge.
+  virtual void add_edges(const std::vector<std::string> &statements,
+                         std::string src_path, unsigned int idx,
+                         unsigned int line_no);
 
   virtual bool is_relative_import(const std::string &statement);
   virtual bool is_module(const std::string &path_string);
@@ -197,6 +196,12 @@ class Solver_Py : public Solver {
                                              const std::string &statement,
                                              unsigned int idx,
                                              unsigned int line_no);
+
+  virtual void modify_path_and_statement_to_relative_import(std::string &statement,
+                                      const std::string &src_path,
+                                      boost::filesystem::path &parent_directory);
+
+  virtual std::string extract_dummy_node_name(const std::string &statement);
 
  private:
   /// @brief The process paths given as a program argument.

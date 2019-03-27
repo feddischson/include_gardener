@@ -63,8 +63,7 @@ class SolverPyTest : public ::testing::Test, public Solver_Py {
 public:
   using Solver_Py::get_first_substring;
   using Solver_Py::dots_to_system_slash;
-  using Solver_Py::from_import_statement_to_path;
-  using Solver_Py::import_statement_to_path;
+  using Solver_Py::convert_import_statement_to_path_str;
   using Solver_Py::how_many_directories_above;
   using Solver_Py::begins_with_dot;
   using Solver_Py::without_prepended_dots;
@@ -84,7 +83,7 @@ class MockSolver_Py2 : public Solver_Py {
 public:
   MockSolver_Py2() = default;
 
-  MOCK_METHOD1(from_import_statement_to_path, string(const string &statement));
+  MOCK_METHOD1(convert_import_statement_to_path_str, string(const string &statement));
   MOCK_METHOD1(import_statement_to_path, string(const string &statement));
   MOCK_METHOD1(how_many_directories_above, unsigned int(const string &statement));
   MOCK_METHOD1(begins_with_dot, bool(const string &statement));
@@ -157,7 +156,7 @@ TEST_F(SolverPyTest, ImportToPath) {
   expected /= "bar";
   expected /= "baz";
 
-  string output = from_import_statement_to_path(input);
+  string output = convert_import_statement_to_path_str(input);
 
   EXPECT_THAT(output, Contains(path::preferred_separator));
   EXPECT_THAT(output, Not(Contains('.')));
@@ -170,7 +169,7 @@ TEST_F(SolverPyTest, ImportAsToPath) {
   string input = "foo.bar as baz";
   path p{"foo"};
   p /= "bar";
-  string output = from_import_statement_to_path(input);
+  string output = convert_import_statement_to_path_str(input);
 
   EXPECT_THAT(output, Contains(path::preferred_separator));
   EXPECT_THAT(output, Not(HasSubstr(".")));
@@ -289,31 +288,25 @@ TEST_F(SolverPyTest, CommaSeparatedMatch) {
 // NOLINTNEXTLINE
 TEST_F(SolverPyTest, FromXXXImportYYYNoDots) {
   string s = "xxx import yyy";
-  EXPECT_THAT("xxx/yyy", StrEq(from_import_statement_to_path(s)));
+  EXPECT_THAT("xxx/yyy", StrEq(convert_import_statement_to_path_str(s)));
 }
 
 // NOLINTNEXTLINE
 TEST_F(SolverPyTest, FromXXXImportYYYThreeDots) {
   string s = "...xxx import yyy";
-  EXPECT_THAT("../../xxx/yyy", StrEq(from_import_statement_to_path(s)));
+  EXPECT_THAT("../../xxx/yyy", StrEq(convert_import_statement_to_path_str(s)));
 }
 
 // NOLINTNEXTLINE
 TEST_F(SolverPyTest, FromXXXImportYYYAsZZZNoDots) {
   string s = "xxx import yyy as zzz";
-  EXPECT_THAT("xxx/yyy", StrEq(from_import_statement_to_path(s)));
+  EXPECT_THAT("xxx/yyy", StrEq(convert_import_statement_to_path_str(s)));
 }
 
 // NOLINTNEXTLINE
 TEST_F(SolverPyTest, FromXXXImportYYYAsZZZThreeDots) {
   string s = "...xxx import yyy as zzz";
-  EXPECT_THAT("../../xxx/yyy", StrEq(from_import_statement_to_path(s)));
-}
-
-// NOLINTNEXTLINE
-TEST_F(SolverPyTest, ImportXXXDotYYYDotZZZ) {
-  string s = "xxx.yyy.zzz";
-  EXPECT_THAT("xxx/yyy/zzz", StrEq(import_statement_to_path(s)));
+  EXPECT_THAT("../../xxx/yyy", StrEq(convert_import_statement_to_path_str(s)));
 }
 
 // vim: filetype=cpp et ts=2 sw=2 sts=2
