@@ -58,9 +58,6 @@ class Mock_Solver2 : public Solver {
     graph[edge] = Edge{static_cast<int>(line_no)};
   }
 
-  MOCK_METHOD4(add_edges, void(const string &, const vector<string> &, unsigned int,
-                               unsigned int));
-
   Vertex::Ptr find_vertex(const string &key) {
     auto x = vertexes.find(key);
     if (x != vertexes.end()) {

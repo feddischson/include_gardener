@@ -52,7 +52,7 @@ Statement_Py::Statement_Py(const std::string &src_path, const std::string &state
   }
 
   if (regex_idx == ALL_IMPORT){
-    erase_all_quotation_marks(modified_statement);
+    remove_all_quotation_marks(modified_statement);
 
     if (!contains_comma(modified_statement)){
       add_relative_dot_in_front(modified_statement);
@@ -63,6 +63,10 @@ Statement_Py::Statement_Py(const std::string &src_path, const std::string &state
     contains_multiple_imports = true;
     split_into_multiple_statements(src_path, modified_statement, regex_idx, line_no);
     return;
+  } else if (regex_idx == FROM_IMPORT){
+     // Remove import from middle
+     modified_statement = get_all_before_import(modified_statement)
+            + "." + get_all_after_import(modified_statement);
   }
 
   if (is_relative_import(modified_statement)){
@@ -88,9 +92,7 @@ bool Statement_Py::is_relative_import(const std::string &statement)
   return boost::regex_match(statement, r);
 }
 
-
-
-void Statement_Py::erase_all_quotation_marks(std::string &statement)
+void Statement_Py::remove_all_quotation_marks(std::string &statement)
 {
   boost::erase_all(statement, "\"");
   boost::erase_all(statement, "\'");
@@ -150,7 +152,7 @@ void Statement_Py::split_into_multiple_statements(const std::string &src_path,
 
     for (auto &comma_separated_statement : comma_separated_statements){
       add_package_name_in_front(comma_separated_statement, before_import);
-      Statement_Py child(src_path, comma_separated_statement, idx, line_no);
+      Statement_Py child(src_path, comma_separated_statement, IMPORT, line_no);
       child_statements.push_back(child);
     }
 
@@ -175,11 +177,6 @@ void Statement_Py::split_into_multiple_statements(const std::string &src_path,
 bool Statement_Py::contained_multiple_imports()
 {
   return contains_multiple_imports && !child_statements.empty();
-}
-
-std::vector<Statement_Py> Statement_Py::get_child_statements()
-{
-  return child_statements;
 }
 
 string Statement_Py::extract_dummy_node_name(const string &statement)

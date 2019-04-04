@@ -122,7 +122,10 @@ class Solver_Py : public Solver {
   /// as edges through add_edge.
   void add_edges(std::vector<Statement_Py> &statements);
 
+  /// @brief Tests if a path is a Python module.
   virtual bool is_module(const std::string &path_string);
+
+  /// @brief Tests if a path is a Python package.
   virtual bool is_package(const std::string &path_string);
 
  private:

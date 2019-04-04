@@ -41,7 +41,7 @@ using boost::filesystem::path;
 
 vector<string> Solver_Py::get_statement_regex() const {
   vector<string> regex_str = {R"(^[ \t]*import[ \t]+((?:[.]*)[^\d\W](?:[\w,\. ])*)[ \t]*$)",
-                             R"(^[ \t]*from[ \t]+([^\d\W](?:[\w\.]*)[ \t]+import[ \t]+(?:\*|[^\d\W](?:[\w,\. ]*)))[ \t]*$)",
+                             R"(^[ \t]*from[ \t]+(\.*[^\d\W](?:[\w\.]*)[ \t]+import[ \t]+(?:\*|[^\d\W](?:[\w,\. ]*)))[ \t]*$)",
                              R"(^[ \t]*__all__[ \t]*=[ \t]*\[(.*)\]$)"};
   return regex_str;
 }
