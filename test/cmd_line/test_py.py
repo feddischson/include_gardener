@@ -45,116 +45,131 @@ class GardenerTestCases(unittest.TestCase):
             A PyGraphml graph is returned.
         """
 
-        """ List of files by doing find -iname '*.py' -or -iname '*.pyw' -or -iname '*.py3'
+        """ List of files by doing:
+	 find -iname '*.py' -or -iname '*.pyw' -or -iname '*.py3'
 
         Use as basis for constructing the graph
-        ./pack2/file3.py
-        ./pack2/file2.py
-        ./pack2/file1.py
-        ./pack2/__init__.py
-        ./file2.py3
-        ./pack1/file3.py
-        ./pack1/file2.py
-        ./pack1/file1.py
-        ./pack1/subpack1/file3.py
-        ./pack1/subpack1/file2.py
-        ./pack1/subpack1/file1.py
-        ./pack1/subpack1/__init__.py
-        ./pack1/__init__.py
-        ./file1.py
+	./py/pack3/__init__.py
+	./py/pack3/file1.py
+	./py/file3.pyw
+	./py/pack2/__init__.py
+	./py/pack2/file3.py
+	./py/pack2/file2.py
+	./py/pack2/file1.py
+	./py/file2.py3
+	./py/file1.py
+	./py/pack1/__init__.py
+	./py/pack1/file3.py
+	./py/pack1/file2.py
+	./py/pack1/file1.py
+	./py/pack1/subpack1/__init__.py
+	./py/pack1/subpack1/file3.py
+	./py/pack1/subpack1/file2.py
+	./py/pack1/subpack1/file1.py
+
 
         """
 
         g = pgml.Graph()
 
-        bogusfile = g.add_node("1")
-        f1 = g.add_node("2")
-        f2 = g.add_node("3")
-        f3 = g.add_node("4")
-        filecmp = g.add_node("5")
-        fork = g.add_node("6")
-        os = g.add_node("7")
-        p1_f1 = g.add_node("8")
-        p1_f2 = g.add_node("9")
-        p1_f3 = g.add_node("10")
-        p1 = g.add_node("11")
-        p1_init = g.add_node("12")
-        p1_s1_f1 = g.add_node("13")
-        p1_s1_f2 = g.add_node("14")
-        p1_s1_f3 = g.add_node("15")
-        p1_s1 = g.add_node("16")
-        p1_s1_init = g.add_node("17")
-        p2_f1 = g.add_node("18")
-        p2_f2 = g.add_node("19")
-        p2_f3 = g.add_node("20")
-        p2 = g.add_node("21")
-        p2_init = g.add_node("22")
-        pickle = g.add_node("23")
-        sys = g.add_node("24")
+        f1 = g.add_node("1")
+        f2 = g.add_node("2")
+        f3 = g.add_node("3")
 
-        bogusfile['key1'] = 'bogusfilename'
+        p1_f1 = g.add_node("4")
+        p1_f2 = g.add_node("5")
+        p1_f3 = g.add_node("6")
+        p1_init = g.add_node("7")
+
+        p1_s1_f1 = g.add_node("8")
+        p1_s1_f2 = g.add_node("9")
+        p1_s1_f3 = g.add_node("10")
+        p1_s1_init = g.add_node("11")
+
+        p2_f1 = g.add_node("12")
+        p2_f2 = g.add_node("13")
+        p2_f3 = g.add_node("14")
+        p2_init = g.add_node("15")
+
+        p3_f1 = g.add_node("16")
+        p3_init = g.add_node("17")
+
+        bogusfile = g.add_node("18")
+        filecmp = g.add_node("19")
+        os = g.add_node("20")
+        pickle = g.add_node("21")
+        sys = g.add_node("22")
+
         f1['key1'] = 'file1.py'
         f2['key1'] = 'file2.py3'
         f3['key1'] = 'file3.pyw'
-        filecmp['key1'] = 'filecmp'
-        fork['key1'] = 'fork'
-        os['key1'] = 'os'
+
         p1_f1['key1'] = 'pack1/file1.py'
         p1_f2['key1'] = 'pack1/file2.py'
         p1_f3['key1'] = 'pack1/file3.py'
         p1_init['key1'] = 'pack1/__init__.py'
-        p1['key1'] ='pack1'
+
         p1_s1_f1['key1'] = 'pack1/subpack1/file1.py'
         p1_s1_f2['key1'] = 'pack1/subpack1/file2.py'
         p1_s1_f3['key1'] = 'pack1/subpack1/file3.py'
         p1_s1_init['key1'] = 'pack1/subpack1/__init__.py'
-        p1_s1['key1'] = 'pack1/subpack1'
+
         p2_f1['key1'] = 'pack2/file1.py'
         p2_f2['key1'] = 'pack2/file2.py'
         p2_f3['key1'] = 'pack2/file3.py'
         p2_init['key1'] = 'pack2/__init__.py'
-        p2['key1'] ='pack2'
+
+        p3_f1['key1'] = 'pack3/file1.py'
+        p3_init['key1'] = 'pack3/__init__.py'
+
+        bogusfile['key1'] = 'bogusfilename'
+        filecmp['key1'] = 'filecmp'
+        os['key1'] = 'os'
         pickle['key1'] = 'pickle'
         sys['key1'] = 'sys'
 
-        # Pack 1
-        g.add_edge(p1_init, pickle)
-        g.add_edge(p1_f1, p1_s1_f1)
-        g.add_edge(p1_f1, p2_f1)
-        g.add_edge(p1_f2, p1_f1)
-        g.add_edge(p1_f2, p1_f3)
-        g.add_edge(p1_f2, p1_s1_f1)
-        g.add_edge(p1_f3, sys)
-
-        # Pack 1, Subpack 1 (no imports in __init__.py)
-        g.add_edge(p1_s1_f1, p1_s1_f3)
-        g.add_edge(p1_s1_f2, sys)
-        g.add_edge(p1_s1_f2, p1_s1_f1)
-        g.add_edge(p1_s1_f3, filecmp)
-
-        # Pack 2
-        g.add_edge(p2_f3, p1_f2)
-        g.add_edge(p2_f2, filecmp)
-        g.add_edge(p2_init, p1_f1)
-
-        # File1.py
-        g.add_edge(f1, p1)
-        g.add_edge(f1, p2)
-        g.add_edge(f1, p2_init)
+	# Root
         g.add_edge(f1, p1_s1_f1)
 
-        # File2.py3
-        g.add_edge(f2, fork)
         g.add_edge(f2, sys)
-        g.add_edge(f2, p1_s1)
-        g.add_edge(f2, p2)
+        g.add_edge(f2, p1_s1_init) # *-import
+        g.add_edge(f2, p1_f1)
+        g.add_edge(f2, os)
 
-        # File3.pyw
+        g.add_edge(f3, p2_init) # *-import
         g.add_edge(f3, bogusfile)
-        g.add_edge(f3, p2_init)
-        g.add_edge(f3, p2_f1)
-        g.add_edge(f3, p2_f2)
-        g.add_edge(f3, p2_f3)
+
+        # Pack 1
+        g.add_edge(p1_f1, p1_s1_f1)
+        g.add_edge(p1_f1, p2_f1)
+
+        g.add_edge(p1_f2, f1)
+        g.add_edge(p1_f2, f3)
+        g.add_edge(p1_f2, p1_s1_f1)
+
+        g.add_edge(p1_f3, sys)
+
+        g.add_edge(p1_init, pickle)
+
+        # Pack 1, Subpack 1
+        g.add_edge(p1_s1_f1, f3)
+
+        g.add_edge(p1_s1_f2, sys)
+        g.add_edge(p1_s1_f2, f1)
+
+        g.add_edge(p1_s1_f3, filecmp)
+
+        # Pack 2 (__init__ has __all__ import)
+        g.add_edge(p2_f2, filecmp)
+
+        g.add_edge(p2_f3, p1_f2)
+        
+        g.add_edge(p2_init, p2_f1)
+        g.add_edge(p2_init, p2_f2)
+        g.add_edge(p2_init, p2_f3)
+
+        # Pack 3 (__init__ has __all__ import)
+        g.add_edge(p3_init, p3_f1)
 
         return g
 
@@ -193,6 +208,8 @@ class GardenerTestCases(unittest.TestCase):
             # search for the src in the second list
             for n2 in nodes2:
                 src2 = n2['key1']
+
+                print(src1 + " =? " + src2)
 
                 if src1 == src2:
                     found = True
