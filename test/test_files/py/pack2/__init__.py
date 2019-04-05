@@ -1,1 +1,2 @@
-from pack1 import file1
+# Multiple __all__ import
+__all__ = ["file1", "file2", "file3"]

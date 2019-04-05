@@ -57,7 +57,8 @@ set (SOURCE_FILES
   ${CMAKE_SOURCE_DIR}/src/vertex.cpp
   ${CMAKE_SOURCE_DIR}/src/solver.cpp
   ${CMAKE_SOURCE_DIR}/src/solver_c.cpp
-  ${CMAKE_SOURCE_DIR}/src/solver_py.cpp )
+  ${CMAKE_SOURCE_DIR}/src/solver_py.cpp
+  ${CMAKE_SOURCE_DIR}/src/statement_py.cpp )
 
 set (EXEC_SOURCE_FILES
   ${SOURCE_FILES}
@@ -70,7 +71,8 @@ set (UNIT_TEST_SOURCE_FILES
   ${CMAKE_SOURCE_DIR}/test/unit_test/test_helper.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_test/test_input_files.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_test/test_solver.cpp
-  ${CMAKE_SOURCE_DIR}/test/unit_test/test_solver_py.cpp)
+  ${CMAKE_SOURCE_DIR}/test/unit_test/test_solver_py.cpp
+  ${CMAKE_SOURCE_DIR}/test/unit_test/test_statement_py.cpp )
 
 add_executable ( include_gardener ${EXEC_SOURCE_FILES})
 
