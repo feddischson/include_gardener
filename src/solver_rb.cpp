@@ -35,7 +35,10 @@ using std::vector;
 
 vector<string> Solver_Rb::get_statement_regex() const {
   // TODO: Maybe should use [^'] rather than \S.
-  vector<string> regex_str = {R"(\s*(?:require|require_relative)\s+'(\S+)')"};
+  vector<string> regex_str = {
+    R"(\s*(?:require_relative)\s+'(\S+)')",
+    R"(\s*(?:require)\s+'(\S+)')"
+  };
   return regex_str;
 }
 
@@ -69,20 +72,59 @@ void Solver_Rb::add_edge(const std::string &src_path, const std::string &stateme
                            << ", idx = " << idx << ", line_no = " << line_no;
 
   #define RB_EXT path(".rb")
-
+  
+  // TODO: Maybe rather than confusing this branch condition, split the body into a separate function.
   if (0 == idx) {
-    // construct relative path from the same directory as
-    // the file that contains the require statement.
+    // require_relative: Construct edge from a relative path
+
     path base = path(src_path).parent_path();
     path dst_path = base / statement;
     dst_path.replace_extension(RB_EXT);
+
     if (exists(dst_path)) {
       dst_path = canonical(dst_path);
       BOOST_LOG_TRIVIAL(trace) << "   |>> Relative Edge";
       insert_edge(src_path, dst_path.string(), statement, line_no);
       return;
     }
-  } 
+  }
+  else if (1 == idx) {
+    // require
+
+    // TODO: if the statement is a gem, then it will be regular require and no dot or dot-dot.
+
+    // cosntruct from relative
+    if ((statement.substr(0, 1) == ".") || (statement.substr(0, 2) == "..")) {
+      path base = path(src_path).parent_path();
+      path dst_path = base / statement;
+      dst_path.replace_extension(RB_EXT);
+
+      if (exists(dst_path)) {
+        dst_path = canonical(dst_path);
+        BOOST_LOG_TRIVIAL(trace) << "   |>> Relative Edge";
+        insert_edge(src_path, dst_path.string(), statement, line_no);
+        return;
+      }
+    }
+
+    // construct edge from the include directories supplied by the user
+    for (const auto &i_path : include_paths) {
+      path dst_path = i_path / statement;
+      dst_path.replace_extension(RB_EXT);
+      BOOST_LOG_TRIVIAL(trace) << "Absolute Destination:" << dst_path;
+
+      if (exists(dst_path)) {
+        dst_path = canonical(dst_path);
+        BOOST_LOG_TRIVIAL(trace) << "   |>> Absolute Edge";
+        insert_edge(src_path, dst_path.string(), statement, line_no);
+        return;
+      }
+    }
+  }
+
+  // if non of the cases above found a file:
+  // -> add an dummy entry
+  insert_edge(src_path, "", statement, line_no);
 }
 
 void Solver_Rb::insert_edge(const std::string &src_path,
