@@ -124,10 +124,6 @@ Solver::Ptr init_options(int argc, char* argv[], Options* opts) {
                                       "output file")(
        "format,f", po::value<string>(),
        "output format (suported formats: dot, xml/graphml)")(
-       "process-path,P", po::value<vector<string> >()->composing(),
-       "path which is processed")(
-       "exclude,e", po::value<vector<string> >()->composing(),
-       "regular expressions to exclude specific files")(
        "recursive-limit,L", po::value<int>(),
        "limits recursive processing (default=-1 = unlimited)")(
        "threads,j", po::value<int>(),
@@ -142,7 +138,6 @@ Solver::Ptr init_options(int argc, char* argv[], Options* opts) {
 
    po::store(po::command_line_parser(argc, argv)
                   .options(desc)
-                  .positional(pos)
                   .allow_unregistered() // Don't catch unknown options until we add language-dependent options
                   .run(),
                vm);
@@ -174,11 +169,22 @@ Solver::Ptr init_options(int argc, char* argv[], Options* opts) {
       exit(-1);
    }
    
-   // Add language-specific options.
+   // Add the vector options
+   desc.add_options()(
+       "process-path,P", po::value<vector<string> >()->composing(),
+       "path which is processed")(
+       "exclude,e", po::value<vector<string> >()->composing(),
+       "regular expressions to exclude specific files");
+   
+   // Add language-specific options
    solver->add_options(&desc);
 
    try {
-      po::store(po::parse_command_line(argc, argv, desc), vm);
+      po::store(po::command_line_parser(argc, argv)
+                  .options(desc)
+                  .positional(pos)
+                  .run(),
+               vm);
       po::notify(vm);
    } catch (boost::program_options::unknown_option& e) {
       cerr << e.what() << "\n";

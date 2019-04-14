@@ -225,7 +225,8 @@ class GardenerTestCases(unittest.TestCase):
         The test expects that the result can be read by graphml
         and that there is at least one node.
         """
-        g1 = self.graphml_gardener_call(['-I', self.T_PATH + 'inc/'])
+        print(self.T_PATH + 'inc/')
+        g1 = self.graphml_gardener_call(['-I', self.T_PATH + '/inc/'])
 
         # get a reference graph
         g2 = self.build_reference_graph()
