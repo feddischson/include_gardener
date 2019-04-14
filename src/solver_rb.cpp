@@ -34,9 +34,8 @@ using std::unique_lock;
 using std::vector;
 
 vector<string> Solver_Rb::get_statement_regex() const {
-  // TODO: Maybe should use [^'] rather than \S.
   vector<string> regex_str = {
-    R"(\s*(?:require_relative)\s+'(\S+)')",
+    R"(\s*(?:require_relative|load)\s+'(\S+)')",
     R"(\s*(?:require)\s+'(\S+)')"
   };
   return regex_str;
@@ -75,7 +74,6 @@ void Solver_Rb::add_edge(const std::string &src_path, const std::string &stateme
 
   #define RB_EXT path(".rb")
   
-  // TODO: Maybe rather than confusing this branch condition, split the body into a separate function.
   if (0 == idx) {
     // require_relative: Construct edge from a relative path
 
