@@ -155,9 +155,14 @@ add_test( unit_test unit_test --gtest_output=xml:test-reports/unit_test_results.
 ##
 ## cmdline test execution (via python)
 ##
-add_test( c_cmdline_test python3 ${TEST_DIR}/cmd_line/test.py
+add_test( c_cmdline_test python3 ${TEST_DIR}/cmd_line/test_basic.py
   test-reports
   ${CMAKE_BINARY_DIR}/include_gardener ${TEST_DIR}/test_files/c )
+
+add_test( ruby_cmdline_test python3 ${TEST_DIR}/cmd_line/test.py
+  test-reports ruby ${TEST_DIR}/cmd_line ${CMAKE_BINARY_DIR}/include_gardener
+  ${TEST_DIR}/test_files/ruby/require_needs_include/lib
+  ${TEST_DIR}/test_files/ruby/require_needs_include )
 
 ##
 ## CPPCHECK
