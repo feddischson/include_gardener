@@ -46,14 +46,12 @@ string Solver_Rb::get_file_regex() const {
 }
 
 void Solver_Rb::add_options(po::options_description *options) {
-  // TODO: Add a unique ruby include path.
   options->add_options()("ruby-include-path,I",
                          po::value<vector<string> >()->composing(),
                          "ruby-include path");
 }
 
 void Solver_Rb::extract_options(const po::variables_map &vm) {
-  // TODO: Use a unique ruby include path.
   if (vm.count("ruby-include-path") != 0u) {
     include_paths = vm["ruby-include-path"].as<vector<string> >();
   }
@@ -92,6 +90,7 @@ void Solver_Rb::add_edge(const std::string &src_path, const std::string &stateme
     // require
 
     // TODO: if the statement is a gem, then it will be regular require and no dot or dot-dot.
+    //  In this case, we would look at the $LOAD_PATH, but we will leave it to an additional feature.
 
     // cosntruct from relative
     if ((statement.substr(0, 1) == ".") || (statement.substr(0, 2) == "..")) {
