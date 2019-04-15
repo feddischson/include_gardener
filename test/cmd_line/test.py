@@ -116,7 +116,7 @@ class GardenerTestCases(unittest.TestCase):
             self.assertCountEqual(dst1, dst2)
 
     def gardener_call(self, options, subpath=""):
-
+        
         p_args = [self.G_PATH, os.path.join(self.T_PATH, subpath)] + options
         # print( ' '.join( p_args ) )
         pipe = Popen(p_args, stdout=PIPE)
@@ -225,7 +225,7 @@ class GardenerTestCases(unittest.TestCase):
         The test expects that the result can be read by graphml
         and that there is at least one node.
         """
-        g1 = self.graphml_gardener_call(['-I', self.T_PATH + '/inc/'])
+        g1 = self.graphml_gardener_call(['-I', self.T_PATH + 'inc/'])
 
         # get a reference graph
         g2 = self.build_reference_graph()

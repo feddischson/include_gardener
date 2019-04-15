@@ -70,3 +70,18 @@ TEST_F (Solver_Rb_Test, statement_regex) {
   EXPECT_TRUE(sd.line_is_valid("require_relative 'banjo.rb'"));
   EXPECT_TRUE(sd.line_is_valid("require_relative 'banjo'"));
 }
+
+// NOLINTNEXTLINE
+TEST_F (Solver_Rb_Test, rb_require) {
+  Mock_Statement_Detector sd(solver.get_solver("ruby"));
+}
+
+// NOLINTNEXTLINE
+TEST_F (Solver_Rb_Test, rb_require_relative) {
+  Mock_Statement_Detector sd(solver.get_solver("ruby"));
+}
+
+// NOLINTNEXTLINE
+TEST_F (Solver_Rb_Test, rb_load) {
+  Mock_Statement_Detector sd(solver.get_solver("ruby"));
+}
