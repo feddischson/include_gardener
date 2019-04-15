@@ -54,10 +54,10 @@ void Solver_Rb::add_options(po::options_description *options) {
 
 void Solver_Rb::extract_options(const po::variables_map &vm) {
   // TODO: Use a unique ruby include path.
-  if (vm.count("c-include-path") != 0u) {
-    include_paths = vm["c-include-path"].as<vector<string> >();
+  if (vm.count("ruby-include-path") != 0u) {
+    include_paths = vm["ruby-include-path"].as<vector<string> >();
   }
-  BOOST_LOG_TRIVIAL(trace) << "c-include-paths:   ";
+  BOOST_LOG_TRIVIAL(trace) << "ruby-include-paths:   ";
   for (const auto &p : include_paths) {
     BOOST_LOG_TRIVIAL(trace) << "    " << p;
   }
@@ -111,7 +111,6 @@ void Solver_Rb::add_edge(const std::string &src_path, const std::string &stateme
     for (const auto &i_path : include_paths) {
       path dst_path = i_path / statement;
       dst_path.replace_extension(RB_EXT);
-      BOOST_LOG_TRIVIAL(trace) << "Absolute Destination:" << dst_path;
 
       if (exists(dst_path)) {
         dst_path = canonical(dst_path);

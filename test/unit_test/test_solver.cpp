@@ -44,6 +44,10 @@ class Mock_Solver2 : public Solver {
   string get_file_regex() const override { return string(); }
 
   // NOLINTNEXTLINE
+  void add_options(boost::program_options::options_description *) override {
+  }
+
+  // NOLINTNEXTLINE
   void extract_options(const boost::program_options::variables_map &) override {
   }
 

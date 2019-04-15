@@ -76,7 +76,7 @@ class Solver_Rb : public Solver {
 
   /// @brief Adds solver-specific options
   /// not implemented! (may not have to be)
-  static void add_options(boost::program_options::options_description *options);
+  virtual void add_options(boost::program_options::options_description *options) override;
 
  protected:
   /// @brief Adds an edge

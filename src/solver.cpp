@@ -60,11 +60,6 @@ void Solver::add_vertex(const std::string& name, const std::string& abs_path) {
   }
 }
 
-void Solver::add_options(boost::program_options::options_description* options) {
-  // TODO: Make this generic to all subclasses of Solver.
-  Solver_C::add_options(options);
-}
-
 Solver::Ptr Solver::get_solver(const std::string& name) {
   if (name == "c") {
     return std::dynamic_pointer_cast<Solver>(std::make_shared<Solver_C>());

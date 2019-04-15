@@ -78,7 +78,7 @@ class Solver_C : public Solver {
       const boost::program_options::variables_map &vm) override;
 
   /// @brief Adds solver-specific options.
-  static void add_options(boost::program_options::options_description *options);
+  virtual void add_options(boost::program_options::options_description *options) override;
 
  protected:
   /// @brief Adds an edge
