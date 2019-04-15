@@ -137,7 +137,7 @@ Solver::Ptr init_options(int argc, char* argv[], Options* opts) {
    po::positional_options_description pos;
    pos.add("process-path", -1);
 
-   // the process-path arguments can also be provided als post-arguments
+   // the process-path arguments can also be provided as post-arguments
    po::variables_map vm;
 
    po::store(po::command_line_parser(argc, argv)
@@ -174,7 +174,7 @@ Solver::Ptr init_options(int argc, char* argv[], Options* opts) {
       exit(-1);
    }
    
-   // Add lang-dependent options.
+   // Add language-specific options.
    solver->add_options(&desc);
 
    try {
