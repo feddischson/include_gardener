@@ -52,7 +52,7 @@ class Mock_Solver : public Solver {
   }
   MOCK_CONST_METHOD0(get_file_regex, string());
   MOCK_CONST_METHOD0(name, string());
-  MOCK_CONST_METHOD1(add_options, void(po::options_description *));
+  MOCK_METHOD1(add_options, void(po::options_description *));
   MOCK_METHOD1(extract_options, void(const po::variables_map &));
 };
 

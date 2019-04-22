@@ -18,8 +18,8 @@
 // Public License along with this program; if not, see
 // <http://www.gnu.org/licenses/>.
 //
-#ifndef SOLVER_C_H
-#define SOLVER_C_H
+#ifndef SOLVER_RB_H
+#define SOLVER_RB_H
 
 #include <memory>
 
@@ -29,33 +29,29 @@ namespace INCLUDE_GARDENER {
 
 /// @brief Solver class for C/C++/Obj-C language.
 /// @details
-///   Instances of this class behave simlar to the C-pre-processor.
-///   When an include statement is detected:
-///   Depending if it is a #include "" or #include <> statement,
-///   the file is searched relative to the source file first, or
-///   in the include paths, provided by the option c-include-path list.
-class Solver_C : public Solver {
+/// The file is searched relative to the path (if any) in each require.
+class Solver_Rb : public Solver {
  public:
-  /// @brief Smart pointer for Solver_C
-  using Ptr = std::shared_ptr<Solver_C>;
+  /// @brief Smart pointer for Solver_Rb
+  using Ptr = std::shared_ptr<Solver_Rb>;
 
   /// @brief Default ctor.
-  Solver_C() = default;
+  Solver_Rb() = default;
 
   /// @brief Copy ctor: not implemented!
-  Solver_C(const Solver_C &other) = delete;
+  Solver_Rb(const Solver_Rb &other) = delete;
 
   /// @brief Assignment operator: not implemented!
-  Solver_C &operator=(const Solver_C &rhs) = delete;
+  Solver_Rb &operator=(const Solver_Rb &rhs) = delete;
 
   /// @brief Move constructor: not implemented!
-  Solver_C(Solver_C &&rhs) = delete;
+  Solver_Rb(Solver_Rb &&rhs) = delete;
 
   /// @brief Move assignment operator: not implemented!
-  Solver_C &operator=(Solver_C &&rhs) = delete;
+  Solver_Rb &operator=(Solver_Rb &&rhs) = delete;
 
   /// @brief Default dtor
-  ~Solver_C() override = default;
+  ~Solver_Rb() override = default;
 
   /// @brief Adds an edge to the graph.
   /// @param src_path Path the the source path (where the statement is detected.
@@ -73,11 +69,13 @@ class Solver_C : public Solver {
   ///        detectes the files.
   std::string get_file_regex() const override;
 
-  /// @brief Extracts solver-specific options (variables).
+  /// @brief Extracts solver-specific options (variables)
+  /// not implemented! (may not have to be)
   void extract_options(
       const boost::program_options::variables_map &vm) override;
 
-  /// @brief Adds solver-specific options.
+  /// @brief Adds solver-specific options
+  /// not implemented! (may not have to be)
   virtual void add_options(boost::program_options::options_description *options) override;
 
  protected:
@@ -93,10 +91,10 @@ class Solver_C : public Solver {
  private:
   /// @brief Search path for include statements.
   std::vector<std::string> include_paths;
-};  // class Solver_C
+};  // class Solver_Rb
 
 }  // namespace INCLUDE_GARDENER
 
-#endif  // SOLVER_C_H
+#endif  // SOLVER_RB_H
 
 // vim: filetype=cpp et ts=2 sw=2 sts=2

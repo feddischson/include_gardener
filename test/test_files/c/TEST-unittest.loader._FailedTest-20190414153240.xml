@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<testsuite errors="2" failures="0" name="unittest.loader._FailedTest-20190414153240" tests="2" time="0.000">
+	<testcase classname="unittest.loader._FailedTest" name="test-reports" time="0.000">
+		<error message="module '__main__' has no attribute 'test-reports'" type="AttributeError">
+<![CDATA[AttributeError: module '__main__' has no attribute 'test-reports'
+]]>		</error>
+	</testcase>
+	<testcase classname="unittest.loader._FailedTest" name="/home/benji/code/oss/include_gardener/build/include_gardener" time="0.000">
+		<error message="module '__main__' has no attribute '/home/benji/code/oss/include_gardener/build/include_gardener'" type="AttributeError">
+<![CDATA[AttributeError: module '__main__' has no attribute '/home/benji/code/oss/include_gardener/build/include_gardener'
+]]>		</error>
+	</testcase>
+	<system-out>
+<![CDATA[]]>	</system-out>
+	<system-err>
+<![CDATA[]]>	</system-err>
+</testsuite>
