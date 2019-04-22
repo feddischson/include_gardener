@@ -27,6 +27,7 @@
 
 #include "file_detector.h"
 #include "solver_c.h"
+#include "solver_py.h"
 #include "statement_detector.h"
 
 using std::cerr;
@@ -105,7 +106,7 @@ int main(int argc, char* argv[]) {
       cerr << e.what() << "\n";
       exit(-1);
    } catch (...) {
-      cerr << "Unecpected Error!"
+      cerr << "Unexpected Error!"
            << "\n";
       exit(-1);
    }
