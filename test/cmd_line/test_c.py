@@ -1,8 +1,8 @@
 ###
 #
-# Command-line tests written in Python.
+# Command-line tests written in Python (C-language).
 # Do
-#  > python3 test.py test-reports ../../build/include_gardener ../test_files/c
+#  > python3 test_c.py test-reports ../../build/include_gardener ../test_files/c
 # to run the tests
 #
 # The first argument is used to defines the include_gardener executable,

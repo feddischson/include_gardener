@@ -1,6 +1,6 @@
 ###
 #
-# Command-line tests written in Python.
+# Command-line tests written in Python (Python language).
 # Do
 #  > python3 test_py.py test-reports ../../build/include_gardener ../test_files/py
 # to run the tests
@@ -163,7 +163,7 @@ class GardenerTestCases(unittest.TestCase):
         g.add_edge(p2_f2, filecmp)
 
         g.add_edge(p2_f3, p1_f2)
-        
+
         g.add_edge(p2_init, p2_f1)
         g.add_edge(p2_init, p2_f2)
         g.add_edge(p2_init, p2_f3)
