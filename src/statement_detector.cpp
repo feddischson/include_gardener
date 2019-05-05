@@ -94,7 +94,6 @@ void Statement_Detector::process_stream(istream& input,
         found_multi_line = false;
       } else {
         // ... if not: move on.
-        line_cnt++;
       }
     } else if (line.back() == '\\') {
       line.pop_back();
