@@ -92,6 +92,7 @@ void Statement_Detector::process_stream(istream& input,
                            line_cnt);
         }
         found_multi_line = false;
+        multi_line = "";
       } else {
         // ... if not: move on.
       }
@@ -108,6 +109,7 @@ void Statement_Detector::process_stream(istream& input,
                            line_cnt);
         }
         found_multi_line = false;
+        multi_line = "";
       } else {
         statement = detect(line);
         if (statement) {
