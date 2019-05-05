@@ -24,36 +24,39 @@
 #include <string>
 #include <vector>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/find.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/find.hpp>
 #include <boost/regex.hpp>
 
 namespace INCLUDE_GARDENER {
-  using std::string;
-  using std::vector;
-  using boost::filesystem::path;
+using boost::filesystem::path;
+using std::string;
+using std::vector;
 
-Statement_Py::Statement_Py(const std::string &src_path, const std::string &statement, unsigned int idx, unsigned int line_no)
-  : source_path(src_path), original_statement(statement), line_number(line_no)
-{
+Statement_Py::Statement_Py(const std::string &src_path,
+                           const std::string &statement, unsigned int idx,
+                           unsigned int line_no)
+    : source_path(src_path),
+      original_statement(statement),
+      line_number(line_no) {
   regex_idx = idx;
 
-  if (regex_idx == FROM_IMPORT && contains_star(original_statement)){
+  if (regex_idx == FROM_IMPORT && contains_star(original_statement)) {
     had_star = true;
     modified_statement = get_all_before_import(original_statement);
-    regex_idx = IMPORT; // Treat as normal import statement
+    regex_idx = IMPORT;  // Treat as normal import statement
   } else {
     modified_statement = original_statement;
   }
 
-  if (regex_idx == ALL_IMPORT){
+  if (regex_idx == ALL_IMPORT) {
     remove_all_quotation_marks(modified_statement);
 
-    if (!contains_comma(modified_statement)){
+    if (!contains_comma(modified_statement)) {
       add_relative_dot_in_front(modified_statement);
     }
   }
@@ -61,17 +64,17 @@ Statement_Py::Statement_Py(const std::string &src_path, const std::string &state
   is_relative = is_relative_import(modified_statement);
   contains_multiple_imports = contains_comma(modified_statement);
 
-  if (contains_multiple_imports){
-    split_into_multiple_statements(src_path, modified_statement, regex_idx, line_no);
+  if (contains_multiple_imports) {
+    split_into_multiple_statements(src_path, modified_statement, regex_idx,
+                                   line_no);
     return;
-  } else if (regex_idx == FROM_IMPORT){
-
+  } else if (regex_idx == FROM_IMPORT) {
     // Remove import from the middle
-    modified_statement = get_all_before_import(modified_statement)
-            + "." + get_all_after_import(modified_statement);
+    modified_statement = get_all_before_import(modified_statement) + "." +
+                         get_all_after_import(modified_statement);
   }
 
-  if (is_relative){
+  if (is_relative) {
     directories_above = how_many_directories_above(modified_statement);
     remove_prepended_dots(modified_statement);
   }
@@ -87,87 +90,79 @@ vector<string> Statement_Py::split_by_comma(const string &statement) {
   return separate_statements;
 }
 
-bool Statement_Py::is_relative_import(const std::string &statement)
-{
+bool Statement_Py::is_relative_import(const std::string &statement) {
   boost::regex r(dot_regex);
   return boost::regex_match(statement, r);
 }
 
-void Statement_Py::remove_all_quotation_marks(std::string &statement)
-{
+void Statement_Py::remove_all_quotation_marks(std::string &statement) {
   boost::erase_all(statement, "\"");
   boost::erase_all(statement, "\'");
 }
 
-void Statement_Py::add_relative_dot_in_front(std::string &statement)
-{
+void Statement_Py::add_relative_dot_in_front(std::string &statement) {
   statement.insert(0, ".");
 }
 
-void Statement_Py::add_package_name_in_front(std::string &statement, const std::string &package_name)
-{
+void Statement_Py::add_package_name_in_front(std::string &statement,
+                                             const std::string &package_name) {
   statement.insert(0, package_name + ".");
 }
 
-std::string Statement_Py::get_all_before_import(const std::string &statement)
-{
+std::string Statement_Py::get_all_before_import(const std::string &statement) {
   string::size_type pos_of_import = statement.find(" import ");
-  if (pos_of_import != string::npos){
+  if (pos_of_import != string::npos) {
     string str_copy = statement.substr(0, pos_of_import);
     return str_copy;
   }
   return "";
 }
 
-std::string Statement_Py::get_all_after_import(const std::string &statement)
-{
+std::string Statement_Py::get_all_after_import(const std::string &statement) {
   string::size_type pos_of_import = statement.find(" import ");
-  if (pos_of_import != string::npos){
+  if (pos_of_import != string::npos) {
     string str_copy = statement.substr(pos_of_import + 8);
     return str_copy;
   }
   return "";
 }
 
-bool Statement_Py::contains_comma(const std::string &statement)
-{
+bool Statement_Py::contains_comma(const std::string &statement) {
   return boost::contains(statement, ",");
 }
 
-bool Statement_Py::contains_star(const std::string &statement)
-{
+bool Statement_Py::contains_star(const std::string &statement) {
   return boost::contains(statement, "*");
 }
 
 void Statement_Py::split_into_multiple_statements(const std::string &src_path,
                                                   const std::string &statement,
                                                   unsigned int idx,
-                                                  unsigned int line_no)
-{
+                                                  unsigned int line_no) {
   vector<string> comma_separated_statements;
 
-  if (idx == FROM_IMPORT){
+  if (idx == FROM_IMPORT) {
     string before_import = get_all_before_import(statement);
     string after_import = get_all_after_import(statement);
     comma_separated_statements = split_by_comma(after_import);
 
-    for (auto &comma_separated_statement : comma_separated_statements){
+    for (auto &comma_separated_statement : comma_separated_statements) {
       add_package_name_in_front(comma_separated_statement, before_import);
       remove_whitespace(comma_separated_statement);
       Statement_Py child(src_path, comma_separated_statement, IMPORT, line_no);
       child_statements.push_back(child);
     }
 
-  } else if (idx == IMPORT || idx == ALL_IMPORT){
+  } else if (idx == IMPORT || idx == ALL_IMPORT) {
     comma_separated_statements = split_by_comma(statement);
 
-    if (idx == ALL_IMPORT){
-      for (auto &comma_separated_statement : comma_separated_statements){
+    if (idx == ALL_IMPORT) {
+      for (auto &comma_separated_statement : comma_separated_statements) {
         add_relative_dot_in_front(comma_separated_statement);
       }
     }
 
-    for (auto &comma_separated_statement : comma_separated_statements){
+    for (auto &comma_separated_statement : comma_separated_statements) {
       Statement_Py child(src_path, comma_separated_statement, idx, line_no);
       child_statements.push_back(child);
     }
@@ -176,17 +171,15 @@ void Statement_Py::split_into_multiple_statements(const std::string &src_path,
   return;
 }
 
-bool Statement_Py::contained_multiple_imports()
-{
+bool Statement_Py::contained_multiple_imports() {
   return contains_multiple_imports && !child_statements.empty();
 }
 
-string Statement_Py::extract_dummy_node_name(const string &statement)
-{
+string Statement_Py::extract_dummy_node_name(const string &statement) {
   string dummy_name;
-  if (boost::contains(statement, " ")){
+  if (boost::contains(statement, " ")) {
     dummy_name = get_all_before_import(statement);
-    if (dummy_name.empty()){
+    if (dummy_name.empty()) {
       dummy_name = boost::erase_all_copy(statement, " ");
     }
   } else {
@@ -196,47 +189,44 @@ string Statement_Py::extract_dummy_node_name(const string &statement)
   return dummy_name;
 }
 
-string Statement_Py::dots_to_system_slash(const string &statement){
+string Statement_Py::dots_to_system_slash(const string &statement) {
   const string separator(1, path::preferred_separator);
   return boost::replace_all_copy(statement, ".", separator);
 }
 
-unsigned int Statement_Py::how_many_directories_above(const string &statement){
+unsigned int Statement_Py::how_many_directories_above(const string &statement) {
   boost::regex r(dot_regex);
   boost::match_results<string::const_iterator> results;
-  if (boost::regex_match(statement, results, r)){
+  if (boost::regex_match(statement, results, r)) {
     return results[1].length() - 1;  // The first dot is current directory
   }
 
   return 0;
 }
 
-void Statement_Py::remove_prepended_dots(std::string &statement)
-{
+void Statement_Py::remove_prepended_dots(std::string &statement) {
   boost::regex r(past_dot_regex);
   boost::match_results<string::const_iterator> results;
-  if (boost::regex_match(statement, results, r)){
-    if (results.size() > 1){
+  if (boost::regex_match(statement, results, r)) {
+    if (results.size() > 1) {
       statement = results[1].str();
     }
   }
 }
 
-void Statement_Py::remove_whitespace(std::string &statement)
-{
+void Statement_Py::remove_whitespace(std::string &statement) {
   boost::erase_all(statement, " ");
 }
 
-void Statement_Py::remove_as_statements(std::string &statement)
-{
+void Statement_Py::remove_as_statements(std::string &statement) {
   string::size_type as_pos;
   string::size_type comma_pos;
 
   do {
     as_pos = statement.find(" as ");
-    if (as_pos != string::npos){
+    if (as_pos != string::npos) {
       comma_pos = statement.find(",", as_pos);
-      if (comma_pos != string::npos){
+      if (comma_pos != string::npos) {
         statement.erase(as_pos, comma_pos);
       } else {
         statement.erase(as_pos, string::npos);

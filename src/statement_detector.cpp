@@ -66,7 +66,8 @@ optional<pair<string, unsigned int>> Statement_Detector::detect(
     auto s = statements[i];
     if (regex_search(line, match, s)) {
       if (!match.empty()) {
-        BOOST_LOG_TRIVIAL(trace) << "Statement matched: " << match[match.size() - 1];
+        BOOST_LOG_TRIVIAL(trace)
+            << "Statement matched: " << match[match.size() - 1];
         return pair<string, unsigned int>(match[match.size() - 1], i);
       }
     }

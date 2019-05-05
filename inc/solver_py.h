@@ -24,10 +24,10 @@
 #include "solver.h"
 #include "statement_py.h"
 
-#include <memory>
 #include <boost/algorithm/string.hpp>
-#include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
+#include <memory>
 
 namespace INCLUDE_GARDENER {
 
@@ -60,7 +60,6 @@ namespace INCLUDE_GARDENER {
 /// @note Options have not been implemented.
 
 class Solver_Py : public Solver {
-
  public:
   /// @brief Smart pointer for Solver_Py
   using Ptr = std::shared_ptr<Solver_Py>;
@@ -84,7 +83,8 @@ class Solver_Py : public Solver {
   ~Solver_Py() override = default;
 
   /// @brief Adds an edge to the graph.
-  /// @param src_path Path the the source path (where the statement is detected).
+  /// @param src_path Path the the source path (where the statement is
+  /// detected).
   /// @param statement The detected statement
   /// @param idx The index of the regular expression, which matched.
   /// @param line_no The line number where the statement is detected.
@@ -104,19 +104,18 @@ class Solver_Py : public Solver {
 
   /// @brief Adds solver-specific options.
   /// @note Not implemented yet.
-  static void add_options(
-      boost::program_options::options_description *options);
+  static void add_options(boost::program_options::options_description *options);
 
  protected:
   /// @brief Adds an edge
-  /// @param src_path Path the the source path (where the statement is detected).
+  /// @param src_path Path the the source path (where the statement is
+  /// detected).
   /// @param dst_path Path of the destination file (the file which is included).
   /// @param name The statement (mostly the name of the file).
   /// @param line_no The line number where the statement is detected.
   virtual void insert_edge(const std::string &src_path,
                            const std::string &dst_path, const std::string &name,
                            unsigned int line_no);
-
 
   /// @brief Convenience function for adding a vector of statements
   /// as edges through add_edge.
@@ -136,12 +135,17 @@ class Solver_Py : public Solver {
   const std::vector<std::string> file_extensions{"py", "pyw", "py3"};
 
   // Enum naming the different import types (corresponds to regex index)
-  enum Py_Regex { IMPORT = 0, FROM_IMPORT, ALL_IMPORT, HAS_DONE_FIRST_PASS = 99 };
+  enum Py_Regex {
+    IMPORT = 0,
+    FROM_IMPORT,
+    ALL_IMPORT,
+    HAS_DONE_FIRST_PASS = 99
+  };
 
 };  // class Solver_Py
 
 }  // namespace INCLUDE_GARDENER
 
-#endif // SOLVER_PY_H
+#endif  // SOLVER_PY_H
 
 // vim: filetype=cpp et ts=2 sw=2 sts=2

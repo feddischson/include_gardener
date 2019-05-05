@@ -65,12 +65,11 @@ void Solver::add_options(boost::program_options::options_description* options) {
 }
 
 Solver::Ptr Solver::get_solver(const std::string& name) {
-
   if (name == "c") {
     return std::dynamic_pointer_cast<Solver>(std::make_shared<Solver_C>());
   }
 
-  if (name == "py"){
+  if (name == "py") {
     return std::dynamic_pointer_cast<Solver>(std::make_shared<Solver_Py>());
   }
 

@@ -32,8 +32,7 @@ namespace INCLUDE_GARDENER {
 /// it is analyzed. Getters can then be used to find
 /// out information about the statement.
 class Statement_Py {
-
- public:
+  public:
    /// @brief Ctor for statement
    Statement_Py(const std::string &src_path, const std::string &statement,
                 unsigned int idx, unsigned int line_no);
@@ -60,13 +59,15 @@ class Statement_Py {
    virtual std::string extract_dummy_node_name(const std::string &statement);
 
    // Getters
-   virtual std::vector<Statement_Py> get_child_statements() { return child_statements; }
-   virtual std::string get_source_path(){ return source_path; }
-   virtual std::string get_modified_statement(){ return modified_statement; }
-   virtual std::string get_possible_path(){ return possible_path; }
-   virtual std::string get_original_statement(){ return original_statement; }
-   virtual unsigned int get_regex_idx(){ return regex_idx; }
-   virtual unsigned int get_line_number(){ return line_number; }
+   virtual std::vector<Statement_Py> get_child_statements() {
+      return child_statements;
+   }
+   virtual std::string get_source_path() { return source_path; }
+   virtual std::string get_modified_statement() { return modified_statement; }
+   virtual std::string get_possible_path() { return possible_path; }
+   virtual std::string get_original_statement() { return original_statement; }
+   virtual unsigned int get_regex_idx() { return regex_idx; }
+   virtual unsigned int get_line_number() { return line_number; }
    virtual bool get_is_relative() { return is_relative; }
    virtual bool get_had_star() { return had_star; }
 
@@ -74,8 +75,7 @@ class Statement_Py {
    /// pointed at.
    virtual unsigned int get_directories_above() { return directories_above; }
 
- protected:
-
+  protected:
    /// @brief Replaces all dots in a string with system-specific slash.
    virtual std::string dots_to_system_slash(const std::string &statement);
 
@@ -100,15 +100,17 @@ class Statement_Py {
    /// multiple imports in to child Statement_Py:s and
    /// places these in this instance's vector.
    virtual void split_into_multiple_statements(const std::string &src_path,
-                                           const std::string &statement,
-                                           unsigned int idx,
-                                           unsigned int line_no);
+                                               const std::string &statement,
+                                               unsigned int idx,
+                                               unsigned int line_no);
 
    /// @brief Counts how many dots a string is prepended with.
-   virtual unsigned int how_many_directories_above(const std::string &statement);
+   virtual unsigned int how_many_directories_above(
+       const std::string &statement);
 
    /// @brief Splits a string by comma and places results in a vector.
-   virtual std::vector<std::string> split_by_comma(const std::string &statement);
+   virtual std::vector<std::string> split_by_comma(
+       const std::string &statement);
 
    // Functions for removing something from a string.
    virtual void remove_all_quotation_marks(std::string &statement);
@@ -116,40 +118,40 @@ class Statement_Py {
    virtual void remove_prepended_dots(std::string &statement);
    virtual void remove_whitespace(std::string &statement);
 
- private:
-    /// @brief Regex to match the first dot(s) in a string
-    const std::string dot_regex = "^[ \\t]*([.]+).*$";
+  private:
+   /// @brief Regex to match the first dot(s) in a string
+   const std::string dot_regex = "^[ \\t]*([.]+).*$";
 
-    /// @brief Regex to match everything past the first dot(s) in a string
-    const std::string past_dot_regex = "^[ \\t]*[.]+(.*)$";
+   /// @brief Regex to match everything past the first dot(s) in a string
+   const std::string past_dot_regex = "^[ \\t]*[.]+(.*)$";
 
-    /// @brief The original data given to this class
-    const std::string source_path;
-    const std::string original_statement;
-    const unsigned int line_number;
-    unsigned int regex_idx;
+   /// @brief The original data given to this class
+   const std::string source_path;
+   const std::string original_statement;
+   const unsigned int line_number;
+   unsigned int regex_idx;
 
-    /// @brief Information about the argument statement
-    bool had_star = false;
-    bool is_relative = false;
-    bool contains_multiple_imports = false;
-    unsigned int directories_above = 0;
+   /// @brief Information about the argument statement
+   bool had_star = false;
+   bool is_relative = false;
+   bool contains_multiple_imports = false;
+   unsigned int directories_above = 0;
 
-    /// @brief Itinerary places to store the
-    /// string as it is modified and its possible
-    /// path equivalent.
-    std::string modified_statement = "";
-    std::string possible_path = "";
+   /// @brief Itinerary places to store the
+   /// string as it is modified and its possible
+   /// path equivalent.
+   std::string modified_statement = "";
+   std::string possible_path = "";
 
-    /// @brief If the statement contained multiple
-    /// imports, they are created as separate instances
-    /// and stored here.
-    std::vector<Statement_Py> child_statements;
+   /// @brief If the statement contained multiple
+   /// imports, they are created as separate instances
+   /// and stored here.
+   std::vector<Statement_Py> child_statements;
 
-    // Enum naming the different import types (corresponds to regex index)
-    enum Py_Regex { IMPORT = 0, FROM_IMPORT, ALL_IMPORT};
+   // Enum naming the different import types (corresponds to regex index)
+   enum Py_Regex { IMPORT = 0, FROM_IMPORT, ALL_IMPORT };
 
 };  // class Statement_Py
 }  // namespace INCLUDE_GARDENER
 
-#endif // Statement_Py_H
+#endif  // Statement_Py_H
