@@ -64,9 +64,9 @@ class Mock_Py_Solver : public Solver {
                               unsigned int));
   vector<string> get_statement_regex() const override {
     return {
-      R"(^[ \t]*import[ \t]+((?:[.]*)[^\d\W](?:[\w,\. ])*)[ \t]*$)",
-      R"(^[ \t]*from[ \t]+(\.*[^\d\W](?:[\w\.]*)[ \t]+import[ \t]+(?:\*|[^\d\W](?:[\w,\. ]*)))[ \t]*$)",
-      R"(^[ \t]*__all__[ \t]*=[ \t]*\[(.*)\]$)"};
+        R"(^[ \t]*import[ \t]+((?:[.]*)[^\d\W](?:[\w,\. ])*)[ \t]*$)",
+        R"(^[ \t]*from[ \t]+(\.*[^\d\W](?:[\w\.]*)[ \t]+import[ \t]+(?:\*|[^\d\W](?:[\w,\. ]*)))[ \t]*$)",
+        R"(^[ \t]*__all__[ \t]*=[ \t]*\[(.*)\]$)"};
   }
   MOCK_CONST_METHOD0(get_file_regex, string());
   MOCK_CONST_METHOD0(name, string());
@@ -215,7 +215,11 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_py2) {
   EXPECT_CALL(*s, add_edge("id", "sys", 0, 2)).Times(1);
   EXPECT_CALL(*s, add_edge("id", "pack1.subpack1 import *", 1, 5)).Times(1);
   EXPECT_CALL(*s, add_edge("id", "os import fork", 1, 8)).Times(1);
-  EXPECT_CALL(*s, add_edge("id", "pack2                                 as              p2", 0, 17)).Times(1);
+  EXPECT_CALL(
+      *s,
+      add_edge("id", "pack2                                 as              p2",
+               0, 17))
+      .Times(1);
   EXPECT_CALL(*s, add_edge("id", "pack1.     file1", 0, 21)).Times(1);
 
   d->call_process_stream(sstream, "id");

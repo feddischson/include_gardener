@@ -22,8 +22,8 @@
 #include <regex>
 
 #include "graph.h"
-#include "solver_py.h"
 #include "solver.h"
+#include "solver_py.h"
 #include "statement_detector.h"
 
 #include <gmock/gmock.h>
@@ -33,54 +33,53 @@
 #include <boost/filesystem/path.hpp>
 #include <sstream>
 
-using INCLUDE_GARDENER::Solver_Py;
-using INCLUDE_GARDENER::Solver;
-using INCLUDE_GARDENER::Statement_Detector;
-using INCLUDE_GARDENER::Vertex;
 using INCLUDE_GARDENER::Edge;
 using INCLUDE_GARDENER::Edge_Descriptor;
+using INCLUDE_GARDENER::Solver;
+using INCLUDE_GARDENER::Solver_Py;
+using INCLUDE_GARDENER::Statement_Detector;
+using INCLUDE_GARDENER::Vertex;
 
-using std::stringstream;
-using std::string;
-using std::vector;
-using std::optional;
-using std::pair;
+using std::endl;
 using std::istream;
 using std::make_shared;
-using std::endl;
-using testing::StrEq;
-using testing::StrNe;
-using testing::Not;
-using testing::HasSubstr;
+using std::optional;
+using std::pair;
+using std::string;
+using std::stringstream;
+using std::vector;
+using testing::_;
 using testing::Contains;
 using testing::Ge;
+using testing::HasSubstr;
+using testing::Not;
 using testing::Return;
 using testing::SizeIs;
-using testing::_;
+using testing::StrEq;
+using testing::StrNe;
 
 using boost::filesystem::path;
 
 class SolverPyTest : public ::testing::Test, public Solver_Py {
-public:
+ public:
   using Solver_Py::is_module;
   using Solver_Py::is_package;
 };
 
 class Mock_Solver_Py : public Solver_Py {
-public:
+ public:
   Mock_Solver_Py() = default;
   MOCK_METHOD1(is_module, bool(const std::string &path_string));
   MOCK_METHOD1(is_package, bool(const std::string &path_string));
   MOCK_METHOD4(add_edge, void(const string &, const string &, unsigned int,
-                               unsigned int));
+                              unsigned int));
 };
 
 class Mock_Statement_Detector : public Statement_Detector {
  public:
   explicit Mock_Statement_Detector(const Solver::Ptr &solver)
       : Statement_Detector(solver, 0) {}
-  optional<pair<string, unsigned int>> call_detect(
-      const string &line) const {
+  optional<pair<string, unsigned int>> call_detect(const string &line) const {
     return detect(line);
   }
 
