@@ -7,7 +7,7 @@ from pack1.subpack1 import *
 # Should show up only as os, since it is not local
 from os import fork
 
-# Multiline import, package import with no effect
+# Multiline import, package import
 import \
     pack2 \
         \
