@@ -15,7 +15,7 @@ and creates a graph or include tree.
 The result can then further analyzed by other tools.
 
 The following output formats are supported at the moment:
- - dot (Graphviz): see http://www.graphviz.org/Documentation.php
+ - dot (Graphviz): see http://www.graphviz.org/documentation
  - XML / Graphml: see http://graphml.graphdrawing.org/
 
 This tool
