@@ -107,8 +107,7 @@ void Solver_Py::add_edge(const string &src_path, const string &statement,
       dst_path = canonical(dst_path);
       insert_edge(src_path, dst_path.string(), possible_path, line_no);
       return;
-    } else if (py_statement.get_had_star() &&
-               is_package(
+    } else if (is_package(
                    (likely_module_parent_path / likely_module_name).string())) {
       possible_path += "/__init__.py";
       insert_edge(src_path,
@@ -117,9 +116,6 @@ void Solver_Py::add_edge(const string &src_path, const string &statement,
                       .string(),
                   possible_path, line_no);
       return;
-    } else if (is_package(
-                   (likely_module_parent_path / likely_module_name).string())) {
-      return;  // Not a valid import!
     }
   }
 

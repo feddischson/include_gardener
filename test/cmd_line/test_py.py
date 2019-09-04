@@ -2,7 +2,7 @@
 #
 # Command-line tests written in Python (Python language).
 # Do
-#  > python3 test_py.py test-reports ../../build/include_gardener ../test_files/py
+#  > python3 test_py.py test-reports ../../build/include_gardener ../test_files/py/graph_test_files
 # to run the tests
 #
 # The first argument is used to defines the include_gardener executable,
@@ -30,7 +30,7 @@ class GardenerTestCases(unittest.TestCase):
 
     # default paths
     G_PATH = "../../build/include_gardener"
-    T_PATH = "../test_files/"
+    T_PATH = "../test_files/py/graph_test_files/"
 
     def setUp(self):
         """Nothing to setup here"""
@@ -130,11 +130,14 @@ class GardenerTestCases(unittest.TestCase):
 
 	# Root
         g.add_edge(f1, p1_s1_f1)
+        g.add_edge(f1, p1_init)
+        g.add_edge(f1, p2_init)
 
         g.add_edge(f2, sys)
         g.add_edge(f2, p1_s1_init) # *-import
         g.add_edge(f2, p1_f1)
         g.add_edge(f2, os)
+        g.add_edge(f2, p2_init)
 
         g.add_edge(f3, p2_init) # *-import
         g.add_edge(f3, bogusfile)
@@ -178,11 +181,30 @@ class GardenerTestCases(unittest.TestCase):
         nodes1 = G1.nodes()
         nodes2 = G2.nodes()
 
+        print("\nFIRST GRAPH (INCLUDE GARDENER):")
+        print("------------------------")
+	
+        n1keys = []
         for n1 in nodes1:
-            print(n1)
+            n1keys.append(n1["key1"])
 
+        print(n1keys)
+        print("\nTotal:" + str(len(nodes1)))
+
+        n2keys = []
+        print("\nSECOND GRAPH (REFERENCE):")
+        print("------------------------")
         for n2 in nodes2:
-            print(n2)
+            n2keys.append(n2["key1"])
+
+        print(n2keys)
+        print("\nTotal:" + str(len(nodes2)) + "\n")
+
+
+        if ((set(n1keys) - set(n2keys)) != set()):
+            print("DIFFERENCE:")
+            print("------------------------")
+            print(set(n1keys) - set(n2keys))
 
     def compare(self, G1, G2):
         """ Compares two PyGraphml graphs by using PyUnittest's
@@ -192,40 +214,25 @@ class GardenerTestCases(unittest.TestCase):
 
         nodes1 = G1.nodes()
         nodes2 = G2.nodes()
+
         self.assertEqual(len(nodes1), len(nodes2))
+
+        dst1 = []
+        dst2 = []
+
+        # get all children
         for n1 in nodes1:
-            found = False
+            dst1.append(n1['key1'])
 
-            src1 = n1['key1']
-            src2 = ""
-            dst1 = []
-            dst2 = []
+        for n2 in nodes2:
+            dst2.append(n2['key1'])
 
-            # get all children
-            for c1 in G1.children(n1):
-                dst1.append(c1['key1'])
-
-            # search for the src in the second list
-            for n2 in nodes2:
-                src2 = n2['key1']
-
-                print(src1 + " =? " + src2)
-
-                if src1 == src2:
-                    found = True
-                    # get all children
-                    for c2 in G2.children(n2):
-                        dst2.append(c2['key1'])
-                    break
-
-            self.assertTrue(found)
-            self.assertEqual(src1, src2)
-            self.assertCountEqual(dst1, dst2)
+        self.assertCountEqual(set(dst1), set(dst2))
 
     def gardener_call(self, options, subpath=""):
 
         p_args = [self.G_PATH, os.path.join(self.T_PATH, subpath)] + options + ['-l', 'py']
-        # print( ' '.join( p_args ) )
+        print( ' '.join( p_args ) )
         pipe = Popen(p_args, stdout=PIPE)
         result_str = pipe.communicate()[0]
         return result_str
@@ -253,6 +260,7 @@ class GardenerTestCases(unittest.TestCase):
         temp = tempfile.NamedTemporaryFile()
         temp.write(result_str)
         temp.flush()
+
         parser = pgml.GraphMLParser()
 
         # get the result from the system call:
@@ -264,7 +272,7 @@ class GardenerTestCases(unittest.TestCase):
         The test expects that the result can be read by graphml
         and that there is at least one node.
         """
-        g1 = self.graphml_gardener_call([])
+        g1 = self.graphml_gardener_call(['-j', '1'])
 
         # get a reference graph
         g2 = self.build_reference_graph()

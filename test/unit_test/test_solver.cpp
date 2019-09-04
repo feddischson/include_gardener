@@ -62,7 +62,7 @@ class Mock_Solver2 : public Solver {
     auto x = vertexes.find(key);
     if (x != vertexes.end()) {
       return x->second;
-    } 
+    }
     return nullptr;
   }
 };

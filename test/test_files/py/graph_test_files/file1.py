@@ -1,4 +1,4 @@
-# Package imports that have no effect
+# Package imports that should create edges to __init__.py files
 import pack1
 import pack2 as p2
 

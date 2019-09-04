@@ -36,10 +36,10 @@ static constexpr int START_LINE = -1;
 /// @brief Edge Properties.
 /// @author feddischson
 struct Edge {
-   Edge() = default;
-   explicit Edge(int l) : line(l) {}
-   int line = START_LINE;  ///< The line number where
-};                         ///  the include statement is defined.
+  Edge() = default;
+  explicit Edge(int l) : line(l) {}
+  int line = START_LINE;  ///< The line number where
+};                        ///  the include statement is defined.
 
 /// @brief Graph definition.
 /// @author feddischson
@@ -63,47 +63,47 @@ using Edge_Iterator = boost::graph_traits<Graph>::edge_iterator;
 /// @author feddischson
 template <class T>
 class Vertex_Writer {
-  public:
-   explicit Vertex_Writer(T t) : t(t) {}
-   template <class T_v>
-   // NOLINTNEXTLINE(fuchsia-overloaded-operator)
-   void operator()(std::ostream& out, const T_v& vertex) const {
-      out << "[label=\"" << t[vertex] << "\"]";
-   }
+ public:
+  explicit Vertex_Writer(T t) : t(t) {}
+  template <class T_v>
+  // NOLINTNEXTLINE(fuchsia-overloaded-operator)
+  void operator()(std::ostream& out, const T_v& vertex) const {
+    out << "[label=\"" << t[vertex] << "\"]";
+  }
 
-  private:
-   T t;
+ private:
+  T t;
 };
 
 /// @brief Helper function for graphviz vertices writer class
 /// @author feddischson
 template <class T>
 inline Vertex_Writer<T> make_vertex_writer(T t) {
-   return Vertex_Writer<T>(t);
+  return Vertex_Writer<T>(t);
 }
 
 /// @brief Graphviz writer class for edges.
 /// @author feddischson
 template <class T>
 class Edge_Writer {
-  public:
-   explicit Edge_Writer(T t) : t(t) {}
-   template <class T_Edge>
-   // NOLINTNEXTLINE(fuchsia-overloaded-operator)
-   void operator()(std::ostream& out, const T_Edge& e) const {
-      out << "[label=\""
-          << "line " << t[e] << "\"]";
-   }
+ public:
+  explicit Edge_Writer(T t) : t(t) {}
+  template <class T_Edge>
+  // NOLINTNEXTLINE(fuchsia-overloaded-operator)
+  void operator()(std::ostream& out, const T_Edge& e) const {
+    out << "[label=\""
+        << "line " << t[e] << "\"]";
+  }
 
-  private:
-   T t;
+ private:
+  T t;
 };
 
 /// @brief Helper function for graphviz edge writer class.
 /// @author feddischson
 template <class T>
 inline Edge_Writer<T> make_edge_writer(T t) {
-   return Edge_Writer<T>(t);
+  return Edge_Writer<T>(t);
 }
 
 }  // namespace INCLUDE_GARDENER
