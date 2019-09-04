@@ -54,10 +54,10 @@ Statement_Py::Statement_Py(const std::string &src_path,
   }
 
   if (regex_idx == ALL_IMPORT) {
-    remove_all_quotation_marks(modified_statement);
+    remove_all_quotation_marks(&modified_statement);
 
     if (!contains_comma(modified_statement)) {
-      add_relative_dot_in_front(modified_statement);
+      add_relative_dot_in_front(&modified_statement);
     }
   }
 
@@ -76,11 +76,11 @@ Statement_Py::Statement_Py(const std::string &src_path,
 
   if (is_relative) {
     directories_above = how_many_directories_above(modified_statement);
-    remove_prepended_dots(modified_statement);
+    remove_prepended_dots(&modified_statement);
   }
 
-  remove_as_statements(modified_statement);
-  remove_whitespace(modified_statement);
+  remove_as_statements(&modified_statement);
+  remove_whitespace(&modified_statement);
   possible_path = dots_to_system_slash(modified_statement);
 }
 
@@ -95,18 +95,13 @@ bool Statement_Py::is_relative_import(const std::string &statement) {
   return boost::regex_match(statement, r);
 }
 
-void Statement_Py::remove_all_quotation_marks(std::string &statement) {
-  boost::erase_all(statement, "\"");
-  boost::erase_all(statement, "\'");
+void Statement_Py::remove_all_quotation_marks(std::string * statement) {
+  boost::erase_all( *statement, "\"");
+  boost::erase_all( *statement, "\'");
 }
 
-void Statement_Py::add_relative_dot_in_front(std::string &statement) {
-  statement.insert(0, ".");
-}
-
-void Statement_Py::add_package_name_in_front(std::string &statement,
-                                             const std::string &package_name) {
-  statement.insert(0, package_name + ".");
+void Statement_Py::add_relative_dot_in_front(std::string *statement) {
+  statement->insert(0, ".");
 }
 
 std::string Statement_Py::get_all_before_import(const std::string &statement) {
@@ -147,8 +142,9 @@ void Statement_Py::split_into_multiple_statements(const std::string &src_path,
     comma_separated_statements = split_by_comma(after_import);
 
     for (auto &comma_separated_statement : comma_separated_statements) {
-      add_package_name_in_front(comma_separated_statement, before_import);
-      remove_whitespace(comma_separated_statement);
+
+      comma_separated_statement.insert(0, before_import + ".");
+      remove_whitespace(&comma_separated_statement);
       Statement_Py child(src_path, comma_separated_statement, IMPORT, line_no);
       child_statements.push_back(child);
     }
@@ -158,7 +154,7 @@ void Statement_Py::split_into_multiple_statements(const std::string &src_path,
 
     if (idx == ALL_IMPORT) {
       for (auto &comma_separated_statement : comma_separated_statements) {
-        add_relative_dot_in_front(comma_separated_statement);
+        add_relative_dot_in_front(&comma_separated_statement);
       }
     }
 
@@ -204,32 +200,32 @@ unsigned int Statement_Py::how_many_directories_above(const string &statement) {
   return 0;
 }
 
-void Statement_Py::remove_prepended_dots(std::string &statement) {
+void Statement_Py::remove_prepended_dots(std::string *statement) {
   boost::regex r(past_dot_regex);
   boost::match_results<string::const_iterator> results;
-  if (boost::regex_match(statement, results, r)) {
+  if (boost::regex_match(*statement, results, r)) {
     if (results.size() > 1) {
-      statement = results[1].str();
+      *statement = results[1].str();
     }
   }
 }
 
-void Statement_Py::remove_whitespace(std::string &statement) {
-  boost::erase_all(statement, " ");
+void Statement_Py::remove_whitespace(std::string *statement) {
+  boost::erase_all(*statement, " ");
 }
 
-void Statement_Py::remove_as_statements(std::string &statement) {
+void Statement_Py::remove_as_statements(std::string *statement) {
   string::size_type as_pos;
   string::size_type comma_pos;
 
   do {
-    as_pos = statement.find(" as ");
+    as_pos = statement->find(" as ");
     if (as_pos != string::npos) {
-      comma_pos = statement.find(",", as_pos);
+      comma_pos = statement->find(",", as_pos);
       if (comma_pos != string::npos) {
-        statement.erase(as_pos, comma_pos);
+        statement->erase(as_pos, comma_pos);
       } else {
-        statement.erase(as_pos, string::npos);
+        statement->erase(as_pos, string::npos);
       }
     } else {
       break;

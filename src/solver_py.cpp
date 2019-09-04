@@ -163,8 +163,8 @@ void Solver_Py::insert_edge(const string &src_path, const string &dst_path,
   graph[edge] = Edge{static_cast<int>(line_no)};
 }
 
-void Solver_Py::add_edges(vector<Statement_Py> &statements) {
-  for (Statement_Py &statement : statements) {
+void Solver_Py::add_edges(const vector<Statement_Py> &statements) {
+  for (auto &statement : statements) {
     add_edge(statement.get_source_path(), statement.get_modified_statement(),
              statement.get_regex_idx(), statement.get_line_number());
   }

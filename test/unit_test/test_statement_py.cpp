@@ -60,17 +60,17 @@ class StatementPyWrapper : public Statement_Py {
  public:
   StatementPyWrapper() : Statement_Py("a", "b", 0, 0) {}
 
-  void remove_quotes(string &statement) {
+  void remove_quotes(string *statement) {
     remove_all_quotation_marks(statement);
   }
 
-  void remove_as_stmnt(string &statement) { remove_as_statements(statement); }
+  void remove_as_stmnt(string *statement) { remove_as_statements(statement); }
 
-  void remove_dots_in_front(string &statement) {
+  void remove_dots_in_front(string *statement) {
     remove_prepended_dots(statement);
   }
 
-  void remove_spaces(string &statement) { remove_whitespace(statement); }
+  void remove_spaces(string *statement) { remove_whitespace(statement); }
 
   vector<string> split_at_comma(const string &statement) {
     return split_by_comma(statement);
@@ -82,14 +82,6 @@ class StatementPyWrapper : public Statement_Py {
 
   string dot_to_slash(const string &statement) {
     return dots_to_system_slash(statement);
-  }
-
-  void add_dot_in_front(string &statement) {
-    add_relative_dot_in_front(statement);
-  }
-
-  void add_string_in_front(string &statement, const string &add_in_front) {
-    add_package_name_in_front(statement, add_in_front);
   }
 
   string get_before_import(const string &statement) {
@@ -285,13 +277,13 @@ TEST_F(StatementPyTest, RemovalStringFunctions) {
   StatementPyWrapper wrapper;
 
   string test_string = ".....\"hello\" . 'world' as earth";
-  wrapper.remove_quotes(test_string);
+  wrapper.remove_quotes(&test_string);
   EXPECT_EQ(test_string, ".....hello . world as earth");
-  wrapper.remove_dots_in_front(test_string);
+  wrapper.remove_dots_in_front(&test_string);
   EXPECT_EQ(test_string, "hello . world as earth");
-  wrapper.remove_as_stmnt(test_string);
+  wrapper.remove_as_stmnt(&test_string);
   EXPECT_EQ(test_string, "hello . world");
-  wrapper.remove_spaces(test_string);
+  wrapper.remove_spaces(&test_string);
   EXPECT_EQ(test_string, "hello.world");
 }
 
@@ -386,9 +378,9 @@ TEST_F(StatementPyTest, RemoveStartingDots) {
   string dot_beginning_too = ".dot";
   string no_dot_beginning = "no.dots";
 
-  wrapper.remove_dots_in_front(dot_beginning);
-  wrapper.remove_dots_in_front(dot_beginning_too);
-  wrapper.remove_dots_in_front(no_dot_beginning);
+  wrapper.remove_dots_in_front(&dot_beginning);
+  wrapper.remove_dots_in_front(&dot_beginning_too);
+  wrapper.remove_dots_in_front(&no_dot_beginning);
 
   EXPECT_THAT(dot_beginning, "dots");
   EXPECT_THAT(dot_beginning_too, "dot");
