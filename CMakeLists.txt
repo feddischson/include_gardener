@@ -163,7 +163,7 @@ add_test( c_cmdline_test python3 ${TEST_DIR}/cmd_line/test_c.py
 
 add_test( py_cmdline_test python3 ${TEST_DIR}/cmd_line/test_py.py
   test-reports
-  ${CMAKE_BINARY_DIR}/include_gardener ${TEST_DIR}/test_files/py )
+  ${CMAKE_BINARY_DIR}/include_gardener ${TEST_DIR}/test_files/py/graph_test_files )
 
 ##
 ## CPPCHECK
