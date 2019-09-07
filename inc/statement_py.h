@@ -49,6 +49,9 @@ class Statement_Py {
    /// @brief Move assignment operator: not implemented!
    Statement_Py &operator=(Statement_Py &&rhs) = delete;
 
+   /// @brief Default dtor.
+   ~Statement_Py() = default;
+
    /// @brief Checks if the statement given contained
    /// multiple imports. This requires the user
    /// to check the vector child_statements.
@@ -59,13 +62,9 @@ class Statement_Py {
    std::string extract_dummy_node_name(const std::string &statement);
 
    // Getters
-   std::vector<Statement_Py> get_child_statements() {
-      return child_statements;
-   }
+   std::vector<Statement_Py> get_child_statements() { return child_statements; }
    std::string get_source_path() const { return source_path; }
-   std::string get_modified_statement() const {
-      return modified_statement;
-   }
+   std::string get_modified_statement() const { return modified_statement; }
    std::string get_possible_path() { return possible_path; }
    std::string get_original_statement() { return original_statement; }
    unsigned int get_regex_idx() const { return regex_idx; }
@@ -100,23 +99,20 @@ class Statement_Py {
    /// multiple imports in to child Statement_Py:s and
    /// places these in this instance's vector.
    void split_into_multiple_statements(const std::string &src_path,
-                                               const std::string &statement,
-                                               unsigned int idx,
-                                               unsigned int line_no);
+                                       const std::string &statement,
+                                       unsigned int idx, unsigned int line_no);
 
    /// @brief Counts how many dots a string is prepended with.
-   unsigned int how_many_directories_above(
-       const std::string &statement);
+   unsigned int how_many_directories_above(const std::string &statement);
 
    /// @brief Splits a string by comma and places results in a vector.
-   std::vector<std::string> split_by_comma(
-       const std::string &statement);
+   std::vector<std::string> split_by_comma(const std::string &statement);
 
    // Functions for removing something from a string.
-   void remove_all_quotation_marks(std::string * statement);
-   void remove_as_statements(std::string * statement);
-   void remove_prepended_dots(std::string * statement);
-   void remove_whitespace(std::string * statement);
+   void remove_all_quotation_marks(std::string *statement);
+   void remove_as_statements(std::string *statement);
+   void remove_prepended_dots(std::string *statement);
+   void remove_whitespace(std::string *statement);
 
   private:
    /// @brief Regex to match the first dot(s) in a string

@@ -99,16 +99,19 @@ void Solver_Py::add_edge(const string &src_path, const string &statement,
   unique_lock<mutex> glck(graph_mutex);
 
   for (const string &file_extension : file_extensions) {
-    string module_with_file_extension =
-        likely_module_name + '.' + file_extension;
+    string module_with_file_extension = likely_module_name;
+    module_with_file_extension.append(".");
+    module_with_file_extension.append(file_extension);
+
     path dst_path = likely_module_parent_path / module_with_file_extension;
 
     if (exists(dst_path)) {
       dst_path = canonical(dst_path);
       insert_edge(src_path, dst_path.string(), possible_path, line_no);
       return;
-    } else if (is_package(
-                   (likely_module_parent_path / likely_module_name).string())) {
+    }
+
+    if (is_package((likely_module_parent_path / likely_module_name).string())) {
       possible_path += "/__init__.py";
       insert_edge(src_path,
                   canonical((likely_module_parent_path / likely_module_name /
@@ -179,8 +182,9 @@ bool Solver_Py::is_module(const std::string &path_string) {
   path likely_module_parent_path = path_to_test.parent_path();
 
   for (const string &file_extension : file_extensions) {
-    string module_with_file_extension =
-        likely_module_name + '.' + file_extension;
+    string module_with_file_extension = likely_module_name;
+    module_with_file_extension.append(".");
+    module_with_file_extension.append(file_extension);
     path dst_path = likely_module_parent_path / module_with_file_extension;
 
     if (exists(dst_path)) {

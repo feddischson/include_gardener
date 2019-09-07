@@ -33,12 +33,10 @@
 #include <boost/filesystem/path.hpp>
 #include <sstream>
 
-using INCLUDE_GARDENER::Edge;
 using INCLUDE_GARDENER::Edge_Descriptor;
 using INCLUDE_GARDENER::Solver;
 using INCLUDE_GARDENER::Solver_Py;
 using INCLUDE_GARDENER::Statement_Detector;
-using INCLUDE_GARDENER::Vertex;
 
 using std::endl;
 using std::istream;
@@ -47,18 +45,8 @@ using std::optional;
 using std::pair;
 using std::string;
 using std::stringstream;
-using std::vector;
 using testing::_;
-using testing::Contains;
 using testing::Ge;
-using testing::HasSubstr;
-using testing::Not;
-using testing::Return;
-using testing::SizeIs;
-using testing::StrEq;
-using testing::StrNe;
-
-using boost::filesystem::path;
 
 class SolverPyTest : public ::testing::Test, public Solver_Py {
  public:

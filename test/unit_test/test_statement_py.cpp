@@ -33,19 +33,10 @@
 #include <boost/filesystem/path.hpp>
 #include <sstream>
 
-using INCLUDE_GARDENER::Edge;
 using INCLUDE_GARDENER::Edge_Descriptor;
-using INCLUDE_GARDENER::Solver;
-using INCLUDE_GARDENER::Solver_Py;
-using INCLUDE_GARDENER::Statement_Detector;
 using INCLUDE_GARDENER::Statement_Py;
-using INCLUDE_GARDENER::Vertex;
 
-using std::endl;
 using std::istream;
-using std::make_shared;
-using std::optional;
-using std::pair;
 using std::string;
 using std::stringstream;
 using std::vector;

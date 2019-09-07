@@ -68,7 +68,9 @@ Statement_Py::Statement_Py(const std::string &src_path,
     split_into_multiple_statements(src_path, modified_statement, regex_idx,
                                    line_no);
     return;
-  } else if (regex_idx == FROM_IMPORT) {
+  }
+
+  if (regex_idx == FROM_IMPORT) {
     // Remove import from the middle
     modified_statement = get_all_before_import(modified_statement) + "." +
                          get_all_after_import(modified_statement);
@@ -95,9 +97,9 @@ bool Statement_Py::is_relative_import(const std::string &statement) {
   return boost::regex_match(statement, r);
 }
 
-void Statement_Py::remove_all_quotation_marks(std::string * statement) {
-  boost::erase_all( *statement, "\"");
-  boost::erase_all( *statement, "\'");
+void Statement_Py::remove_all_quotation_marks(std::string *statement) {
+  boost::erase_all(*statement, "\"");
+  boost::erase_all(*statement, "\'");
 }
 
 void Statement_Py::add_relative_dot_in_front(std::string *statement) {
@@ -142,7 +144,6 @@ void Statement_Py::split_into_multiple_statements(const std::string &src_path,
     comma_separated_statements = split_by_comma(after_import);
 
     for (auto &comma_separated_statement : comma_separated_statements) {
-
       comma_separated_statement.insert(0, before_import + ".");
       remove_whitespace(&comma_separated_statement);
       Statement_Py child(src_path, comma_separated_statement, IMPORT, line_no);
@@ -163,8 +164,6 @@ void Statement_Py::split_into_multiple_statements(const std::string &src_path,
       child_statements.push_back(child);
     }
   }
-
-  return;
 }
 
 bool Statement_Py::contained_multiple_imports() {
