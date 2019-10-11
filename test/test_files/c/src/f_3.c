@@ -1,4 +1,4 @@
-#include  "lib/f_3.h"
+#include "lib/f_3.h"
 
 #include <iostream>
 
