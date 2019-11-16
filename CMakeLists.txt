@@ -9,7 +9,7 @@ set ( GARDENER_VERSION
 
 set ( CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Boost REQUIRED COMPONENTS log system filesystem program_options )
+find_package(Boost REQUIRED COMPONENTS log system filesystem program_options regex )
 if(Boost_FOUND)
   include_directories( SYSTEM ${Boost_INCLUDE_DIRS})
 else()
