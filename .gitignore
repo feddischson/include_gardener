@@ -34,6 +34,9 @@ include_gardener
 # VSCode
 .vscode
 
+# VSCode directory
+.vscode/*
+
 # QT Creator
 CMakeLists.txt.user
 
@@ -46,3 +49,4 @@ test/cmd_line/test-reports
 # Python cache
 __pycache__/
 *.py[cod]
+

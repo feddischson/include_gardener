@@ -96,7 +96,8 @@ class Solver {
   virtual void write_graph(const std::string &format, ostream &os);
 
   /// @brief Adds solver-specific options.
-  static void add_options(boost::program_options::options_description *options);
+  virtual void add_options(
+      boost::program_options::options_description *options) const = 0;
 
   /// @brief Returns a specific solver.
   /// @param name Name of the solver.

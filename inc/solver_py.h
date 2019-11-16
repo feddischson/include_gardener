@@ -104,7 +104,8 @@ class Solver_Py : public Solver {
 
   /// @brief Adds solver-specific options.
   /// @note Not implemented yet.
-  static void add_options(boost::program_options::options_description *options);
+  void add_options(
+      boost::program_options::options_description *options) const override;
 
  protected:
   /// @brief Adds an edge

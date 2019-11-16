@@ -52,7 +52,7 @@ string Solver_Py::get_file_regex() const {
 }
 
 void Solver_Py::add_options(po::options_description *options
-                            __attribute__((unused))) {
+                            __attribute__((unused))) const {
   BOOST_LOG_TRIVIAL(trace)
       << "add_options in Solver_Py has not been implemented";
 }

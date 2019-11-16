@@ -58,6 +58,7 @@ set (SOURCE_FILES
      ${CMAKE_SOURCE_DIR}/src/solver.cpp
      ${CMAKE_SOURCE_DIR}/src/solver_c.cpp
      ${CMAKE_SOURCE_DIR}/src/solver_py.cpp
+     ${CMAKE_SOURCE_DIR}/src/solver_rb.cpp
      ${CMAKE_SOURCE_DIR}/src/statement_py.cpp)
 
 set (EXEC_SOURCE_FILES
@@ -72,7 +73,8 @@ set (UNIT_TEST_SOURCE_FILES
      ${CMAKE_SOURCE_DIR}/test/unit_test/test_input_files.cpp
      ${CMAKE_SOURCE_DIR}/test/unit_test/test_solver.cpp
      ${CMAKE_SOURCE_DIR}/test/unit_test/test_solver_py.cpp
-     ${CMAKE_SOURCE_DIR}/test/unit_test/test_statement_py.cpp )
+     ${CMAKE_SOURCE_DIR}/test/unit_test/test_solver_rb.cpp
+     ${CMAKE_SOURCE_DIR}/test/unit_test/test_statement_py.cpp)
 
 add_executable ( include_gardener ${EXEC_SOURCE_FILES})
 
@@ -159,6 +161,11 @@ add_test (unit_test unit_test --gtest_output=xml:test-reports/unit_test_results.
 add_test (c_cmdline_test python3 ${TEST_DIR}/cmd_line/test_c.py
           test-reports
           ${CMAKE_BINARY_DIR}/include_gardener ${TEST_DIR}/test_files/c)
+
+add_test (ruby_cmdline_test python3 ${TEST_DIR}/cmd_line/test_rb.py
+          test-reports ruby ${TEST_DIR}/cmd_line ${CMAKE_BINARY_DIR}/include_gardener
+          ${TEST_DIR}/test_files/ruby/require_needs_include/lib
+          ${TEST_DIR}/test_files/ruby/require_needs_include)
 
 add_test (py_cmdline_test python3 ${TEST_DIR}/cmd_line/test_py.py
           test-reports

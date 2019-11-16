@@ -42,7 +42,7 @@ vector<string> Solver_C::get_statement_regex() const {
 
 string Solver_C::get_file_regex() const { return string("(.*)\\.(c|h)$"); }
 
-void Solver_C::add_options(po::options_description *options) {
+void Solver_C::add_options(po::options_description *options) const {
   options->add_options()("c-include-path,I",
                          po::value<vector<string> >()->composing(),
                          "c-include path");
