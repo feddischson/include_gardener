@@ -58,7 +58,7 @@ void Solver_Py::add_options(po::options_description *options
 }
 
 void Solver_Py::extract_options(const po::variables_map &vm) {
-  if (vm.count("process-path") != 0u) {
+  if (vm.count("process-path") != 0U) {
     process_path = vm["process-path"].as<vector<string>>();
   }
 }

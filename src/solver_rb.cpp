@@ -48,7 +48,7 @@ void Solver_Rb::add_options(po::options_description *options) const {
 }
 
 void Solver_Rb::extract_options(const po::variables_map &vm) {
-   if (vm.count("ruby-include-path") != 0u) {
+   if (vm.count("ruby-include-path") != 0U) {
       include_paths = vm["ruby-include-path"].as<vector<string> >();
    }
    BOOST_LOG_TRIVIAL(trace) << "ruby-include-paths:   ";
@@ -66,7 +66,7 @@ void Solver_Rb::add_edge(const std::string &src_path,
    BOOST_LOG_TRIVIAL(trace) << "add_edge: " << src_path << " -> " << statement
                             << ", idx = " << idx << ", line_no = " << line_no;
 
-#define RB_EXT path(".rb")
+   static const path RB_EXT = ".rb";
 
    if (0 == idx) {
       // require_relative: Construct edge from a relative path

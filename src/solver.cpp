@@ -64,9 +64,11 @@ void Solver::add_vertex(const std::string& name, const std::string& abs_path) {
 Solver::Ptr Solver::get_solver(const std::string& name) {
   if (name == "c") {
     return std::dynamic_pointer_cast<Solver>(std::make_shared<Solver_C>());
-  } else if (name == "py") {
+  } 
+  if (name == "py") {
     return std::dynamic_pointer_cast<Solver>(std::make_shared<Solver_Py>());
-  } else if (name == "ruby") {
+  } 
+  if (name == "ruby") {
     return std::dynamic_pointer_cast<Solver>(std::make_shared<Solver_Rb>());
   }
   return nullptr;
@@ -75,7 +77,7 @@ Solver::Ptr Solver::get_solver(const std::string& name) {
 void Solver::write_graph(const string& format, ostream& os) {
   // prepare the name-map for graphviz output generation
   auto name_map = boost::make_transform_value_property_map(
-      [](Vertex::Ptr v) { return v->get_name(); },
+      [](const Vertex::Ptr & v) { return v->get_name(); },
       get(boost::vertex_bundle, graph));
 
   if ("dot" == format) {

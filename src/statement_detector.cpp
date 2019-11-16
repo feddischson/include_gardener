@@ -62,7 +62,7 @@ vector<regex> Statement_Detector::get_statements() const { return statements; }
 optional<pair<string, unsigned int>> Statement_Detector::detect(
     const string& line) const {
   smatch match;
-  for (unsigned int i = 0; i < statements.size(); i++) {
+  for (size_t i = 0; i < statements.size(); i++) {
     auto s = statements[i];
     if (regex_search(line, match, s)) {
       if (!match.empty()) {

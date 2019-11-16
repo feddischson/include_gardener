@@ -49,7 +49,7 @@ void Solver_C::add_options(po::options_description *options) const {
 }
 
 void Solver_C::extract_options(const po::variables_map &vm) {
-  if (vm.count("c-include-path") != 0u) {
+  if (vm.count("c-include-path") != 0U) {
     include_paths = vm["c-include-path"].as<vector<string> >();
   }
   BOOST_LOG_TRIVIAL(trace) << "c-include-paths:   ";
