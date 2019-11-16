@@ -32,7 +32,7 @@ class GardenerTestCases(unittest.TestCase):
     M_PATH = "."
     T_PATH = "../test_files/"
     G_PATH = "../../build/include_gardener"
-    LANGUAGE = "c"
+    LANGUAGE = "rb"
 
     def setUp(self):
         """Nothing to setup here"""
@@ -84,7 +84,7 @@ class GardenerTestCases(unittest.TestCase):
             self.assertCountEqual(dst1, dst2)
 
     def gardener_call(self, options, subpath=""):
-        
+
         p_args = [self.G_PATH, os.path.join(self.T_PATH, subpath)] + options
         # print( ' '.join( p_args ) )
         pipe = Popen(p_args, stdout=PIPE)
