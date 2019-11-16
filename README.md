@@ -54,7 +54,11 @@ make
 make doc
 make install
 ```
-
+In case of having issues with linking boost like `/usr/lib/libboost_log-mt.so: error adding symbols: file in wrong format`:
+This might happend on a multi-lib system. Try to specify the boost location manually:
+```
+cmake ../ -DBOOST_ROOT=/usr/lib64/
+```
 
 Usage
 -------
