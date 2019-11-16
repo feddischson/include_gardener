@@ -41,14 +41,32 @@ namespace po = boost::program_options;
 class Statement_Detector_Test : public ::testing::Test {};
 
 // NOLINTNEXTLINE
-class Mock_Solver : public Solver {
+class Mock_C_Solver : public Solver {
  public:
-  Mock_Solver() = default;
+  Mock_C_Solver() = default;
   MOCK_METHOD4(add_edge, void(const string &, const string &, unsigned int,
                               unsigned int));
   vector<string> get_statement_regex() const override {
     return {R"(\s*#\s*(include|import)\s+\"(\S+)\")",
             R"(\s*#\s*(include|import)\s+<(\S+)>)"};
+  }
+  MOCK_CONST_METHOD0(get_file_regex, string());
+  MOCK_CONST_METHOD0(name, string());
+  MOCK_CONST_METHOD1(add_options, void(po::options_description *));
+  MOCK_METHOD1(extract_options, void(const po::variables_map &));
+};
+
+// NOLINTNEXTLINE
+class Mock_Py_Solver : public Solver {
+ public:
+  Mock_Py_Solver() = default;
+  MOCK_METHOD4(add_edge, void(const string &, const string &, unsigned int,
+                              unsigned int));
+  vector<string> get_statement_regex() const override {
+    return {
+        R"(^[ \t]*import[ \t]+((?:[.]*)[^\d\W](?:[\w,\. ])*)[ \t]*$)",
+        R"(^[ \t]*from[ \t]+(\.*[^\d\W](?:[\w\.]*)[ \t]+import[ \t]+(?:\*|[^\d\W](?:[\w,\. ]*)))[ \t]*$)",
+        R"(^[ \t]*__all__[ \t]*=[ \t]*\[(.*)\]$)"};
   }
   MOCK_CONST_METHOD0(get_file_regex, string());
   MOCK_CONST_METHOD0(name, string());
@@ -72,7 +90,7 @@ class Mock_Statement_Detector : public Statement_Detector {
 
 // NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, empty_initialization) {
-  auto s = make_shared<Mock_Solver>();
+  auto s = make_shared<Mock_C_Solver>();
   auto d = make_shared<Statement_Detector>(s);
   EXPECT_EQ(d->get_statements().size(), 2);
   d->wait_for_workers();
@@ -80,7 +98,7 @@ TEST_F(Statement_Detector_Test, empty_initialization) {
 
 // NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, simple_detection) {
-  auto s = make_shared<Mock_Solver>();
+  auto s = make_shared<Mock_C_Solver>();
   auto d = make_shared<Mock_Statement_Detector>(s);
   EXPECT_EQ(d->get_statements().size(), 2);
   auto res = d->call_detect("  #include \"abc.h\"");
@@ -93,7 +111,7 @@ TEST_F(Statement_Detector_Test, simple_detection) {
 // NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, no_detection) {
   using ::testing::_;
-  auto s = make_shared<Mock_Solver>();
+  auto s = make_shared<Mock_C_Solver>();
   auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
@@ -110,7 +128,7 @@ TEST_F(Statement_Detector_Test, no_detection) {
 
 // NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, detection_from_stream) {
-  auto s = make_shared<Mock_Solver>();
+  auto s = make_shared<Mock_C_Solver>();
   auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
@@ -130,7 +148,7 @@ TEST_F(Statement_Detector_Test, detection_from_stream) {
 //
 // NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_1) {
-  auto s = make_shared<Mock_Solver>();
+  auto s = make_shared<Mock_C_Solver>();
   auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
@@ -149,11 +167,71 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_1) {
 }
 
 //
+// Multi-line statement in the middle of a simple python stream
+//
+// NOLINTNEXTLINE
+TEST_F(Statement_Detector_Test, ml_detection_from_stream_py1) {
+  auto s = make_shared<Mock_Py_Solver>();
+  auto d = make_shared<Mock_Statement_Detector>(s);
+
+  stringstream sstream;
+  sstream << "import pack1.\\" << endl;
+  sstream << "      file1" << endl;
+
+  EXPECT_EQ(d->get_statements().size(), 3);
+  EXPECT_CALL(*s, add_edge("id", "pack1.      file1", 0, 2)).Times(1);
+  d->call_process_stream(sstream, "id");
+  d->wait_for_workers();
+}
+
+//
+// Multi-line statement in the middle of a more complicated python stream
+//
+// NOLINTNEXTLINE
+TEST_F(Statement_Detector_Test, ml_detection_from_stream_py2) {
+  auto s = make_shared<Mock_Py_Solver>();
+  auto d = make_shared<Mock_Statement_Detector>(s);
+
+  stringstream sstream;
+  sstream << "# Should show up as sys in graph" << endl;
+  sstream << "import sys" << endl << endl;
+  sstream << "# Should create an edge to pack1/subpack1/__init__.py" << endl;
+  sstream << "from pack1.subpack1 import *" << endl << endl;
+  sstream << "# Should show up only as os, since it is not local" << endl;
+  sstream << "from os import fork" << endl << endl;
+  sstream << "# Multiline import, package import with no effect" << endl;
+  sstream << "import \\" << endl;
+  sstream << "    pack2 \\" << endl;
+  sstream << "        \\" << endl;
+  sstream << "        \\" << endl;
+  sstream << "        \\" << endl;
+  sstream << "        as  \\" << endl;
+  sstream << "            p2" << endl << endl;
+  sstream << "# Multiline import that should show up in graph" << endl;
+  sstream << "import pack1.\\" << endl;
+  sstream << "     file1" << endl << endl;
+
+  EXPECT_EQ(d->get_statements().size(), 3);
+  EXPECT_CALL(*s, add_edge("id", "sys", 0, 2)).Times(1);
+  EXPECT_CALL(*s, add_edge("id", "pack1.subpack1 import *", 1, 5)).Times(1);
+  EXPECT_CALL(*s, add_edge("id", "os import fork", 1, 8)).Times(1);
+  EXPECT_CALL(
+      *s,
+      add_edge("id", "pack2                                 as              p2",
+               0, 17))
+      .Times(1);
+  EXPECT_CALL(*s, add_edge("id", "pack1.     file1", 0, 21)).Times(1);
+
+  d->call_process_stream(sstream, "id");
+  d->wait_for_workers();
+}
+
+//
 // Multi-line statement at the end of the stream
 //
 // NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_2) {
-  auto s = make_shared<Mock_Solver>();
+  auto s = make_shared<Mock_C_Solver>();
   auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
@@ -176,7 +254,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_2) {
 //
 // NOLINTNEXTLINE
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_3) {
-  auto s = make_shared<Mock_Solver>();
+  auto s = make_shared<Mock_C_Solver>();
   auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
@@ -200,7 +278,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_3) {
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_4) {
   using ::testing::_;
   using ::testing::Ge;
-  auto s = make_shared<Mock_Solver>();
+  auto s = make_shared<Mock_C_Solver>();
   auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
@@ -228,7 +306,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_4) {
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_5) {
   using ::testing::_;
   using ::testing::Ge;
-  auto s = make_shared<Mock_Solver>();
+  auto s = make_shared<Mock_C_Solver>();
   auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;
@@ -256,7 +334,7 @@ TEST_F(Statement_Detector_Test, ml_detection_from_stream_5) {
 TEST_F(Statement_Detector_Test, ml_detection_from_stream_6) {
   using ::testing::_;
   using ::testing::Ge;
-  auto s = make_shared<Mock_Solver>();
+  auto s = make_shared<Mock_C_Solver>();
   auto d = make_shared<Mock_Statement_Detector>(s);
 
   stringstream sstream;

@@ -66,7 +66,8 @@ optional<pair<string, unsigned int>> Statement_Detector::detect(
     auto s = statements[i];
     if (regex_search(line, match, s)) {
       if (!match.empty()) {
-        BOOST_LOG_TRIVIAL(trace) << "Statement matched: " << match[match.size() - 1];
+        BOOST_LOG_TRIVIAL(trace)
+            << "Statement matched: " << match[match.size() - 1];
         return pair<string, unsigned int>(match[match.size() - 1], i);
       }
     }
@@ -91,9 +92,9 @@ void Statement_Detector::process_stream(istream& input,
                            line_cnt);
         }
         found_multi_line = false;
+        multi_line = "";
       } else {
         // ... if not: move on.
-        line_cnt++;
       }
     } else if (line.back() == '\\') {
       line.pop_back();
@@ -108,6 +109,7 @@ void Statement_Detector::process_stream(istream& input,
                            line_cnt);
         }
         found_multi_line = false;
+        multi_line = "";
       } else {
         statement = detect(line);
         if (statement) {
