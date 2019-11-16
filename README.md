@@ -15,7 +15,7 @@ and creates a graph or include tree.
 The result can then further analyzed by other tools.
 
 The following output formats are supported at the moment:
- - dot (Graphviz): see http://www.graphviz.org/Documentation.php
+ - dot (Graphviz): see http://www.graphviz.org/documentation
  - XML / Graphml: see http://graphml.graphdrawing.org/
 
 This tool
@@ -54,7 +54,11 @@ make
 make doc
 make install
 ```
-
+In case of having issues with linking boost like `/usr/lib/libboost_log-mt.so: error adding symbols: file in wrong format`:
+This might happend on a multi-lib system. Try to specify the boost location manually:
+```
+cmake ../ -DBOOST_ROOT=/usr/lib64/
+```
 
 Usage
 -------
