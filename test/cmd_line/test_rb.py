@@ -50,10 +50,23 @@ class GardenerRbTestCases(unittest.TestCase):
         g = pgml.Graph()
         f1 = g.add_node("1")
         f2 = g.add_node("2")
+        f3 = g.add_node("3")
+        f4 = g.add_node("4")
+        f5 = g.add_node("5")
+        f6 = g.add_node("6")
 
-        f1['key1'] = 'lib/motorcycle.rb'
-        f2['key1'] = 'motorcycle_test.rb'
-        g.add_edge(f2, f1)
+        f1['key1'] = 'motorcycle_test.rb'
+        f2['key1'] = 'lib/motorcycle.rb'
+        f3['key1'] = 'motorcycle_2.rb'
+        f4['key1'] = 'motorcycle_3.rb'
+        f5['key1'] = 'motorcycle_4.rb'
+        f6['key1'] = 'lib/sidecar.rb'
+
+        g.add_edge(f1, f2)
+        g.add_edge(f1, f3)
+        g.add_edge(f1, f4)
+        g.add_edge(f1, f5)
+        g.add_edge(f4, f6)
         return g
 
     def test_CallAndCompareOutput(self):

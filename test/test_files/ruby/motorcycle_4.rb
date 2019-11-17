@@ -1,4 +1,4 @@
-class MotorCycle  
+class MotorCycle_4
   def initialize(make, color)  
     # Instance variables  
     @make = make  
@@ -9,7 +9,7 @@ class MotorCycle
       puts 'Engine is already Running'  
     else  
       @engine_state = true  
-      puts 'Engine Idle'  
+      puts 'Engine 4 Idle'  
     end  
   end  
 end  
