@@ -2,7 +2,7 @@
 #
 # Command-line tests written in Python.
 # Do
-#  > python3 test.py test-reports ../../build/include_gardener ../test_files/c
+#  > python3 test_rb.py test-reports ../../build/include_gardener ../test_files/rb
 # to run the tests
 #
 # The first argument is used to defines the include_gardener executable,
@@ -10,29 +10,29 @@
 # third one defines where test-tree / files are located.
 #
 ###
+import sys
+import tempfile
+import pygraphml as pgml
+from test_support.log_select import enable_log
+from test_support.gardener_call import GardenerCall
+from test_support.main import main
+from test_support.helper import compare
 
 try:
     import unittest2 as unittest
 except ImportError:
     import unittest
 
-import os
-import sys
-import tempfile
-import pygraphviz as pgv
-import pygraphml as pgml
 
-from subprocess import Popen, PIPE
-from os.path import abspath, join
+class GardenerRbTestCases(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        cls.gardener = GardenerCall(cls.path_gardener, cls.path_testfiles)
 
-class GardenerTestCases(unittest.TestCase):
-
-    # default paths
-    M_PATH = "."
-    T_PATH = "../test_files/"
-    G_PATH = "../../build/include_gardener"
-    LANGUAGE = "rb"
+    @classmethod
+    def tearDownClass(cls):
+        """Nothing to tear down here"""
 
     def setUp(self):
         """Nothing to setup here"""
@@ -40,86 +40,21 @@ class GardenerTestCases(unittest.TestCase):
     def tearDown(self):
         """Nothing to tear down here"""
 
-    def build_reference_graph(self):
+    @staticmethod
+    def build_reference_graph():
         """ Builds a reference graph which shall be the same
             than the graph of ../test_files.
 
             A PyGraphml graph is returned.
         """
-        parser = pgml.GraphMLParser()
-        return parser.parse(os.path.join(self.M_PATH, self.LANGUAGE + '_graph.dot'))
+        g = pgml.Graph()
+        f1 = g.add_node("1")
+        f2 = g.add_node("2")
 
-    def compare(self, G1, G2):
-        """ Compares two PyGraphml graphs by using PyUnittest's
-            assert methods.
-        """
-        nodes1 = G1.nodes()
-        nodes2 = G2.nodes()
-        self.assertEqual(len(nodes1), len(nodes2))
-        for n1 in nodes1:
-            found = False
-
-            src1 = n1['key1']
-            src2 = ""
-            dst1 = []
-            dst2 = []
-
-            # get all children
-            for c1 in G1.children(n1):
-                dst1.append(c1['key1'])
-
-            # search for the src in the second list
-            for n2 in nodes2:
-                src2 = n2['key1']
-
-                if src1 == src2:
-                    found = True
-                    # get all children
-                    for c2 in G2.children(n2):
-                        dst2.append(c2['key1'])
-                    break
-
-            self.assertTrue(found)
-            self.assertEqual(src1, src2)
-            self.assertCountEqual(dst1, dst2)
-
-    def gardener_call(self, options, subpath=""):
-
-        p_args = [self.G_PATH, os.path.join(self.T_PATH, subpath)] + options
-        # print( ' '.join( p_args ) )
-        pipe = Popen(p_args, stdout=PIPE)
-        result_str = pipe.communicate()[0]
-        return result_str
-
-    def dot_gardener_call(self, options, subpath=""):
-        """
-        Runs the include_gardener with the dot option,
-        extracts the result and returns the graph.
-        """
-        # we don't use '-f dot' because dot is the default!
-        result_str = self.gardener_call([] + options, subpath).decode("utf-8")
-        # print("result:")
-        # print(result_str)
-        G = pgv.AGraph(result_str)
-        return G
-
-    def graphml_gardener_call(self, options, subpath=""):
-        """
-        Runs the include_gardener with the xml option,
-        extracts the result and returns the graph.
-        """
-        result_str = self.gardener_call(['-f', 'xml'] + options, subpath)
-        if len(result_str) == 0:
-            return None
-        # print("result:")
-        # print(result_str.decode('utf-8'))
-        temp = tempfile.NamedTemporaryFile()
-        temp.write(result_str)
-        temp.flush()
-        parser = pgml.GraphMLParser()
-
-        # get the result from the system call:
-        return parser.parse(temp.name)
+        f1['key1'] = 'lib/motorcycle.rb'
+        f2['key1'] = 'motorcycle_test.rb'
+        g.add_edge(f2, f1)
+        return g
 
     def test_CallAndCompareOutput(self):
         """ Tests "include_gardener -f xml -l <language> -I <include_files> <test_files>"
@@ -127,24 +62,15 @@ class GardenerTestCases(unittest.TestCase):
         The test expects that the result can be read by graphml
         and that there is at least one node.
         """
-        g1 = self.graphml_gardener_call(['-l', self.LANGUAGE, '-I', self.I_PATH])
+        g1 = self.gardener.graphml_gardener_call(['-l', 'ruby', '-I', self.path_testfiles + '/lib'])
 
         # get a reference graph
-        g2 = self.build_reference_graph()
+        g2 = GardenerRbTestCases.build_reference_graph()
 
         # both graphs shall be the same
-        self.compare(g1, g2)
+        compare(self, g1, g2)
 
 
 if __name__ == "__main__":
-    print(sys.argv)
-    if len(sys.argv) > 4:
-        GardenerTestCases.T_PATH = abspath(sys.argv.pop())
-        GardenerTestCases.I_PATH = abspath(sys.argv.pop())
-        GardenerTestCases.G_PATH = abspath(sys.argv.pop())
-        GardenerTestCases.M_PATH = abspath(sys.argv.pop())
-        GardenerTestCases.LANGUAGE = sys.argv.pop()
+    main(sys.argv, GardenerRbTestCases)
 
-    import xmlrunner
-    out_dir = abspath(sys.argv.pop())
-    unittest.main(testRunner=xmlrunner.XMLTestRunner(output=out_dir))

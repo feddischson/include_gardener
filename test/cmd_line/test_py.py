@@ -10,27 +10,31 @@
 # third one defines where test-tree / files are located.
 #
 ###
+import sys
+import tempfile
+import pygraphml as pgml
+from test_support.log_select import enable_log
+from test_support.gardener_call import GardenerCall
+from test_support.main import main
+from test_support.helper import compare
 
 try:
     import unittest2 as unittest
 except ImportError:
     import unittest
 
-import os
-import sys
-import tempfile
-import pygraphviz as pgv
-import pygraphml as pgml
 
-from subprocess import Popen, PIPE
-from os.path import abspath
+class GardenerPyTestCases(unittest.TestCase):
 
+    LANGUAGE = "rb"
 
-class GardenerTestCases(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.gardener = GardenerCall(cls.path_gardener, cls.path_testfiles)
 
-    # default paths
-    G_PATH = "../../build/include_gardener"
-    T_PATH = "../test_files/py/graph_test_files/"
+    @classmethod
+    def tearDownClass(cls):
+        """Nothing to tear down here"""
 
     def setUp(self):
         """Nothing to setup here"""
@@ -66,8 +70,6 @@ class GardenerTestCases(unittest.TestCase):
 	./py/pack1/subpack1/file3.py
 	./py/pack1/subpack1/file2.py
 	./py/pack1/subpack1/file1.py
-
-
         """
 
         g = pgml.Graph()
@@ -183,7 +185,7 @@ class GardenerTestCases(unittest.TestCase):
 
         print("\nFIRST GRAPH (INCLUDE GARDENER):")
         print("------------------------")
-	
+
         n1keys = []
         for n1 in nodes1:
             n1keys.append(n1["key1"])
@@ -206,79 +208,19 @@ class GardenerTestCases(unittest.TestCase):
             print("------------------------")
             print(set(n1keys) - set(n2keys))
 
-    def compare(self, G1, G2):
-        """ Compares two PyGraphml graphs by using PyUnittest's
-            assert methods.
-        """
-        self.print_graph_contents(G1, G2)
-
-        nodes1 = G1.nodes()
-        nodes2 = G2.nodes()
-
-        self.assertEqual(len(nodes1), len(nodes2))
-
-        dst1 = []
-        dst2 = []
-
-        # get all children
-        for n1 in nodes1:
-            dst1.append(n1['key1'])
-
-        for n2 in nodes2:
-            dst2.append(n2['key1'])
-
-        self.assertCountEqual(set(dst1), set(dst2))
-
-    def gardener_call(self, options, subpath=""):
-
-        p_args = [self.G_PATH, os.path.join(self.T_PATH, subpath)] + options + ['-l', 'py']
-        print( ' '.join( p_args ) )
-        pipe = Popen(p_args, stdout=PIPE)
-        result_str = pipe.communicate()[0]
-        return result_str
-
-    def dot_gardener_call(self, options, subpath=""):
-        """
-        Runs the include_gardener with the dot option,
-        extracts the result and returns the graph.
-        """
-        # we don't use '-f dot' because dot is the default!
-        result_str = self.gardener_call([] + options, subpath).decode("utf-8")
-
-        G = pgv.AGraph(result_str)
-        return G
-
-    def graphml_gardener_call(self, options, subpath=""):
-        """
-        Runs the include_gardener with the xml option,
-        extracts the result and returns the graph.
-        """
-        result_str = self.gardener_call(['-f', 'xml'] + options, subpath)
-        if len(result_str) == 0:
-            return None
-
-        temp = tempfile.NamedTemporaryFile()
-        temp.write(result_str)
-        temp.flush()
-
-        parser = pgml.GraphMLParser()
-
-        # get the result from the system call:
-        return parser.parse(temp.name)
-
     def test_SimpleCallWithSinglePath_GraphmlOutput(self):
         """ Tests "include_gardener test_files -f xml -l py"
 
         The test expects that the result can be read by graphml
         and that there is at least one node.
         """
-        g1 = self.graphml_gardener_call(['-j', '1'])
+        g1 = self.gardener.graphml_gardener_call(['-j', '1', '-l', 'py'])
 
         # get a reference graph
         g2 = self.build_reference_graph()
 
         # both graphs shall be the same
-        self.compare(g1, g2)
+        compare(self, g1, g2)
 
     def test_SimpleCallWithSinglePath(self):
         """ Tests "include_gardener test_files"
@@ -286,17 +228,12 @@ class GardenerTestCases(unittest.TestCase):
         The test expects that the result can be read by pygraphviz
         and that there is at least one node.
         """
-        G = self.dot_gardener_call(['-j', '1'])
+        G = self.gardener.dot_gardener_call(['-j', '1', '-l', 'py'])
 
         # the first node shall not be None ...
         n = G.get_node(1)
         self.assertNotEqual(n, None)
 
 if __name__ == "__main__":
-    print(sys.argv)
-    if len(sys.argv) > 2:
-        GardenerTestCases.T_PATH = abspath(sys.argv.pop())
-        GardenerTestCases.G_PATH = abspath(sys.argv.pop())
-    import xmlrunner
-    out_dir = abspath(sys.argv.pop())
-    unittest.main(testRunner=xmlrunner.XMLTestRunner(output=out_dir))
+    main(sys.argv, GardenerPyTestCases)
+
