@@ -10,7 +10,7 @@ Include Gardener
 
 Introduction
 -------------
-This is a small C++ based commandline-tool which analyzes C/C++ code
+This is a small C++ based commandline-tool which analyzes C/C++/Python/Ruby code
 and creates a graph or include tree.
 The result can then further analyzed by other tools.
 
@@ -24,7 +24,9 @@ This tool
  - is able to process the files via multiple threads
  - written in C++
  - tested on Linux (GCC, clang)
-
+ - analyzes C/C++ code
+ - analyzes Python code
+ - analyzes Ruby code
 
 
 Build Description
@@ -77,6 +79,10 @@ Usage
 
 # the result can then be further converted to a scalable vector graphics file.
 dot -Tsvg graph.dot > graph.svg
+
+
+# The option `-l` can be used to specify the language (default is C/C++).
+# Use `-l py` to analyze python code or `-l ruby` to analyze ruby code.
 ```
 
 Limitations
