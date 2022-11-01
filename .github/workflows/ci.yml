@@ -13,6 +13,7 @@ jobs:
       - run: mkdir build
       - run: cmake -B build
       - run: make  -C build VERBOSE=1
+      - run: cd build && ctest -VV
 
   build-clang:
     runs-on: ubuntu-latest
@@ -25,4 +26,5 @@ jobs:
       - run: mkdir build
       - run: CC=clang CXX=clang++ cmake -B build
       - run: make  -C build VERBOSE=1
+      - run: cd build && ctest -VV
 
