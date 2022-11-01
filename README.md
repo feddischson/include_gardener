@@ -5,8 +5,7 @@ Include Gardener
 Include Gardener
 =================
 
-[![Build Status](https://travis-ci.org/feddischson/include_gardener.svg?branch=master)](https://travis-ci.org/feddischson/include_gardener)
-
+![CI](https://github.com/feddischson/include_gardener/actions/workflows/ci.yml/badge.svg?branch=master)
 
 Introduction
 -------------
