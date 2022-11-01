@@ -9,7 +9,5 @@ jobs:
         with:
           submodules: true
       - run: mkdir build
-      - run: cd build
-      - run: cmake ..
-      - run: make VERBOSE=1
-      - run: ctest -VV
+      - run: cmake -B build
+      - run: make  -C build VERBOSE=1
