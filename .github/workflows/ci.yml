@@ -1,0 +1,15 @@
+name: CI
+on: [push]
+
+jobs:
+  build-gcc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - run: mkdir build
+      - run: cd build
+      - run: cmake ..
+      - run: make VERBOSE=1
+      - run: ctest -VV
