@@ -26,6 +26,9 @@ endif ()
 
 find_package (Threads REQUIRED)
 
+# Optional testing support
+option(BUILD_TESTING "Build unit tests" OFF)
+
 #
 # Doxygen Documentation Generation
 #
@@ -85,75 +88,76 @@ install (TARGETS include_gardener DESTINATION bin)
 
 enable_testing ()
 
-#########
-#
-# Download and unpack googletest at configure time
-#      configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
-#
-#
-#
-# Download and unpack googletest at configure time
-configure_file (CMakeLists.txt.in
-              googletest-download/CMakeLists.txt)
-execute_process (COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-                 RESULT_VARIABLE result
-                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
-if (result)
-  message(FATAL_ERROR "CMake step for googletest failed: ${result}")
-endif ()
+if(BUILD_TESTING)
+  #########
+  #
+  # Download and unpack googletest at configure time
+  #      configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
+  #
+  #
+  #
+  # Download and unpack googletest at configure time
+  configure_file (CMakeLists.txt.in
+                googletest-download/CMakeLists.txt)
+  execute_process (COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+                   RESULT_VARIABLE result
+                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+  if (result)
+    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+  endif ()
 
 
-execute_process (COMMAND ${CMAKE_COMMAND} --build .
-                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
-if (result)
-  message(FATAL_ERROR "Build step for googletest failed: ${result}")
-endif ()
+  execute_process (COMMAND ${CMAKE_COMMAND} --build .
+                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+  if (result)
+    message(FATAL_ERROR "Build step for googletest failed: ${result}")
+  endif ()
 
-# Prevent Googletest from overriding our compiler/linker options
-# when building with Visual Studio
-set (gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  # Prevent Googletest from overriding our compiler/linker options
+  # when building with Visual Studio
+  set (gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-# Add googletest directly to our build. This adds
-# the following targets: gtest, gtest_main, gmock
-# and gmock_main
-add_subdirectory (${CMAKE_BINARY_DIR}/googletest-src
-                  ${CMAKE_BINARY_DIR}/googletest-build)
+  # Add googletest directly to our build. This adds
+  # the following targets: gtest, gtest_main, gmock
+  # and gmock_main
+  add_subdirectory (${CMAKE_BINARY_DIR}/googletest-src
+                    ${CMAKE_BINARY_DIR}/googletest-build)
 
-# The gtest/gmock targets carry header search path
-# dependencies automatically when using CMake 2.8.11 or
-# later. Otherwise we must add them here ourselves.
-if (CMAKE_VERSION VERSION_LESS 2.8.11)
-    include_directories("${gtest_SOURCE_DIR}/include"
-                        "${gmock_SOURCE_DIR}/include")
-endif()
-#
-########
+  # The gtest/gmock targets carry header search path
+  # dependencies automatically when using CMake 2.8.11 or
+  # later. Otherwise we must add them here ourselves.
+  if (CMAKE_VERSION VERSION_LESS 2.8.11)
+      include_directories("${gtest_SOURCE_DIR}/include"
+                          "${gmock_SOURCE_DIR}/include")
+  endif()
+  #
+  ########
 
 ##
 ## Unit-Test Executable Generation
 ##
 
-add_executable (unit_test
-                ${SOURCE_FILES}
-                ${UNIT_TEST_SOURCE_FILES})
+  add_executable (unit_test
+                  ${SOURCE_FILES}
+                  ${UNIT_TEST_SOURCE_FILES})
 
-add_dependencies (unit_test gmock)
-add_dependencies (unit_test gtest)
-add_dependencies (unit_test gtest_main)
-link_directories (${CMAKE_BINARY_DIR}/googletest-build/googlemock)
-link_directories (${CMAKE_BINARY_DIR}/googletest-build/googlemock/gtest)
+  add_dependencies (unit_test gmock)
+  add_dependencies (unit_test gtest)
+  add_dependencies (unit_test gtest_main)
+  link_directories (${CMAKE_BINARY_DIR}/googletest-build/googlemock)
+  link_directories (${CMAKE_BINARY_DIR}/googletest-build/googlemock/gtest)
 
-target_link_libraries (unit_test  ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries (unit_test  ${Boost_LIBRARIES})
-target_link_libraries (unit_test  gtest_main)
-target_link_libraries (unit_test  gmock_main)
+  target_link_libraries (unit_test  ${CMAKE_THREAD_LIBS_INIT})
+  target_link_libraries (unit_test  ${Boost_LIBRARIES})
+  target_link_libraries (unit_test  gtest_main)
+  target_link_libraries (unit_test  gmock_main)
 
 set (TEST_DIR ${CMAKE_SOURCE_DIR}/test)
 
 ##
 ## Unit-Test (gtest) execution
 ##
-add_test (unit_test unit_test --gtest_output=xml:test-reports/unit_test_results.xml)
+  add_test (unit_test unit_test --gtest_output=xml:test-reports/unit_test_results.xml)
 
 ##
 ## cmdline test execution (via python)
@@ -174,7 +178,7 @@ add_test (ruby_cmdline_test python3 ${TEST_DIR}/cmd_line/test_rb.py
 add_test (py_cmdline_test python3 ${TEST_DIR}/cmd_line/test_py.py
           test-reports
           ${CMAKE_BINARY_DIR}/include_gardener ${TEST_DIR}/test_files/py/graph_test_files)
-
+endif(BUILD_TESTING)
 ##
 ## CPPCHECK
 ##
