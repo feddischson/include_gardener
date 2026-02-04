@@ -28,6 +28,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <deque>
 
 #include <boost/regex.hpp>
 
