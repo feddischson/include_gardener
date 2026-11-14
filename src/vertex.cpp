@@ -25,7 +25,7 @@ namespace INCLUDE_GARDENER {
 using std::string;
 
 Vertex::Vertex(string name, string abs_path)
-    : name(move(name)), abs_path(move(abs_path)) {}
+    : name(std::move(name)), abs_path(std::move(abs_path)) {}
 
 string Vertex::get_name() const { return name; }
 
