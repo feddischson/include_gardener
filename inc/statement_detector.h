@@ -22,6 +22,7 @@
 #define STATEMENT_DETECTOR_H
 
 #include <condition_variable>
+#include <deque>
 #include <iostream>
 #include <mutex>
 #include <optional>
