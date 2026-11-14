@@ -36,7 +36,7 @@ File_Detector::File_Detector(const string& file_regex,
                              vector<string> process_paths, int recursive_limit)
     : file_regex(file_regex, boost::regex::icase),
       exclude_regex(init_regex_vector(exclude_regex)),
-      process_paths(move(process_paths)),
+      process_paths(std::move(process_paths)),
       use_exclude_regex(!exclude_regex.empty()),
       recursive_limit(recursive_limit) {}
 
