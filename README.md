@@ -61,6 +61,15 @@ This might happend on a multi-lib system. Try to specify the boost location manu
 cmake ../ -DBOOST_ROOT=/usr/lib64/
 ```
 
+Building without internet access, or without the tests:
+ - `-DINCLUDE_GARDENER_BUILD_TESTS=OFF` skips the tests and does not need googletest.
+ - An installed googletest (including gmock) is used automatically.
+ - Otherwise googletest 1.12.1 is downloaded. In an offline environment, unpack it
+   somewhere and use `-DFETCHCONTENT_SOURCE_DIR_GOOGLETEST=/path/to/googletest`.
+
+The Vim templates for new files are in `vim-templates/` (set
+`g:templates_directory` accordingly if you use the vim-template plugin).
+
 Usage
 -------
 ```

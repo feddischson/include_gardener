@@ -38,6 +38,20 @@ using std::string;
 
 namespace INCLUDE_GARDENER {
 
+namespace {
+
+/// @brief Maps a vertex pointer to the vertex name.
+/// @details
+///     A named functor with an explicit result_type is used instead of a
+///     lambda: older Boost versions (e.g. 1.55 with MSVC) cannot deduce the
+///     result type of a lambda in boost::result_of.
+struct Vertex_Name {
+  using result_type = std::string;
+  std::string operator()(const Vertex::Ptr& v) const { return v->get_name(); }
+};
+
+}  // namespace
+
 void Solver::add_vertex(const std::string& name, const std::string& abs_path) {
   using std::pair;
   using std::string;
@@ -77,8 +91,7 @@ Solver::Ptr Solver::get_solver(const std::string& name) {
 void Solver::write_graph(const string& format, ostream& os) {
   // prepare the name-map for graphviz output generation
   auto name_map = boost::make_transform_value_property_map(
-      [](const Vertex::Ptr & v) { return v->get_name(); },
-      get(boost::vertex_bundle, graph));
+      Vertex_Name(), get(boost::vertex_bundle, graph));
 
   if ("dot" == format) {
     write_graphviz(os, graph, make_vertex_writer(name_map),
